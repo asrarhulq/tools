@@ -9,7 +9,9 @@ import {
   Layers,
   Printer,
   RotateCcw,
+  Rotate3d,
   Activity,
+  ShieldCheck,
   Weight,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -18,7 +20,9 @@ import { useDerivedAnalysis } from "../state/use-derived";
 import { ViewerPanel } from "../viewer/viewer-panel";
 import { GeometryPanel } from "./geometry-panel";
 import { MaterialPanel } from "./material-panel";
+import { OrientationPanel } from "./orientation-panel";
 import { ForcesPanel } from "./forces-panel";
+import { StabilityPanel } from "./stability-panel";
 import { FeaPanel } from "./fea-panel";
 import { PrintingPanel } from "./printing-panel";
 import { generateReport } from "../report/generate-report";
@@ -27,12 +31,21 @@ import { UNIT_LABELS } from "../lib/units";
 import type { Unit } from "../types";
 import { cn } from "@/lib/utils";
 
-type TabId = "geometry" | "material" | "forces" | "fea" | "printing";
+type TabId =
+  | "geometry"
+  | "material"
+  | "orientation"
+  | "forces"
+  | "stability"
+  | "fea"
+  | "printing";
 
 const TABS: Array<{ id: TabId; label: string; icon: typeof Box }> = [
   { id: "geometry", label: "Geometry", icon: Boxes },
   { id: "material", label: "Material", icon: Layers },
-  { id: "forces", label: "Forces & Stability", icon: Weight },
+  { id: "orientation", label: "Orientation", icon: Rotate3d },
+  { id: "forces", label: "Forces", icon: Weight },
+  { id: "stability", label: "Stability", icon: ShieldCheck },
   { id: "fea", label: "Stress (FEA)", icon: Activity },
   { id: "printing", label: "3D Printing", icon: Printer },
 ];
@@ -48,9 +61,11 @@ export function Dashboard() {
     setUnit,
     clearModel,
     material,
+    orientation,
+    constraint,
     forces,
-    supports,
     print,
+    viewer,
     screenshotRef,
   } = useAnalyzer();
   const derived = useDerivedAnalysis();
@@ -60,22 +75,28 @@ export function Dashboard() {
   if (!model || !geometry) return null;
 
   async function onExport() {
-    if (!geometry) return;
+    const reportGeometry = derived.geometry;
+    if (!reportGeometry) return;
     setExporting(true);
     try {
       const preview = screenshotRef.current?.() ?? null;
+      // If the heat map is currently shown, reuse the capture as the FEA image.
+      const feaImage = viewer.showStress ? preview : null;
       await generateReport({
         modelName: model!.name,
-        geometry,
+        geometry: reportGeometry,
         material,
+        effective: derived.effective,
+        orientation,
+        constraint,
         stability: derived.stability,
         fea: derived.fea,
         printEstimate: derived.print,
         recommendation: derived.recommendation,
         printSettings: print,
         forces,
-        supports,
         previewImage: preview,
+        feaImage,
       });
       toast.success("Report downloaded");
     } catch (error) {
@@ -122,11 +143,21 @@ export function Dashboard() {
               </button>
             ))}
           </div>
-          <Button variant="outline" size="sm" onClick={onExport} disabled={exporting}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onExport}
+            disabled={exporting}
+          >
             <FileText className="size-4" />
             {exporting ? "Generating…" : "Export report"}
           </Button>
-          <Button variant="ghost" size="icon" aria-label="Load a different model" onClick={clearModel}>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Load a different model"
+            onClick={clearModel}
+          >
             <RotateCcw className="size-4" />
           </Button>
         </div>
@@ -165,7 +196,11 @@ export function Dashboard() {
                     <motion.span
                       layoutId="stl-tab-pill"
                       className="absolute inset-0 rounded-full bg-[var(--color-primary)]"
-                      transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 380,
+                        damping: 32,
+                      }}
                     />
                   ) : null}
                   <span className="relative flex items-center gap-1.5">
@@ -187,7 +222,9 @@ export function Dashboard() {
             >
               {tab === "geometry" ? <GeometryPanel /> : null}
               {tab === "material" ? <MaterialPanel /> : null}
+              {tab === "orientation" ? <OrientationPanel /> : null}
               {tab === "forces" ? <ForcesPanel /> : null}
+              {tab === "stability" ? <StabilityPanel /> : null}
               {tab === "fea" ? <FeaPanel /> : null}
               {tab === "printing" ? <PrintingPanel /> : null}
             </motion.div>

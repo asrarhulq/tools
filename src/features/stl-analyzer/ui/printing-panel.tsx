@@ -8,7 +8,13 @@ import { getMaterial } from "../lib/materials";
 import { formatCurrency, formatMass } from "../lib/units";
 import type { InfillPattern, PrintSettings } from "../types";
 
-const PATTERNS: InfillPattern[] = ["grid", "gyroid", "honeycomb", "triangles"];
+const PATTERNS: InfillPattern[] = [
+  "grid",
+  "gyroid",
+  "honeycomb",
+  "triangles",
+  "cubic",
+];
 
 /** 3D printing parameters + cost/time/feasibility estimate + recommendations. */
 export function PrintingPanel() {
@@ -23,9 +29,20 @@ export function PrintingPanel() {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatTile label="Print time" value={estimate.printTimeHours.toFixed(1)} unit="h" />
-        <StatTile label="Material" value={formatMass(estimate.materialWeightGrams)} />
-        <StatTile label="Filament" value={estimate.filamentLengthM.toFixed(1)} unit="m" />
+        <StatTile
+          label="Print time"
+          value={estimate.printTimeHours.toFixed(1)}
+          unit="h"
+        />
+        <StatTile
+          label="Material"
+          value={formatMass(estimate.materialWeightGrams)}
+        />
+        <StatTile
+          label="Filament"
+          value={estimate.filamentLengthM.toFixed(1)}
+          unit="m"
+        />
         <StatTile
           label="Total cost"
           value={formatCurrency(estimate.totalCost)}
@@ -35,17 +52,52 @@ export function PrintingPanel() {
 
       <PanelCard title="Print settings">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <NumField label="Infill %" value={print.infillPercent} onChange={(v) => num("infillPercent", v)} />
-          <NumField label="Layer height (mm)" step={0.02} value={print.layerHeight} onChange={(v) => num("layerHeight", v)} />
-          <NumField label="Nozzle (mm)" step={0.1} value={print.nozzleDiameter} onChange={(v) => num("nozzleDiameter", v)} />
-          <NumField label="Walls" value={print.wallCount} onChange={(v) => num("wallCount", v)} />
-          <NumField label="Top/bottom" value={print.topBottomLayers} onChange={(v) => num("topBottomLayers", v)} />
-          <NumField label="Speed (mm/s)" value={print.printSpeed} onChange={(v) => num("printSpeed", v)} />
+          <NumField
+            label="Infill %"
+            value={print.infillPercent}
+            onChange={(v) => num("infillPercent", v)}
+          />
+          <NumField
+            label="Layer height (mm)"
+            step={0.02}
+            value={print.layerHeight}
+            onChange={(v) => num("layerHeight", v)}
+          />
+          <NumField
+            label="Nozzle (mm)"
+            step={0.1}
+            value={print.nozzleDiameter}
+            onChange={(v) => num("nozzleDiameter", v)}
+          />
+          <NumField
+            label="Walls"
+            value={print.wallCount}
+            onChange={(v) => num("wallCount", v)}
+          />
+          <NumField
+            label="Top layers"
+            value={print.topLayers}
+            onChange={(v) => num("topLayers", v)}
+          />
+          <NumField
+            label="Bottom layers"
+            value={print.bottomLayers}
+            onChange={(v) => num("bottomLayers", v)}
+          />
+          <NumField
+            label="Speed (mm/s)"
+            value={print.printSpeed}
+            onChange={(v) => num("printSpeed", v)}
+          />
           <label className="block">
-            <span className="mb-1 block text-xs text-[var(--color-muted-foreground)]">Infill pattern</span>
+            <span className="mb-1 block text-xs text-[var(--color-muted-foreground)]">
+              Infill pattern
+            </span>
             <select
               value={print.infillPattern}
-              onChange={(e) => setPrint({ infillPattern: e.target.value as InfillPattern })}
+              onChange={(e) =>
+                setPrint({ infillPattern: e.target.value as InfillPattern })
+              }
               className="w-full rounded-lg border border-[var(--color-border)] bg-transparent px-3 py-1.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
             >
               {PATTERNS.map((p) => (
@@ -65,15 +117,27 @@ export function PrintingPanel() {
             Supports
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs text-[var(--color-muted-foreground)]">Adhesion</span>
+            <span className="mb-1 block text-xs text-[var(--color-muted-foreground)]">
+              Adhesion
+            </span>
             <select
               value={print.brimRaft}
-              onChange={(e) => setPrint({ brimRaft: e.target.value as PrintSettings["brimRaft"] })}
+              onChange={(e) =>
+                setPrint({
+                  brimRaft: e.target.value as PrintSettings["brimRaft"],
+                })
+              }
               className="w-full rounded-lg border border-[var(--color-border)] bg-transparent px-3 py-1.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
             >
-              <option value="none" className="bg-[var(--color-surface)]">None</option>
-              <option value="brim" className="bg-[var(--color-surface)]">Brim</option>
-              <option value="raft" className="bg-[var(--color-surface)]">Raft</option>
+              <option value="none" className="bg-[var(--color-surface)]">
+                None
+              </option>
+              <option value="brim" className="bg-[var(--color-surface)]">
+                Brim
+              </option>
+              <option value="raft" className="bg-[var(--color-surface)]">
+                Raft
+              </option>
             </select>
           </label>
         </div>
@@ -95,22 +159,53 @@ export function PrintingPanel() {
           </StatusPill>
         }
       >
-        <DataRow label="Material cost" value={formatCurrency(estimate.materialCost)} />
-        <DataRow label="Electricity cost" value={formatCurrency(estimate.electricityCost)} />
-        <DataRow label="CO₂ estimate" value={`${estimate.co2Grams.toFixed(0)} g`} />
-        <DataRow label="Failure risk" value={`${(estimate.failureRisk * 100).toFixed(0)}%`} />
-        <DataRow label="Warp risk" value={`${(estimate.warpRisk * 100).toFixed(0)}%`} />
-        <DataRow label="Supports required" value={estimate.supportRequired ? "Yes" : "No"} />
+        <DataRow
+          label="Material cost"
+          value={formatCurrency(estimate.materialCost)}
+        />
+        <DataRow
+          label="Electricity cost"
+          value={formatCurrency(estimate.electricityCost)}
+        />
+        <DataRow
+          label="CO₂ estimate"
+          value={`${estimate.co2Grams.toFixed(0)} g`}
+        />
+        <DataRow
+          label="Failure risk"
+          value={`${(estimate.failureRisk * 100).toFixed(0)}%`}
+        />
+        <DataRow
+          label="Warp risk"
+          value={`${(estimate.warpRisk * 100).toFixed(0)}%`}
+        />
+        <DataRow
+          label="Supports required"
+          value={estimate.supportRequired ? "Yes" : "No"}
+        />
       </PanelCard>
 
       {recommendation ? (
         <PanelCard title="Recommendations">
           <div className="space-y-2 text-sm">
-            <Recommend icon label="Best material" value={getMaterial(recommendation.bestMaterialId).name} />
-            <Recommend label="Infill" value={`${recommendation.infillPercent}%`} />
-            <Recommend label="Layer height" value={`${recommendation.layerHeight} mm`} />
+            <Recommend
+              icon
+              label="Best material"
+              value={getMaterial(recommendation.bestMaterialId).name}
+            />
+            <Recommend
+              label="Infill"
+              value={`${recommendation.infillPercent}%`}
+            />
+            <Recommend
+              label="Layer height"
+              value={`${recommendation.layerHeight} mm`}
+            />
             <Recommend label="Orientation" value={recommendation.orientation} />
-            <Recommend label="Supports" value={recommendation.supportStrategy} />
+            <Recommend
+              label="Supports"
+              value={recommendation.supportStrategy}
+            />
           </div>
         </PanelCard>
       ) : null}

@@ -3,7 +3,7 @@
 import { useAnalyzer } from "../state/analyzer-context";
 import { useDerivedAnalysis } from "../state/use-derived";
 import { MATERIALS, makeCustomMaterial } from "../lib/materials";
-import { PanelCard, StatTile } from "./primitives";
+import { DataRow, PanelCard, StatTile } from "./primitives";
 import { formatMass } from "../lib/units";
 import type { Material } from "../types";
 
@@ -18,14 +18,19 @@ const FIELDS: Array<{
   { key: "yieldStrength", label: "Yield strength", unit: "MPa", step: 1 },
   { key: "ultimateStrength", label: "Ultimate strength", unit: "MPa", step: 1 },
   { key: "poissonRatio", label: "Poisson ratio", unit: "", step: 0.01 },
-  { key: "thermalExpansion", label: "Thermal expansion", unit: "µm/m·°C", step: 1 },
+  {
+    key: "thermalExpansion",
+    label: "Thermal expansion",
+    unit: "µm/m·°C",
+    step: 1,
+  },
   { key: "costPerKg", label: "Cost", unit: "/kg", step: 1 },
 ];
 
 /** Material selection + editable mechanical properties. */
 export function MaterialPanel() {
   const { material, setMaterial } = useAnalyzer();
-  const { stability } = useDerivedAnalysis();
+  const { stability, effective } = useDerivedAnalysis();
 
   function selectMaterial(id: string) {
     const found = MATERIALS.find((m) => m.id === id);
@@ -40,7 +45,10 @@ export function MaterialPanel() {
 
   return (
     <div className="space-y-4">
-      <PanelCard title="Material" description="Select an FDM filament or customize">
+      <PanelCard
+        title="Material"
+        description="Select an FDM filament or customize"
+      >
         <div className="mb-4 flex flex-wrap gap-2">
           {MATERIALS.map((m) => (
             <button
@@ -82,15 +90,48 @@ export function MaterialPanel() {
         </div>
       </PanelCard>
 
-      {stability ? (
-        <div className="grid grid-cols-2 gap-3">
-          <StatTile label="Estimated mass" value={formatMass(stability.massGrams)} />
+      <div className="grid grid-cols-2 gap-3">
+        {stability ? (
           <StatTile
-            label="Yield strength"
-            value={material.yieldStrength}
-            unit="MPa"
+            label="Estimated mass"
+            value={formatMass(stability.massGrams)}
           />
-        </div>
+        ) : null}
+        <StatTile
+          label="Yield strength"
+          value={material.yieldStrength}
+          unit="MPa"
+        />
+      </div>
+
+      {effective ? (
+        <PanelCard
+          title="As-printed properties"
+          description="How infill, walls, and layer orientation change the effective part"
+        >
+          <DataRow
+            label="Solid fraction"
+            value={`${(effective.solidFraction * 100).toFixed(0)}%`}
+            hint="Fraction of solid polymer (walls + infill)"
+          />
+          <DataRow
+            label="Effective modulus (in-plane)"
+            value={`${effective.modulusXY.toFixed(0)} MPa`}
+          />
+          <DataRow
+            label="Effective strength (in-plane)"
+            value={`${effective.strengthXY.toFixed(1)} MPa`}
+          />
+          <DataRow
+            label="Interlayer strength (Z)"
+            value={`${effective.strengthZ.toFixed(1)} MPa`}
+            hint="Weaker across layers — the usual FDM failure mode"
+          />
+          <DataRow
+            label="Layer anisotropy"
+            value={`${(effective.anisotropy * 100).toFixed(0)}% of in-plane`}
+          />
+        </PanelCard>
       ) : null}
     </div>
   );

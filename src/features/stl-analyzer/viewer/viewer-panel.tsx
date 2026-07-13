@@ -4,27 +4,27 @@ import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAnalyzer } from "../state/analyzer-context";
 import { useDerivedAnalysis } from "../state/use-derived";
-import { ViewerCanvas } from "./viewer-canvas";
+import { ViewerCanvas, type CameraView } from "./viewer-canvas";
 import { ViewerToolbar } from "./viewer-toolbar";
 
 /**
  * The CAD viewport container: hosts the R3F canvas + floating toolbar, the
- * cross-section slider, fullscreen handling, and screenshot download. Reads all
- * model/viewer state from the analyzer context.
+ * cross-section slider, fullscreen handling, camera presets, and screenshot
+ * download. Renders the oriented mesh so the viewport matches the analysis.
  */
 export function ViewerPanel() {
   const {
     mesh,
-    geometry,
     forces,
-    supports,
     viewer,
     setViewer,
     addForce,
+    forceDraft,
     screenshotRef,
   } = useAnalyzer();
-  const { fea, stability } = useDerivedAnalysis();
+  const { geometry, orientedPositions, fea, stability } = useDerivedAnalysis();
   const containerRef = useRef<HTMLDivElement>(null);
+  const cameraRef = useRef<((view: CameraView) => void) | null>(null);
   const [remountKey, setRemountKey] = useState(0);
 
   const registerScreenshot = useCallback(
@@ -32,6 +32,13 @@ export function ViewerPanel() {
       screenshotRef.current = fn;
     },
     [screenshotRef],
+  );
+
+  const registerCamera = useCallback(
+    (fn: ((view: CameraView) => void) | null) => {
+      cameraRef.current = fn;
+    },
+    [],
   );
 
   const takeScreenshot = useCallback(() => {
@@ -42,7 +49,7 @@ export function ViewerPanel() {
     }
     const a = document.createElement("a");
     a.href = dataUrl;
-    a.download = "stl-analyzer-view.png";
+    a.download = "am-analyzer-view.png";
     a.click();
     toast.success("Screenshot saved");
   }, [screenshotRef]);
@@ -50,38 +57,43 @@ export function ViewerPanel() {
   const toggleFullscreen = useCallback(() => {
     const el = containerRef.current;
     if (!el) return;
-    if (document.fullscreenElement) {
-      void document.exitFullscreen();
-    } else {
-      void el.requestFullscreen?.();
-    }
+    if (document.fullscreenElement) void document.exitFullscreen();
+    else void el.requestFullscreen?.();
   }, []);
 
   // Reset view by remounting the canvas (fresh camera + controls).
   const resetView = useCallback(() => setRemountKey((k) => k + 1), []);
+  const setCamera = useCallback(
+    (view: CameraView) => cameraRef.current?.(view),
+    [],
+  );
 
-  if (!mesh || !geometry) return null;
+  if (!mesh || !geometry || !orientedPositions) return null;
+  const renderMesh = { positions: orientedPositions };
 
   return (
     <div
       ref={containerRef}
-      className="relative h-[420px] w-full overflow-hidden rounded-[var(--radius)] border border-[var(--color-border)] bg-black sm:h-[560px]"
+      className="relative h-[440px] w-full overflow-hidden rounded-[var(--radius)] border border-[var(--color-border)] bg-black shadow-lg sm:h-[600px]"
     >
       <ViewerCanvas
         key={remountKey}
-        mesh={mesh}
+        mesh={renderMesh}
         geometry={geometry}
         fea={fea}
         stability={stability}
         forces={forces}
-        supports={supports}
         options={viewer}
         registerScreenshot={registerScreenshot}
+        registerCamera={registerCamera}
         onSurfaceClick={(point) => {
-          // Click-to-place a default downward 50 N force.
-          addForce({ point, direction: [0, 0, -1], magnitude: 50 });
+          addForce({
+            point,
+            direction: forceDraft.direction,
+            magnitude: forceDraft.magnitude,
+          });
           toast("Force added", {
-            description: "50 N downward. Edit it in the Forces panel.",
+            description: `${forceDraft.magnitude} N — edit it in the Forces panel.`,
           });
         }}
       />
@@ -92,7 +104,8 @@ export function ViewerPanel() {
         onScreenshot={takeScreenshot}
         onFullscreen={toggleFullscreen}
         onReset={resetView}
-        hasFea={forces.length > 0 || supports.length > 0}
+        onCamera={setCamera}
+        hasFea={!!fea}
       />
 
       {viewer.clippingEnabled ? (
@@ -113,8 +126,8 @@ export function ViewerPanel() {
         </div>
       ) : null}
 
-      <p className="glass pointer-events-none absolute bottom-3 right-3 z-10 rounded-lg px-2.5 py-1 text-[11px] text-[var(--color-muted-foreground)]">
-        Click the model to add a force
+      <p className="glass pointer-events-none absolute right-3 bottom-3 z-10 rounded-lg px-2.5 py-1 text-[11px] text-[var(--color-muted-foreground)]">
+        Click the model to add a {forceDraft.magnitude} N force
       </p>
     </div>
   );

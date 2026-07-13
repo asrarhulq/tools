@@ -117,6 +117,28 @@ export const MATERIALS: readonly Material[] = [
     thermalExpansion: 50,
     costPerKg: 65,
   },
+  {
+    id: "cf-petg",
+    name: "Carbon Fiber PETG",
+    density: 1.29,
+    youngsModulus: 4200,
+    yieldStrength: 58,
+    ultimateStrength: 70,
+    poissonRatio: 0.38,
+    thermalExpansion: 45,
+    costPerKg: 52,
+  },
+  {
+    id: "cf-pc",
+    name: "Carbon Fiber PC",
+    density: 1.22,
+    youngsModulus: 6500,
+    yieldStrength: 90,
+    ultimateStrength: 110,
+    poissonRatio: 0.35,
+    thermalExpansion: 40,
+    costPerKg: 70,
+  },
 ] as const;
 
 export const DEFAULT_MATERIAL_ID = "pla";

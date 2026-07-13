@@ -2,6 +2,7 @@
 
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { useAnalyzer } from "../state/analyzer-context";
+import { useDerivedAnalysis } from "../state/use-derived";
 import {
   DataRow,
   PanelCard,
@@ -9,15 +10,12 @@ import {
   StatTile,
   StatusPill,
 } from "./primitives";
-import {
-  formatArea,
-  formatLength,
-  formatVolume,
-} from "../lib/units";
+import { formatArea, formatLength, formatVolume } from "../lib/units";
 
 /** Geometry analysis panel: dimensions, mass properties, mesh + diagnostics. */
 export function GeometryPanel() {
-  const { geometry, unit } = useAnalyzer();
+  const { unit } = useAnalyzer();
+  const { geometry } = useDerivedAnalysis();
   if (!geometry) return null;
 
   const { boundingBox, diagnostics, quality } = geometry;
@@ -43,25 +41,43 @@ export function GeometryPanel() {
       </div>
 
       <PanelCard title="Bounding box" description="Overall dimensions">
-        <DataRow label="Width (X)" value={formatLength(boundingBox.size[0], unit)} />
-        <DataRow label="Depth (Y)" value={formatLength(boundingBox.size[1], unit)} />
-        <DataRow label="Height (Z)" value={formatLength(boundingBox.size[2], unit)} />
+        <DataRow
+          label="Width (X)"
+          value={formatLength(boundingBox.size[0], unit)}
+        />
+        <DataRow
+          label="Depth (Y)"
+          value={formatLength(boundingBox.size[1], unit)}
+        />
+        <DataRow
+          label="Height (Z)"
+          value={formatLength(boundingBox.size[2], unit)}
+        />
       </PanelCard>
 
       <PanelCard title="Mass properties">
         <DataRow
           label="Center of mass"
-          value={`${com.map((c) => c.toFixed(1)).join(", ")} mm`}
+          value={com.map((c) => formatLength(c, unit)).join(", ")}
         />
         <DataRow
           label="Center of gravity"
           value="= center of mass (uniform density)"
         />
-        <DataRow label="Unique vertices" value={quality.uniqueVertexCount.toLocaleString()} />
-        <DataRow label="Degenerate triangles" value={quality.degenerateTriangles} />
+        <DataRow
+          label="Unique vertices"
+          value={quality.uniqueVertexCount.toLocaleString()}
+        />
+        <DataRow
+          label="Degenerate triangles"
+          value={quality.degenerateTriangles}
+        />
       </PanelCard>
 
-      <PanelCard title="Diagnostics" description="Mesh integrity & printability">
+      <PanelCard
+        title="Diagnostics"
+        description="Mesh integrity & printability"
+      >
         <DataRow
           label="Watertight"
           value={
@@ -82,12 +98,20 @@ export function GeometryPanel() {
             diagnostics.nonManifoldEdges === 0 ? (
               <StatusPill status="ok">0</StatusPill>
             ) : (
-              <StatusPill status="warn">{diagnostics.nonManifoldEdges}</StatusPill>
+              <StatusPill status="warn">
+                {diagnostics.nonManifoldEdges}
+              </StatusPill>
             )
           }
         />
-        <DataRow label="Holes / boundary edges" value={`${diagnostics.holes} / ${diagnostics.boundaryEdges}`} />
-        <DataRow label="Min wall thickness" value={formatLength(diagnostics.minWallThickness, unit)} />
+        <DataRow
+          label="Holes / boundary edges"
+          value={`${diagnostics.holes} / ${diagnostics.boundaryEdges}`}
+        />
+        <DataRow
+          label="Min wall thickness"
+          value={formatLength(diagnostics.minWallThickness, unit)}
+        />
         <DataRow label="Thin features" value={diagnostics.thinFeatureCount} />
         <DataRow label="Sharp edges" value={diagnostics.sharpEdgeCount} />
         <DataRow

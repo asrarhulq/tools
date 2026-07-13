@@ -68,8 +68,9 @@ export function UploadDropzone() {
           {analyzing ? "Analyzing model…" : "Drop an STL file to analyze"}
         </h2>
         <p className="max-w-md text-sm text-[var(--color-muted-foreground)]">
-          Geometry, mass properties, stability, an approximate stress field, and
-          a full 3D-printing cost breakdown — computed in your browser.
+          Orientation, mass properties, stability, a linear-elastic FEA stress
+          field, and a full 3D-printing cost breakdown — computed in your
+          browser.
         </p>
       </div>
 

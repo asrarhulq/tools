@@ -4,9 +4,12 @@ import type { ReportData } from "./report-types";
 import { getMaterial } from "../lib/materials";
 
 /**
- * Builds a professional multi-section engineering PDF with jsPDF + autoTable:
- * cover (with viewport image), geometry, material, simulation, printing, and
- * final recommendations. Runs fully client-side and triggers a download.
+ * Builds a professional multi-section engineering PDF (jsPDF + autoTable):
+ * cover (with viewport image), geometry & mass properties, material (datasheet
+ * + as-printed), orientation, structural simulation (support-polygon stability
+ * + linear-elastic FEA, with the heat-map image), 3D-printing estimate, and
+ * engineering conclusions. Runs fully client-side and triggers a download.
+ * Every page is footed "A product by Asrar ul Haq."
  */
 
 const BRAND = [79, 70, 229] as const; // indigo, matches --color-primary
@@ -22,28 +25,33 @@ export async function generateReport(data: ReportData): Promise<void> {
   coverPage(doc, data, pageW, pageH, margin);
 
   doc.addPage();
-  let y = sectionHeader(doc, "Geometry Report", margin);
+  let y = sectionHeader(doc, "Geometry & Mass Properties", margin);
   y = geometryTables(doc, data, margin, y);
 
-  y = ensureSpace(doc, y, 60, margin);
-  y = sectionHeader(doc, "Material Report", margin, y + 6);
+  y = ensureSpace(doc, y, 70, margin);
+  y = sectionHeader(doc, "Material", margin, y + 6);
   y = materialTable(doc, data, margin, y);
 
-  y = ensureSpace(doc, y, 70, margin);
-  y = sectionHeader(doc, "Simulation Report", margin, y + 6);
-  y = simulationTables(doc, data, margin, y);
+  doc.addPage();
+  y = sectionHeader(doc, "Structural Simulation", margin);
+  y = simulationSection(doc, data, margin, y, pageW);
 
   doc.addPage();
-  y = sectionHeader(doc, "Printing Report", margin);
+  y = sectionHeader(doc, "3D-Printing Estimate", margin);
   y = printingTables(doc, data, margin, y);
 
-  y = ensureSpace(doc, y, 60, margin);
-  y = sectionHeader(doc, "Final Engineering Recommendations", margin, y + 6);
+  y = ensureSpace(doc, y, 70, margin);
+  y = sectionHeader(
+    doc,
+    "Engineering Conclusions & Recommendations",
+    margin,
+    y + 6,
+  );
   recommendations(doc, data, margin, y, pageW);
 
   addFooters(doc, pageW, pageH, margin);
 
-  doc.save(`${sanitize(data.modelName)}-engineering-report.pdf`);
+  doc.save(`${sanitize(data.modelName)}-am-report.pdf`);
 }
 
 // ── Cover ────────────────────────────────────────────────────────────────
@@ -61,51 +69,56 @@ function coverPage(
   doc.setTextColor(...INK);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(26);
-  doc.text("STL Engineering Analyzer", margin, 40);
+  doc.text("Additive Manufacturing Analyzer", margin, 40);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(13);
   doc.setTextColor(...MUTED);
-  doc.text("Engineering Analysis Report", margin, 50);
+  doc.text("3D-Printing Engineering Analysis Report", margin, 50);
 
   // Preview image (fit into a framed box).
   const boxY = 62;
   const boxW = pageW - margin * 2;
   const boxH = 110;
-  doc.setDrawColor(220);
-  doc.roundedRect(margin, boxY, boxW, boxH, 3, 3, "S");
-  if (data.previewImage) {
-    try {
-      doc.addImage(
-        data.previewImage,
-        "PNG",
-        margin + 4,
-        boxY + 4,
-        boxW - 8,
-        boxH - 8,
-        undefined,
-        "FAST",
-      );
-    } catch {
-      // Ignore malformed image data.
-    }
-  } else {
-    doc.setFontSize(11);
-    doc.text("No preview captured", pageW / 2, boxY + boxH / 2, {
-      align: "center",
-    });
-  }
+  framedImage(doc, data.previewImage, margin, boxY, boxW, boxH);
+
+  const verdict = data.stability
+    ? data.stability.willTip
+      ? "Unstable under load"
+      : "Stable under load"
+    : "—";
+  const sf = data.fea
+    ? data.fea.safetyFactor >= 999
+      ? "∞"
+      : data.fea.safetyFactor.toFixed(2)
+    : "—";
 
   const infoY = boxY + boxH + 16;
   doc.setTextColor(...INK);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
-  doc.text("Model", margin, infoY);
-  doc.text("Generated", margin, infoY + 8);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(...MUTED);
-  doc.text(data.modelName, margin + 30, infoY);
-  doc.text(new Date().toLocaleString(), margin + 30, infoY + 8);
+  doc.setFontSize(11);
+  const labels = [
+    "Model",
+    "Material",
+    "Generated",
+    "Stability",
+    "FEA safety factor",
+  ];
+  const values = [
+    data.modelName,
+    data.material.name,
+    new Date().toLocaleString(),
+    verdict,
+    sf,
+  ];
+  labels.forEach((l, i) => {
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...INK);
+    doc.text(l, margin, infoY + i * 7);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...MUTED);
+    doc.text(String(values[i]), margin + 42, infoY + i * 7);
+  });
 
   doc.setDrawColor(...BRAND);
   doc.setLineWidth(0.5);
@@ -113,12 +126,40 @@ function coverPage(
   doc.setFontSize(10);
   doc.setTextColor(...MUTED);
   doc.text("Generated by tools.asrarul.com", margin, pageH - 16);
-  doc.text("A product of Asrar ul Haq", margin, pageH - 11);
+  doc.text("A product by Asrar ul Haq.", margin, pageH - 11);
+}
+
+function framedImage(
+  doc: jsPDF,
+  image: string | null,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+) {
+  doc.setDrawColor(220);
+  doc.roundedRect(x, y, w, h, 3, 3, "S");
+  if (image) {
+    try {
+      doc.addImage(image, "PNG", x + 4, y + 4, w - 8, h - 8, undefined, "FAST");
+      return;
+    } catch {
+      // fall through to placeholder
+    }
+  }
+  doc.setFontSize(11);
+  doc.setTextColor(...MUTED);
+  doc.text("No preview captured", x + w / 2, y + h / 2, { align: "center" });
 }
 
 // ── Section helpers ─────────────────────────────────────────────────────────
 
-function sectionHeader(doc: jsPDF, title: string, margin: number, y = 22): number {
+function sectionHeader(
+  doc: jsPDF,
+  title: string,
+  margin: number,
+  y = 22,
+): number {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(15);
   doc.setTextColor(...BRAND);
@@ -144,19 +185,13 @@ function table(
     theme: "striped",
     styles: { fontSize: 9.5, cellPadding: 2 },
     headStyles: { fillColor: [...BRAND], textColor: 255 },
-    columnStyles: { 0: { cellWidth: 70, textColor: [...MUTED] } },
+    columnStyles: { 0: { cellWidth: 72, textColor: [...MUTED] } },
   });
   return lastFinalY(doc, startY + 10);
 }
 
-/**
- * autoTable records the ending Y on `doc.lastAutoTable.finalY` at runtime, but
- * that property isn't in jsPDF's public type. Read it through a narrow cast.
- */
 function lastFinalY(doc: jsPDF, fallback: number): number {
-  const withTable = doc as jsPDF & {
-    lastAutoTable?: { finalY?: number };
-  };
+  const withTable = doc as jsPDF & { lastAutoTable?: { finalY?: number } };
   return withTable.lastAutoTable?.finalY ?? fallback;
 }
 
@@ -178,49 +213,59 @@ function ensureSpace(
 
 function geometryTables(
   doc: jsPDF,
-  { geometry }: ReportData,
+  { geometry, orientation }: ReportData,
   margin: number,
   y: number,
 ): number {
   const { boundingBox: bb, diagnostics: d, quality: q } = geometry;
   const f = (n: number, u = "mm") => `${n.toFixed(2)} ${u}`;
-  y = table(
+  return table(
     doc,
     y,
     margin,
     [
-      ["Dimensions (X × Y × Z)", `${bb.size.map((s) => s.toFixed(1)).join(" × ")} mm`],
+      [
+        "Orientation (X, Y, Z)",
+        `${orientation.rx.toFixed(0)}°, ${orientation.ry.toFixed(0)}°, ${orientation.rz.toFixed(0)}°`,
+      ],
+      [
+        "Footprint (X × Y)",
+        `${bb.size[0].toFixed(1)} × ${bb.size[1].toFixed(1)} mm`,
+      ],
+      ["Height (Z)", f(bb.size[2])],
       ["Volume", f(geometry.volume, "mm³")],
       ["Surface area", f(geometry.surfaceArea, "mm²")],
-      ["Center of mass", geometry.centerOfMass.map((c) => c.toFixed(1)).join(", ")],
+      [
+        "Center of mass",
+        geometry.centerOfMass.map((c) => c.toFixed(1)).join(", "),
+      ],
       ["Triangles", q.triangleCount.toLocaleString()],
       ["Unique vertices", q.uniqueVertexCount.toLocaleString()],
       ["Watertight", d.watertight ? "Yes" : "No"],
       ["Non-manifold edges", String(d.nonManifoldEdges)],
       ["Holes", String(d.holes)],
-      ["Min wall thickness", f(d.minWallThickness)],
+      ["Overhang area", `${(d.overhangArea * 100).toFixed(0)}%`],
       ["Printability score", `${geometry.printabilityScore}/100`],
       ["Mesh quality score", `${q.score}/100`],
       ["Complexity score", `${geometry.complexityScore}/100`],
     ],
     ["Geometry", "Value"],
   );
-  return y;
 }
 
 function materialTable(
   doc: jsPDF,
-  { material }: ReportData,
+  { material, effective }: ReportData,
   margin: number,
   y: number,
 ): number {
-  return table(
+  y = table(
     doc,
     y,
     margin,
     [
       ["Material", material.name],
-      ["Density", `${material.density} g/cm³`],
+      ["Density (solid)", `${material.density} g/cm³`],
       ["Young's modulus", `${material.youngsModulus} MPa`],
       ["Yield strength", `${material.yieldStrength} MPa`],
       ["Ultimate strength", `${material.ultimateStrength} MPa`],
@@ -228,38 +273,169 @@ function materialTable(
       ["Thermal expansion", `${material.thermalExpansion} µm/m·°C`],
       ["Cost", `$${material.costPerKg}/kg`],
     ],
-    ["Property", "Value"],
+    ["Datasheet Property", "Value"],
   );
+
+  if (effective) {
+    y = table(
+      doc,
+      y + 4,
+      margin,
+      [
+        [
+          "Solid fraction (walls + infill)",
+          `${(effective.solidFraction * 100).toFixed(0)}%`,
+        ],
+        [
+          "Effective modulus (in-plane)",
+          `${effective.modulusXY.toFixed(0)} MPa`,
+        ],
+        ["Effective modulus (build Z)", `${effective.modulusZ.toFixed(0)} MPa`],
+        [
+          "Effective strength (in-plane)",
+          `${effective.strengthXY.toFixed(1)} MPa`,
+        ],
+        [
+          "Effective strength (interlayer Z)",
+          `${effective.strengthZ.toFixed(1)} MPa`,
+        ],
+        [
+          "Layer anisotropy (Z/XY)",
+          `${(effective.anisotropy * 100).toFixed(0)}%`,
+        ],
+        ["Effective density", `${effective.density.toFixed(2)} g/cm³`],
+      ],
+      ["As-Printed Property", "Value"],
+    );
+  }
+  return y;
 }
 
-function simulationTables(
+function simulationSection(
   doc: jsPDF,
-  { stability, fea, forces }: ReportData,
+  data: ReportData,
   margin: number,
   y: number,
+  pageW: number,
 ): number {
-  const rows: Array<[string, string]> = [];
-  rows.push(["Applied forces", String(forces.length)]);
-  if (stability) {
-    rows.push(["Estimated mass", `${stability.massGrams.toFixed(1)} g`]);
-    rows.push(["Tipping factor", stability.tippingThreshold.toFixed(2)]);
-    rows.push(["Overturning torque", `${stability.overturningTorque.toFixed(2)} N·m`]);
-    rows.push(["Restoring torque", `${stability.restoringTorque.toFixed(2)} N·m`]);
-    rows.push(["Verdict", stability.willTip ? "Tips over" : "Stable"]);
+  const { stability, fea, forces, constraint } = data;
+
+  // Constraint + force summary.
+  y = table(
+    doc,
+    y,
+    margin,
+    [
+      ["Constraint", constraintLabel(constraint.mode)],
+      ["Applied forces", String(forces.length)],
+    ],
+    ["Load Case", "Value"],
+  );
+
+  // Per-force list.
+  if (forces.length) {
+    autoTable(doc, {
+      startY: y + 4,
+      margin: { left: margin, right: margin },
+      head: [["Force", "Magnitude", "Direction", "Location (mm)"]],
+      body: forces.map((f) => [
+        f.name,
+        `${f.magnitude} N`,
+        `[${f.direction.map((d) => d.toFixed(1)).join(", ")}]`,
+        `[${f.point.map((p) => p.toFixed(0)).join(", ")}]`,
+      ]),
+      theme: "striped",
+      styles: { fontSize: 9, cellPadding: 2 },
+      headStyles: { fillColor: [...BRAND], textColor: 255 },
+    });
+    y = lastFinalY(doc, y + 10);
   }
+
+  // Stability.
+  if (stability) {
+    y = ensureSpace(doc, y, 60, margin);
+    y = table(
+      doc,
+      y + 4,
+      margin,
+      [
+        ["Mass", `${stability.massGrams.toFixed(1)} g`],
+        [
+          "Center of gravity",
+          stability.centerOfGravity.map((c) => c.toFixed(1)).join(", "),
+        ],
+        [
+          "CoG over support polygon",
+          stability.cogInsidePolygon ? "Inside" : "Outside",
+        ],
+        ["Stability margin", `${stability.stabilityMargin.toFixed(1)} mm`],
+        ["Overturning moment", `${stability.overturningTorque.toFixed(2)} N·m`],
+        ["Restoring moment", `${stability.restoringTorque.toFixed(2)} N·m`],
+        [
+          "Factor of safety (tipping)",
+          stability.tippingThreshold >= 999
+            ? "∞"
+            : stability.tippingThreshold.toFixed(2),
+        ],
+        ["Verdict", stability.willTip ? "Tips over" : "Stable"],
+      ],
+      ["Stability", "Result"],
+    );
+  }
+
+  // FEA numbers + image.
   if (fea) {
-    rows.push(["Max von Mises stress", `${fea.maxStress.toFixed(2)} MPa (approx.)`]);
-    rows.push(["Max displacement", `${fea.maxDisplacement.toFixed(3)} mm`]);
-    rows.push(["Estimated strain", fea.estimatedStrain.toExponential(2)]);
-    rows.push([
-      "Safety factor",
-      fea.safetyFactor >= 999 ? "∞" : fea.safetyFactor.toFixed(2),
+    y = ensureSpace(doc, y, 70, margin);
+    y = table(
+      doc,
+      y + 4,
+      margin,
+      [
+        ["Method", "Linear-elastic voxel-hex FEM"],
+        [
+          "Mesh resolution",
+          `${fea.resolution}³ voxels (${fea.elementCount.toLocaleString()} elements)`,
+        ],
+        ["Solver converged", fea.converged ? "Yes" : "Max iterations"],
+        ["Max von Mises stress", `${fea.maxStress.toFixed(2)} MPa`],
+        ["Max displacement", `${fea.maxDisplacement.toFixed(3)} mm`],
+        ["Estimated peak strain", fea.estimatedStrain.toExponential(2)],
+        [
+          "Safety factor",
+          fea.safetyFactor >= 999 ? "∞" : fea.safetyFactor.toFixed(2),
+        ],
+      ],
+      ["FEA", "Result"],
+    );
+
+    if (data.feaImage) {
+      y = ensureSpace(doc, y, 96, margin);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.setTextColor(...INK);
+      doc.text("Von Mises stress field", margin, y + 6);
+      framedImage(doc, data.feaImage, margin, y + 9, pageW - margin * 2, 82);
+      y += 94;
+    }
+  } else {
+    y = table(doc, y + 4, margin, [
+      ["Note", "No load case defined — add forces to run FEA."],
     ]);
   }
-  if (rows.length === 1) {
-    rows.push(["Note", "No load case defined — add forces/supports for FEA."]);
+  return y;
+}
+
+function constraintLabel(mode: string): string {
+  switch (mode) {
+    case "build-plate":
+      return "Build plate fixed";
+    case "bottom-face":
+      return "Bottom face fixed";
+    case "selected-face":
+      return "Selected face fixed";
+    default:
+      return "Custom constraints";
   }
-  return table(doc, y, margin, rows, ["Simulation", "Result"]);
 }
 
 function printingTables(
@@ -277,7 +453,8 @@ function printingTables(
       ["Infill", `${s.infillPercent}% ${s.infillPattern}`],
       ["Layer height", `${s.layerHeight} mm`],
       ["Nozzle", `${s.nozzleDiameter} mm`],
-      ["Walls / top-bottom", `${s.wallCount} / ${s.topBottomLayers}`],
+      ["Walls", `${s.wallCount}`],
+      ["Top / bottom layers", `${s.topLayers} / ${s.bottomLayers}`],
       ["Print speed", `${s.printSpeed} mm/s`],
       ["Supports", s.supports ? "Yes" : "No"],
       ["Adhesion", s.brimRaft],
@@ -310,20 +487,38 @@ function printingTables(
 
 function recommendations(
   doc: jsPDF,
-  { recommendation, stability }: ReportData,
+  { recommendation, stability, fea }: ReportData,
   margin: number,
   y: number,
   pageW: number,
 ) {
   const lines: string[] = [];
+  if (fea) {
+    if (fea.safetyFactor < 1) {
+      lines.push(
+        `The current load case yields (safety factor ${fea.safetyFactor.toFixed(2)} < 1). Reduce the load, reinforce the part, increase infill/walls, or select a stronger material.`,
+      );
+    } else if (fea.safetyFactor < 2) {
+      lines.push(
+        `Marginal safety factor (${fea.safetyFactor.toFixed(2)}). Consider more infill or walls for a robust design margin.`,
+      );
+    } else {
+      lines.push(
+        `Healthy structural margin (safety factor ${fea.safetyFactor.toFixed(2)}). The design withstands the applied load with room to spare.`,
+      );
+    }
+  }
+  if (stability) lines.push(`Stability: ${stability.recommendation}`);
   if (recommendation) {
-    lines.push(`Best material: ${getMaterial(recommendation.bestMaterialId).name}`);
-    lines.push(`Recommended infill: ${recommendation.infillPercent}%`);
-    lines.push(`Recommended layer height: ${recommendation.layerHeight} mm`);
+    lines.push(
+      `Suggested material: ${getMaterial(recommendation.bestMaterialId).name}.`,
+    );
+    lines.push(
+      `Suggested infill: ${recommendation.infillPercent}%; layer height ${recommendation.layerHeight} mm.`,
+    );
     lines.push(`Orientation: ${recommendation.orientation}`);
     lines.push(`Supports: ${recommendation.supportStrategy}`);
   }
-  if (stability) lines.push(`Stability: ${stability.recommendation}`);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
@@ -342,8 +537,14 @@ function addFooters(doc: jsPDF, pageW: number, pageH: number, margin: number) {
     doc.setPage(i);
     doc.setFontSize(8);
     doc.setTextColor(...MUTED);
-    doc.text("Generated by tools.asrarul.com  ·  A product of Asrar ul Haq", margin, pageH - 8);
-    doc.text(`Page ${i} / ${pages}`, pageW - margin, pageH - 8, { align: "right" });
+    doc.text(
+      "Generated by tools.asrarul.com  ·  A product by Asrar ul Haq.",
+      margin,
+      pageH - 8,
+    );
+    doc.text(`Page ${i} / ${pages}`, pageW - margin, pageH - 8, {
+      align: "right",
+    });
   }
 }
 

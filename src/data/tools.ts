@@ -71,16 +71,16 @@ export const tools: readonly Tool[] = [
   {
     id: "eng-tool-1",
     slug: "eng-tool-1",
-    title: "STL Engineering Analyzer",
+    title: "Additive Manufacturing Analyzer",
     description:
-      "Upload STL models to analyze geometry, stability, stress, and 3D-printing cost.",
+      "Analyze 3D-printable polymer parts: orientation, mass, stability, FEA stress, and print cost.",
     longDescription:
-      "A CAD-style workspace that inspects STL models in an interactive 3D " +
-      "viewport and computes geometry and mass properties, rigid-body " +
-      "stability, an approximate von Mises stress field, and a full 3D-printing " +
-      "cost and feasibility analysis — with a downloadable engineering PDF report. " +
-      "Built on Three.js and React Three Fiber, architected to add OBJ, GLTF/GLB, " +
-      "and STEP (via conversion) next.",
+      "A CAD/CAE-style workspace for additive manufacturing. Upload an STL of a " +
+      "3D-printable plastic part, orient it on a virtual build plate, and get " +
+      "mass properties, rigid-body stability, a linear-elastic FEA stress and " +
+      "displacement field, and a full 3D-printing cost and feasibility analysis " +
+      "— with a downloadable engineering PDF report. Built on Three.js and React " +
+      "Three Fiber, architected to add OBJ, GLTF/GLB, and STEP (via conversion) next.",
     category: "engineering",
     icon: "boxes",
     difficulty: "advanced",
@@ -89,15 +89,18 @@ export const tools: readonly Tool[] = [
     popular: true,
     addedAt: "2026-07-12",
     keywords: [
+      "3d printing",
+      "additive manufacturing",
+      "fdm",
       "stl",
-      "cad",
       "fea",
       "stress analysis",
-      "3d printing",
-      "mesh analysis",
+      "polymer parts",
+      "print orientation",
       "center of mass",
+      "stability",
+      "cad",
       "three.js",
-      "step",
     ],
     capabilities: {
       viewer3d: true,

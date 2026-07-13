@@ -18,7 +18,10 @@ export function DataRow({
       <span className="text-sm text-[var(--color-muted-foreground)]">
         {label}
       </span>
-      <span className="text-right text-sm font-medium tabular-nums" title={hint}>
+      <span
+        className="text-right text-sm font-medium tabular-nums"
+        title={hint}
+      >
         {value}
       </span>
     </div>
@@ -72,16 +75,14 @@ export function ScoreMeter({
 }) {
   const good = invert ? score < 40 : score > 66;
   const mid = invert ? score < 70 : score > 33;
-  const color = good
-    ? "#22c55e"
-    : mid
-      ? "#f59e0b"
-      : "#ef4444";
+  const color = good ? "#22c55e" : mid ? "#f59e0b" : "#ef4444";
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between text-sm">
         <span className="text-[var(--color-muted-foreground)]">{label}</span>
-        <span className="font-medium tabular-nums">{Math.round(score)}/100</span>
+        <span className="font-medium tabular-nums">
+          {Math.round(score)}/100
+        </span>
       </div>
       <div className="h-2 overflow-hidden rounded-full bg-[var(--color-muted)]">
         <motion.div
@@ -108,13 +109,65 @@ export function StatusPill({
     <span
       className={cn(
         "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
-        status === "ok" && "bg-emerald-500/12 text-emerald-600 dark:text-emerald-400",
-        status === "warn" && "bg-amber-500/12 text-amber-600 dark:text-amber-400",
+        status === "ok" &&
+          "bg-emerald-500/12 text-emerald-600 dark:text-emerald-400",
+        status === "warn" &&
+          "bg-amber-500/12 text-amber-600 dark:text-amber-400",
         status === "bad" && "bg-rose-500/12 text-rose-600 dark:text-rose-400",
       )}
     >
       {children}
     </span>
+  );
+}
+
+/** A compact labelled number input used across the control panels. */
+export function NumberField({
+  label,
+  value,
+  onChange,
+  step = 1,
+  min,
+  max,
+  suffix,
+  className,
+}: {
+  label?: string;
+  value: number;
+  onChange: (value: number) => void;
+  step?: number;
+  min?: number;
+  max?: number;
+  suffix?: string;
+  className?: string;
+}) {
+  return (
+    <label className={cn("block", className)}>
+      {label ? (
+        <span className="mb-1 block text-xs text-[var(--color-muted-foreground)]">
+          {label}
+        </span>
+      ) : null}
+      <span className="flex items-center gap-1.5">
+        <input
+          type="number"
+          value={Number.isFinite(value) ? value : 0}
+          step={step}
+          min={min}
+          max={max}
+          onChange={(e) => {
+            const n = Number(e.target.value);
+            if (Number.isFinite(n)) onChange(n);
+          }}
+          className="w-full min-w-0 rounded-lg border border-[var(--color-border)] bg-transparent px-2.5 py-1.5 text-sm tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
+        />
+        {suffix ? (
+          <span className="shrink-0 text-xs text-[var(--color-muted-foreground)]">
+            {suffix}
+          </span>
+        ) : null}
+      </span>
+    </label>
   );
 }
 

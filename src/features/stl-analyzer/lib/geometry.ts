@@ -26,10 +26,16 @@ function triAt(positions: Float32Array, i: number): [Vec3, Vec3, Vec3] {
 }
 
 export function computeBoundingBox(positions: Float32Array): BoundingBox {
-  let minX = Infinity, minY = Infinity, minZ = Infinity;
-  let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+  let minX = Infinity,
+    minY = Infinity,
+    minZ = Infinity;
+  let maxX = -Infinity,
+    maxY = -Infinity,
+    maxZ = -Infinity;
   for (let i = 0; i < positions.length; i += 3) {
-    const x = positions[i]!, y = positions[i + 1]!, z = positions[i + 2]!;
+    const x = positions[i]!,
+      y = positions[i + 1]!,
+      z = positions[i + 2]!;
     if (x < minX) minX = x;
     if (y < minY) minY = y;
     if (z < minZ) minZ = z;
@@ -72,7 +78,9 @@ export function computeSurfaceArea(positions: Float32Array): number {
 /** Center of mass of a solid, uniform-density body (tetrahedron decomposition). */
 export function computeCenterOfMass(positions: Float32Array): Vec3 {
   let vol = 0;
-  let cx = 0, cy = 0, cz = 0;
+  let cx = 0,
+    cy = 0,
+    cz = 0;
   const triangles = positions.length / 9;
   for (let i = 0; i < triangles; i++) {
     const [a, b, c] = triAt(positions, i);
@@ -121,8 +129,14 @@ function buildTopology(positions: Float32Array) {
   const edgeUse = new Map<string, number>();
   const edgeKey = (a: number, b: number) => (a < b ? `${a}_${b}` : `${b}_${a}`);
   for (let i = 0; i < triangles; i++) {
-    const a = indices[i * 3]!, b = indices[i * 3 + 1]!, c = indices[i * 3 + 2]!;
-    for (const [u, w] of [[a, b], [b, c], [c, a]] as const) {
+    const a = indices[i * 3]!,
+      b = indices[i * 3 + 1]!,
+      c = indices[i * 3 + 2]!;
+    for (const [u, w] of [
+      [a, b],
+      [b, c],
+      [c, a],
+    ] as const) {
       const k = edgeKey(u, w);
       edgeUse.set(k, (edgeUse.get(k) ?? 0) + 1);
     }
@@ -144,7 +158,9 @@ export function analyzeMeshQuality(positions: Float32Array): MeshQuality {
       degenerate++;
       continue;
     }
-    const e0 = distance(a, b), e1 = distance(b, c), e2 = distance(c, a);
+    const e0 = distance(a, b),
+      e1 = distance(b, c),
+      e2 = distance(c, a);
     const longest = Math.max(e0, e1, e2);
     const shortest = Math.min(e0, e1, e2) || EPS;
     if (longest / shortest > 20) badAspect++;
@@ -227,7 +243,12 @@ export function computePrincipalAxes(
   center: Vec3,
 ): readonly [Vec3, Vec3, Vec3] {
   // Build a symmetric 3×3 covariance matrix.
-  let xx = 0, xy = 0, xz = 0, yy = 0, yz = 0, zz = 0;
+  let xx = 0,
+    xy = 0,
+    xz = 0,
+    yy = 0,
+    yz = 0,
+    zz = 0;
   const triangles = positions.length / 9;
   let wsum = 0;
   for (let i = 0; i < triangles; i++) {
@@ -236,12 +257,21 @@ export function computePrincipalAxes(
     const cx = (a[0] + b[0] + c[0]) / 3 - center[0];
     const cy = (a[1] + b[1] + c[1]) / 3 - center[1];
     const cz = (a[2] + b[2] + c[2]) / 3 - center[2];
-    xx += w * cx * cx; xy += w * cx * cy; xz += w * cx * cz;
-    yy += w * cy * cy; yz += w * cy * cz; zz += w * cz * cz;
+    xx += w * cx * cx;
+    xy += w * cx * cy;
+    xz += w * cx * cz;
+    yy += w * cy * cy;
+    yz += w * cy * cz;
+    zz += w * cz * cz;
     wsum += w;
   }
   if (wsum > 0) {
-    xx /= wsum; xy /= wsum; xz /= wsum; yy /= wsum; yz /= wsum; zz /= wsum;
+    xx /= wsum;
+    xy /= wsum;
+    xz /= wsum;
+    yy /= wsum;
+    yz /= wsum;
+    zz /= wsum;
   }
   // Jacobi eigen-decomposition of the symmetric matrix.
   return jacobiEigenvectors([
@@ -252,9 +282,7 @@ export function computePrincipalAxes(
 }
 
 /** Classic Jacobi rotation for a symmetric 3×3; returns eigenvectors as rows. */
-function jacobiEigenvectors(
-  m: number[][],
-): readonly [Vec3, Vec3, Vec3] {
+function jacobiEigenvectors(m: number[][]): readonly [Vec3, Vec3, Vec3] {
   const a = m.map((r) => r.slice());
   const v = [
     [1, 0, 0],
@@ -262,28 +290,43 @@ function jacobiEigenvectors(
     [0, 0, 1],
   ];
   for (let sweep = 0; sweep < 24; sweep++) {
-    let p = 0, q = 1;
+    let p = 0,
+      q = 1;
     let max = Math.abs(a[0]![1]!);
-    if (Math.abs(a[0]![2]!) > max) { max = Math.abs(a[0]![2]!); p = 0; q = 2; }
-    if (Math.abs(a[1]![2]!) > max) { max = Math.abs(a[1]![2]!); p = 1; q = 2; }
+    if (Math.abs(a[0]![2]!) > max) {
+      max = Math.abs(a[0]![2]!);
+      p = 0;
+      q = 2;
+    }
+    if (Math.abs(a[1]![2]!) > max) {
+      max = Math.abs(a[1]![2]!);
+      p = 1;
+      q = 2;
+    }
     if (max < 1e-10) break;
 
-    const app = a[p]![p]!, aqq = a[q]![q]!, apq = a[p]![q]!;
+    const app = a[p]![p]!,
+      aqq = a[q]![q]!,
+      apq = a[p]![q]!;
     const phi = 0.5 * Math.atan2(2 * apq, aqq - app);
-    const cos = Math.cos(phi), sin = Math.sin(phi);
+    const cos = Math.cos(phi),
+      sin = Math.sin(phi);
 
     for (let i = 0; i < 3; i++) {
-      const aip = a[i]![p]!, aiq = a[i]![q]!;
+      const aip = a[i]![p]!,
+        aiq = a[i]![q]!;
       a[i]![p] = cos * aip - sin * aiq;
       a[i]![q] = sin * aip + cos * aiq;
     }
     for (let i = 0; i < 3; i++) {
-      const api = a[p]![i]!, aqi = a[q]![i]!;
+      const api = a[p]![i]!,
+        aqi = a[q]![i]!;
       a[p]![i] = cos * api - sin * aqi;
       a[q]![i] = sin * api + cos * aqi;
     }
     for (let i = 0; i < 3; i++) {
-      const vip = v[i]![p]!, viq = v[i]![q]!;
+      const vip = v[i]![p]!,
+        viq = v[i]![q]!;
       v[i]![p] = cos * vip - sin * viq;
       v[i]![q] = sin * vip + cos * viq;
     }
@@ -340,4 +383,46 @@ export function analyzeGeometry(mesh: RawMesh): GeometryResult {
 
 function clamp(n: number, min = 0, max = 100): number {
   return Math.max(min, Math.min(max, n));
+}
+
+/**
+ * Recompute only the orientation-dependent parts of a geometry result for an
+ * oriented positions array, reusing the orientation-invariant fields (volume,
+ * surface area, quality, topology, complexity) from the base result. This keeps
+ * live re-orientation cheap — no worker round-trip, no re-welding topology.
+ *
+ * Orientation-dependent: bounding box, centre of mass, principal axes, and the
+ * overhang fraction (measured against the current build direction, −Z).
+ */
+export function reorientGeometry(
+  base: GeometryResult,
+  orientedPositions: Float32Array,
+): GeometryResult {
+  const boundingBox = computeBoundingBox(orientedPositions);
+  const centerOfMass = computeCenterOfMass(orientedPositions);
+  const principalAxes = computePrincipalAxes(orientedPositions, centerOfMass);
+
+  // Overhang fraction against the (fixed) build direction.
+  const triangles = orientedPositions.length / 9;
+  const overhangCos = Math.cos((45 * Math.PI) / 180);
+  let downwardArea = 0;
+  let totalArea = 0;
+  for (let i = 0; i < triangles; i++) {
+    const [a, b, c] = triAt(orientedPositions, i);
+    const n = normalize(cross(sub(b, a), sub(c, a)));
+    const area = length(cross(sub(b, a), sub(c, a))) / 2;
+    totalArea += area;
+    if (-n[2] > overhangCos) downwardArea += area;
+  }
+
+  return {
+    ...base,
+    boundingBox,
+    centerOfMass,
+    principalAxes,
+    diagnostics: {
+      ...base.diagnostics,
+      overhangArea: totalArea ? downwardArea / totalArea : 0,
+    },
+  };
 }

@@ -31,8 +31,17 @@ export function estimatePrint(
   const wallThickness = settings.wallCount * settings.nozzleDiameter;
   const shellVolume = Math.min(volumeMm3, surfaceMm2 * wallThickness);
   const interiorVolume = Math.max(0, volumeMm3 - shellVolume);
+  // Top/bottom solid skins add fully-dense material on the flat faces.
+  const skinVolume = Math.min(
+    interiorVolume,
+    geometry.boundingBox.size[0] *
+      geometry.boundingBox.size[1] *
+      (settings.topLayers + settings.bottomLayers) *
+      settings.layerHeight,
+  );
+  const coreVolume = Math.max(0, interiorVolume - skinVolume);
   const solidVolume =
-    shellVolume + interiorVolume * (settings.infillPercent / 100);
+    shellVolume + skinVolume + coreVolume * (settings.infillPercent / 100);
 
   // Support material estimate from overhang fraction.
   const supportVolume = settings.supports
@@ -62,8 +71,7 @@ export function estimatePrint(
 
   // Feasibility signals.
   const warpRisk = clamp01(
-    (material.thermalExpansion - 60) / 80 +
-      geometry.boundingBox.size[0] / 400,
+    (material.thermalExpansion - 60) / 80 + geometry.boundingBox.size[0] / 400,
   );
   const failureRisk = clamp01(
     geometry.diagnostics.overhangArea * 0.6 +
@@ -89,9 +97,7 @@ export function estimatePrint(
   };
 }
 
-export function recommendPrint(
-  geometry: GeometryResult,
-): PrintRecommendation {
+export function recommendPrint(geometry: GeometryResult): PrintRecommendation {
   const overhang = geometry.diagnostics.overhangArea;
   const tall =
     geometry.boundingBox.size[2] >
@@ -123,7 +129,8 @@ export const DEFAULT_PRINT_SETTINGS: PrintSettings = {
   layerHeight: 0.2,
   nozzleDiameter: 0.4,
   wallCount: 3,
-  topBottomLayers: 4,
+  topLayers: 4,
+  bottomLayers: 4,
   printSpeed: 60,
   supports: false,
   brimRaft: "none",

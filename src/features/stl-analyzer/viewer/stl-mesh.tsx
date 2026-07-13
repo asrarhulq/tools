@@ -4,7 +4,7 @@ import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import type { FeaResult, GeometryResult, RawMesh } from "../types";
 import type { ViewerOptions } from "../state/viewer-options";
-import { stressToColor } from "../lib/fea";
+import { stressToColor } from "../lib/colormap";
 
 /**
  * Renders the analyzed mesh. Builds a BufferGeometry from the raw positions
@@ -35,17 +35,24 @@ export function StlMesh({
     return g;
   }, [mesh]);
 
-  // Apply stress-based vertex colors when the FEA overlay is on.
+  // Apply the FEA result as per-vertex colors. The solver returns one stress and
+  // one displacement value per render-vertex position (mapped spatially, not by
+  // index), so we color each vertex directly — no modulo hack.
   useMemo(() => {
-    if (options.showStress && fea) {
+    const field =
+      options.showStress && fea
+        ? options.feaField === "displacement"
+          ? { values: fea.vertexDisplacement, max: fea.maxDisplacement }
+          : { values: fea.vertexStress, max: fea.maxStress }
+        : null;
+
+    if (field) {
       const count = mesh.positions.length / 3;
       const colors = new Float32Array(count * 3);
-      // Map each triangle-vertex to the nearest unique-vertex stress by index
-      // parity; for the approximation this per-position mapping reads well.
-      const maxStress = fea.maxStress || 1;
+      const max = field.max || 1;
       for (let i = 0; i < count; i++) {
-        const s = fea.vertexStress[i % fea.vertexStress.length] ?? 0;
-        const [r, g, b] = stressToColor(s, maxStress);
+        const v = field.values[i] ?? 0;
+        const [r, g, b] = stressToColor(v, max);
         colors[i * 3] = r;
         colors[i * 3 + 1] = g;
         colors[i * 3 + 2] = b;
@@ -57,7 +64,7 @@ export function StlMesh({
     } else {
       bufferGeometry.deleteAttribute("color");
     }
-  }, [options.showStress, fea, mesh, bufferGeometry]);
+  }, [options.showStress, options.feaField, fea, mesh, bufferGeometry]);
 
   const clippingPlanes = useMemo(() => {
     if (!options.clippingEnabled) return [];
@@ -69,16 +76,20 @@ export function StlMesh({
     return [new THREE.Plane(new THREE.Vector3(-1, 0, 0), x)];
   }, [options.clippingEnabled, options.clipX, geometry.boundingBox]);
 
+  const showField = options.showStress && !!fea;
+
   return (
     <mesh ref={meshRef} geometry={bufferGeometry} castShadow receiveShadow>
       <meshStandardMaterial
-        vertexColors={options.showStress && !!fea}
-        color={options.showStress && fea ? "#ffffff" : "#8b8ff5"}
+        vertexColors={showField}
+        color={showField ? "#ffffff" : "#9aa2ff"}
         wireframe={options.wireframe}
         transparent={options.transparent}
-        opacity={options.transparent ? 0.4 : 1}
-        metalness={0.1}
-        roughness={0.55}
+        opacity={options.transparent ? 0.35 : 1}
+        // Field view reads truer as a matte surface; default is a soft metal.
+        metalness={showField ? 0.0 : 0.25}
+        roughness={showField ? 0.9 : 0.42}
+        envMapIntensity={showField ? 0.2 : 0.9}
         side={THREE.DoubleSide}
         clippingPlanes={clippingPlanes}
         clipShadows

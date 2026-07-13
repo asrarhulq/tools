@@ -10,24 +10,28 @@ import {
 } from "react";
 import { toast } from "sonner";
 import type {
+  Constraint,
   Force,
   GeometryResult,
   LoadedModel,
   Material,
+  Orientation,
   PrintSettings,
   RawMesh,
   Support,
   Unit,
+  Vec3,
 } from "../types";
+import { IDENTITY_ORIENTATION } from "../types";
 import { parseStl } from "../lib/stl-parser";
 import { inferFormat } from "../lib/format";
 import { DEFAULT_MATERIAL_ID, getMaterial } from "../lib/materials";
 import { DEFAULT_PRINT_SETTINGS } from "../lib/printing";
+import { bestFlatOrientation } from "../lib/orientation";
 import type { AnalyzeRequest, AnalyzeResponse } from "../lib/worker-protocol";
-import {
-  DEFAULT_VIEWER_OPTIONS,
-  type ViewerOptions,
-} from "./viewer-options";
+import { DEFAULT_VIEWER_OPTIONS, type ViewerOptions } from "./viewer-options";
+
+let forceSeq = 0;
 
 interface AnalyzerState {
   model: LoadedModel | null;
@@ -36,7 +40,11 @@ interface AnalyzerState {
   analyzing: boolean;
   material: Material;
   unit: Unit;
+  orientation: Orientation;
+  constraint: Constraint;
   forces: Force[];
+  /** Magnitude/direction used when placing a force by clicking the viewport. */
+  forceDraft: { magnitude: number; direction: Vec3 };
   supports: Support[];
   print: PrintSettings;
   viewer: ViewerOptions;
@@ -47,7 +55,14 @@ interface AnalyzerContextValue extends AnalyzerState {
   clearModel: () => void;
   setMaterial: (material: Material) => void;
   setUnit: (unit: Unit) => void;
-  addForce: (force: Omit<Force, "id">) => void;
+  setOrientation: (patch: Partial<Orientation>) => void;
+  rotateBy: (axis: "rx" | "ry" | "rz", deltaDeg: number) => void;
+  resetOrientation: () => void;
+  layFlat: () => void;
+  setConstraint: (constraint: Constraint) => void;
+  addForce: (force: Omit<Force, "id" | "name"> & { name?: string }) => void;
+  updateForce: (id: string, patch: Partial<Omit<Force, "id">>) => void;
+  setForceDraft: (patch: Partial<AnalyzerState["forceDraft"]>) => void;
   removeForce: (id: string) => void;
   clearForces: () => void;
   addSupport: (point: Support["point"]) => void;
@@ -69,7 +84,10 @@ export function AnalyzerProvider({ children }: { children: React.ReactNode }) {
     analyzing: false,
     material: getMaterial(DEFAULT_MATERIAL_ID),
     unit: "mm",
+    orientation: IDENTITY_ORIENTATION,
+    constraint: { mode: "build-plate" },
     forces: [],
+    forceDraft: { magnitude: 50, direction: [0, 0, -1] },
     supports: [],
     print: DEFAULT_PRINT_SETTINGS,
     viewer: DEFAULT_VIEWER_OPTIONS,
@@ -152,6 +170,8 @@ export function AnalyzerProvider({ children }: { children: React.ReactNode }) {
           mesh,
           geometry,
           analyzing: false,
+          orientation: IDENTITY_ORIENTATION,
+          constraint: { mode: "build-plate" },
           forces: [],
           supports: [],
         }));
@@ -161,8 +181,7 @@ export function AnalyzerProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         setState((s) => ({ ...s, analyzing: false }));
         toast.error("Could not analyze file", {
-          description:
-            error instanceof Error ? error.message : "Unknown error",
+          description: error instanceof Error ? error.message : "Unknown error",
         });
       }
     },
@@ -177,6 +196,8 @@ export function AnalyzerProvider({ children }: { children: React.ReactNode }) {
         model: null,
         mesh: null,
         geometry: null,
+        orientation: IDENTITY_ORIENTATION,
+        constraint: { mode: "build-plate" },
         forces: [],
         supports: [],
       };
@@ -191,12 +212,63 @@ export function AnalyzerProvider({ children }: { children: React.ReactNode }) {
     setState((s) => ({ ...s, unit }));
   }, []);
 
-  const addForce = useCallback((force: Omit<Force, "id">) => {
-    setState((s) => ({
-      ...s,
-      forces: [...s.forces, { ...force, id: `f${Date.now()}${s.forces.length}` }],
-    }));
+  const setOrientation = useCallback((patch: Partial<Orientation>) => {
+    setState((s) => ({ ...s, orientation: { ...s.orientation, ...patch } }));
   }, []);
+
+  const rotateBy = useCallback((axis: "rx" | "ry" | "rz", deltaDeg: number) => {
+    setState((s) => {
+      const next = (((s.orientation[axis] + deltaDeg) % 360) + 360) % 360;
+      return { ...s, orientation: { ...s.orientation, [axis]: next } };
+    });
+  }, []);
+
+  const resetOrientation = useCallback(() => {
+    setState((s) => ({ ...s, orientation: IDENTITY_ORIENTATION }));
+  }, []);
+
+  const layFlat = useCallback(() => {
+    setState((s) => {
+      if (!s.mesh) return s;
+      return { ...s, orientation: bestFlatOrientation(s.mesh.positions) };
+    });
+  }, []);
+
+  const setConstraint = useCallback((constraint: Constraint) => {
+    setState((s) => ({ ...s, constraint }));
+  }, []);
+
+  const addForce = useCallback(
+    (force: Omit<Force, "id" | "name"> & { name?: string }) => {
+      setState((s) => {
+        const id = `f${++forceSeq}`;
+        const name =
+          force.name ?? `Load ${String.fromCharCode(65 + s.forces.length)}`;
+        return {
+          ...s,
+          forces: [...s.forces, { ...force, id, name }],
+        };
+      });
+    },
+    [],
+  );
+
+  const updateForce = useCallback(
+    (id: string, patch: Partial<Omit<Force, "id">>) => {
+      setState((s) => ({
+        ...s,
+        forces: s.forces.map((f) => (f.id === id ? { ...f, ...patch } : f)),
+      }));
+    },
+    [],
+  );
+
+  const setForceDraft = useCallback(
+    (patch: Partial<AnalyzerState["forceDraft"]>) => {
+      setState((s) => ({ ...s, forceDraft: { ...s.forceDraft, ...patch } }));
+    },
+    [],
+  );
 
   const removeForce = useCallback((id: string) => {
     setState((s) => ({ ...s, forces: s.forces.filter((f) => f.id !== id) }));
@@ -235,7 +307,14 @@ export function AnalyzerProvider({ children }: { children: React.ReactNode }) {
       clearModel,
       setMaterial,
       setUnit,
+      setOrientation,
+      rotateBy,
+      resetOrientation,
+      layFlat,
+      setConstraint,
       addForce,
+      updateForce,
+      setForceDraft,
       removeForce,
       clearForces,
       addSupport,
@@ -250,7 +329,14 @@ export function AnalyzerProvider({ children }: { children: React.ReactNode }) {
       clearModel,
       setMaterial,
       setUnit,
+      setOrientation,
+      rotateBy,
+      resetOrientation,
+      layFlat,
+      setConstraint,
       addForce,
+      updateForce,
+      setForceDraft,
       removeForce,
       clearForces,
       addSupport,
