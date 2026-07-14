@@ -32,15 +32,20 @@ export function BrowseByCategory({
       className="py-12 sm:py-16"
     >
       <Container>
-        <div className="mb-8 space-y-2 text-center">
+        <div className="mb-8 flex flex-col items-center space-y-2.5 text-center">
+          <p className="microlabel flex items-center gap-2 text-[var(--color-primary)]">
+            <span className="inline-block h-px w-6 bg-[var(--color-primary)]" />
+            Catalog
+            <span className="inline-block h-px w-6 bg-[var(--color-primary)]" />
+          </p>
           <h2
             id="browse-heading"
-            className="font-semibold tracking-tight"
+            className="font-display font-semibold"
             style={{ fontSize: "var(--text-h2)" }}
           >
             Browse by category
           </h2>
-          <p className="text-[var(--color-muted-foreground)]">
+          <p className="max-w-xl text-[var(--color-muted-foreground)]">
             {category.description}
           </p>
         </div>

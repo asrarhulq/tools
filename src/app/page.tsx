@@ -1,21 +1,29 @@
 import { Suspense } from "react";
-import { Clock, Flame, Sparkles } from "lucide-react";
+import { Flame, Sparkles } from "lucide-react";
 import { buildMetadata } from "@/lib/metadata";
 import { JsonLd } from "@/components/seo/json-ld";
 import { breadcrumbSchema } from "@/lib/json-ld";
 import { Hero } from "@/components/home/hero";
 import { BrowseByCategory } from "@/components/home/browse-by-category";
 import { Section } from "@/components/ui/section";
-import { ToolGrid } from "@/components/tools/tool-grid";
+import { ToolShowcase } from "@/components/tools/tool-showcase";
+import { ToolLeaderboard } from "@/components/tools/tool-leaderboard";
 import {
   allTools,
   featuredTools,
   getToolCountByCategory,
   popularTools,
-  recentTools,
 } from "@/lib/tools";
 
 export const metadata = buildMetadata({ path: "/" });
+
+// The Featured showcase shows exactly three, led by the Human Biomechanics Lab
+// (which carries the live 3D running-figure preview in the lead tile).
+const BIOMECHANICS_ID = "general-tool-6";
+const featuredThree = [
+  ...featuredTools.filter((t) => t.id === BIOMECHANICS_ID),
+  ...featuredTools.filter((t) => t.id !== BIOMECHANICS_ID),
+].slice(0, 3);
 
 export default function HomePage() {
   const counts = getToolCountByCategory();
@@ -33,29 +41,22 @@ export default function HomePage() {
 
       <Section
         id="featured"
+        eyebrow="Selected"
         title="Featured"
         description="Hand-picked tools worth your attention."
-        icon={<Sparkles className="size-6 text-[var(--color-primary)]" />}
+        icon={<Sparkles />}
       >
-        <ToolGrid tools={featuredTools} />
+        <ToolShowcase tools={featuredThree} />
       </Section>
 
       <Section
         id="popular"
+        eyebrow="Leaderboard"
         title="Popular"
-        description="What people are using most right now."
-        icon={<Flame className="size-6 text-[var(--color-primary)]" />}
+        description="Ranked by what people are reaching for most right now."
+        icon={<Flame />}
       >
-        <ToolGrid tools={popularTools} />
-      </Section>
-
-      <Section
-        id="recent"
-        title="Recently added"
-        description="The newest additions to the collection."
-        icon={<Clock className="size-6 text-[var(--color-primary)]" />}
-      >
-        <ToolGrid tools={recentTools.slice(0, 8)} />
+        <ToolLeaderboard tools={popularTools} />
       </Section>
     </>
   );
