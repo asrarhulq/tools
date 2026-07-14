@@ -33,27 +33,30 @@ export default function HomePage() {
 
       <Section
         id="featured"
+        eyebrow="Selected"
         title="Featured"
         description="Hand-picked tools worth your attention."
-        icon={<Sparkles className="size-6 text-[var(--color-primary)]" />}
+        icon={<Sparkles />}
       >
         <ToolGrid tools={featuredTools} />
       </Section>
 
       <Section
         id="popular"
+        eyebrow="Most used"
         title="Popular"
-        description="What people are using most right now."
-        icon={<Flame className="size-6 text-[var(--color-primary)]" />}
+        description="What people are reaching for most right now."
+        icon={<Flame />}
       >
         <ToolGrid tools={popularTools} />
       </Section>
 
       <Section
         id="recent"
+        eyebrow="Latest"
         title="Recently added"
         description="The newest additions to the collection."
-        icon={<Clock className="size-6 text-[var(--color-primary)]" />}
+        icon={<Clock />}
       >
         <ToolGrid tools={recentTools.slice(0, 8)} />
       </Section>
