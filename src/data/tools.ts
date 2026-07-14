@@ -144,6 +144,82 @@ export const tools: readonly Tool[] = [
     addedAt: "2026-06-25",
     keywords: ["gd&t", "manufacturing", "fit"],
   },
+  {
+    id: "eng-tool-5",
+    slug: "truss-analyzer",
+    title: "Truss Analysis Studio",
+    description:
+      "Build 2D trusses visually and solve reactions, member forces, stress, and deflection with the matrix stiffness method.",
+    longDescription:
+      "A mini structural-analysis application for planar trusses. Draw nodes and " +
+      "members on an interactive canvas or start from Warren, Pratt, Howe, and " +
+      "King-post presets, then define supports, loads, materials, and sections. " +
+      "A direct (matrix) stiffness solver computes support reactions, axial " +
+      "member forces with tension/compression identification, stresses, factors " +
+      "of safety, and the deformed shape — with color-coded force visualization, " +
+      "an animated deflection view, stability and constraint diagnostics, " +
+      "efficiency and safety scores, auto member sizing, design comparison, a " +
+      "step-by-step Learning Mode, and a professional PDF calculation report. " +
+      "SI and Imperial units, all computed in your browser.",
+    category: "engineering",
+    icon: "triangle",
+    difficulty: "advanced",
+    status: "live",
+    featured: true,
+    popular: true,
+    addedAt: "2026-07-14",
+    keywords: [
+      "truss",
+      "structural analysis",
+      "stiffness method",
+      "statics",
+      "member forces",
+      "fea",
+      "civil engineering",
+      "method of joints",
+      "deflection",
+      "factor of safety",
+    ],
+  },
+  {
+    id: "eng-tool-6",
+    slug: "beam-designer",
+    title: "Beam Designer & Structural Analysis",
+    description:
+      "Design beams on an interactive canvas and get live shear, moment, slope, deflection, and stress from a finite-element solver.",
+    longDescription:
+      "A premium browser-based structural-analysis studio for beams. Build " +
+      "simply-supported, cantilever, fixed, continuous, and overhanging beams on " +
+      "an interactive canvas with draggable supports (pin, roller, fixed, spring, " +
+      "internal hinge) and loads (point, moment, UDL, triangular, trapezoidal). A " +
+      "2-node Euler-Bernoulli finite-element solver computes reactions and live " +
+      "shear-force, bending-moment, slope, and deflection diagrams plus bending/" +
+      "shear/von Mises stress, factor of safety, buckling, natural frequency, and " +
+      "weight & cost. Includes a material and cross-section library with automatic " +
+      "section properties, multiple load cases with envelope diagrams, moving-load " +
+      "influence lines, design comparison, auto beam sizing, a step-by-step " +
+      "Learning Mode, SI/metric/imperial units, and a professional PDF report. " +
+      "Built on the direct stiffness method, validated against textbook cases.",
+    category: "engineering",
+    icon: "square-stack",
+    difficulty: "advanced",
+    status: "live",
+    featured: true,
+    popular: true,
+    addedAt: "2026-07-14",
+    keywords: [
+      "beam",
+      "structural analysis",
+      "bending moment",
+      "shear force",
+      "deflection",
+      "euler-bernoulli",
+      "cantilever",
+      "continuous beam",
+      "stress",
+      "finite element",
+    ],
+  },
 
   // ── Economics ─────────────────────────────────────────────────────────────
   {
@@ -248,5 +324,77 @@ export const tools: readonly Tool[] = [
     status: "coming-soon",
     addedAt: "2026-06-20",
     keywords: ["random", "choice", "picker"],
+  },
+  {
+    id: "general-tool-5",
+    slug: "gantt-studio",
+    title: "Project Timeline & Gantt Studio",
+    description:
+      "Build professional project schedules with an interactive Gantt chart, critical path, and presentation-ready exports.",
+    longDescription:
+      "A premium, browser-based project planning studio. Create projects, add " +
+      "unlimited nested tasks with dependencies, and generate a live interactive " +
+      "Gantt chart with critical-path analysis, milestones, baselines, and slack. " +
+      "A dashboard summarizes progress, delays, and upcoming milestones, while " +
+      "smart scheduling flags conflicts and impossible timelines. Start from " +
+      "engineering, research, construction, or software templates and export a " +
+      "polished PDF report (with a professional cover page), PNG, SVG, Excel, " +
+      "CSV, JSON, or Microsoft Project XML — all computed in your browser.",
+    category: "general",
+    icon: "gantt-chart",
+    difficulty: "intermediate",
+    status: "live",
+    featured: true,
+    popular: true,
+    addedAt: "2026-07-13",
+    keywords: [
+      "gantt",
+      "project management",
+      "timeline",
+      "schedule",
+      "critical path",
+      "milestones",
+      "dependencies",
+      "planning",
+      "roadmap",
+      "wbs",
+    ],
+  },
+  {
+    id: "general-tool-6",
+    slug: "biomechanics-lab",
+    title: "Human Biomechanics Lab",
+    description:
+      "An interactive 3D biomechanics lab: simulate gait, lifting, and sport, and analyze joint forces, spinal load, and injury risk.",
+    longDescription:
+      "A virtual biomechanics laboratory that pairs an interactive 3D human " +
+      "model with a real analysis engine. Simulate walking, running, sprinting, " +
+      "squatting, deadlifting, and sports movements, then inspect center of mass, " +
+      "inverse-dynamics joint reaction forces and torques, ground reaction forces, " +
+      "L5/S1 spinal compression, muscle-activation heat maps, and injury-risk " +
+      "indices. Switch between skeleton, muscle, joint, force, injury, and heat-map " +
+      "views; customize body height, mass, and load; assess posture; compare " +
+      "techniques; and export a professional PDF report. Built on Three.js and " +
+      "React Three Fiber with classic biomechanics models (Dempster anthropometry, " +
+      "inverse dynamics) — all computed in your browser.",
+    category: "general",
+    icon: "person-standing",
+    difficulty: "advanced",
+    status: "live",
+    featured: true,
+    popular: true,
+    addedAt: "2026-07-13",
+    keywords: [
+      "biomechanics",
+      "human motion",
+      "gait analysis",
+      "joint forces",
+      "injury risk",
+      "posture",
+      "sports science",
+      "kinesiology",
+      "3d anatomy",
+      "inverse dynamics",
+    ],
   },
 ] as const;
