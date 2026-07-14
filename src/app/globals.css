@@ -21,6 +21,13 @@
   --color-accent: var(--accent);
   --color-ring: var(--ring);
 
+  /* Precision-instrument extensions (used by the engineering tools). */
+  --color-stage: var(--stage);
+  --color-hair: var(--hair);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-crit: var(--crit);
+
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
@@ -55,6 +62,15 @@
   /* Glass surface used for the header, palette, cards on hover. */
   --glass-bg: oklch(1 0 0 / 0.6);
   --glass-border: oklch(1 0 0 / 0.5);
+
+  /* Instrument palette. Stage = the recessed "scope" the canvas sits in;
+     hair = a rule fainter than --border; ok/warn/crit = semantic status
+     (deliberately distinct from the violet accent). */
+  --stage: oklch(0.965 0.005 260);
+  --hair: oklch(0.93 0.004 260);
+  --ok: oklch(0.62 0.16 155);
+  --warn: oklch(0.7 0.16 65);
+  --crit: oklch(0.6 0.22 20);
 }
 
 .dark {
@@ -73,6 +89,14 @@
 
   --glass-bg: oklch(0.19 0.012 265 / 0.6);
   --glass-border: oklch(1 0 0 / 0.08);
+
+  /* Instrument palette (dark). Stage sits *below* the panel surface so the
+     canvas reads as a recessed scope; hair is a whisper above the border. */
+  --stage: oklch(0.125 0.011 265);
+  --hair: oklch(0.26 0.012 265);
+  --ok: oklch(0.72 0.16 155);
+  --warn: oklch(0.78 0.15 70);
+  --crit: oklch(0.68 0.2 20);
 }
 
 @layer base {
@@ -135,6 +159,40 @@
     backdrop-filter: blur(16px) saturate(180%);
     -webkit-backdrop-filter: blur(16px) saturate(180%);
     border: 1px solid var(--glass-border);
+  }
+
+  /* ── Precision-instrument surfaces (engineering tools) ────────────────── */
+
+  /* A recessed "scope" the canvas/diagrams sit in: darker than panels, with
+     an engineering grid and a soft inner shadow so it reads as inset glass. */
+  .instrument-stage {
+    background-color: var(--color-stage);
+    background-image:
+      linear-gradient(var(--hair) 1px, transparent 1px),
+      linear-gradient(90deg, var(--hair) 1px, transparent 1px);
+    background-size: 22px 22px;
+    background-position: -1px -1px;
+    box-shadow:
+      inset 0 1px 0 0 var(--glass-border),
+      inset 0 0 60px -30px var(--glow);
+  }
+
+  /* Mono numeric readout — the house style for every computed value. */
+  .readout {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "ss01";
+    letter-spacing: -0.01em;
+  }
+
+  /* Micro-label: the small uppercase field/section captions. */
+  .microlabel {
+    font-size: 0.625rem;
+    line-height: 1;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted-foreground);
   }
 
   /* Subtle animated grid/gradient backdrop for the hero. */

@@ -10,13 +10,12 @@ import {
   Redo2,
   FolderOpen,
   Save,
-  Layers,
   Plus,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useBeam, type ToolMode } from "../state/store";
-import { Panel, Field, NumberInput, Select } from "./primitives";
+import { Group, Field, NumberInput, Select } from "./primitives";
 import { PRESETS, buildPreset } from "../lib/presets";
 import {
   MATERIALS,
@@ -39,43 +38,110 @@ const TOOLS: Array<{
     id: "select",
     label: "Select",
     icon: MousePointer2,
-    hint: "Select & drag supports/loads",
+    hint: "Select and drag supports or loads",
   },
   {
     id: "add-support",
     label: "Support",
     icon: Anchor,
-    hint: "Click beam to add a support",
+    hint: "Click the beam to place a support",
   },
   {
     id: "add-load",
     label: "Load",
     icon: ArrowDown,
-    hint: "Click beam to add a point load",
+    hint: "Click the beam to place a point load",
   },
   {
     id: "add-hinge",
     label: "Hinge",
     icon: Split,
-    hint: "Click beam to add an internal hinge",
+    hint: "Click the beam to place an internal hinge",
   },
 ];
 
-/** Left panel: presets, tools, beam/material/section setup, load cases, I/O. */
-export function ToolsPanel() {
+/**
+ * The tool dock — a slim vertical rail of the four canvas modes plus undo/redo.
+ * Quiet by default; the active mode gets the accent. This is the only place the
+ * accent appears in the left column, so the active tool always reads clearly.
+ */
+export function ToolDock() {
+  const { tool, setTool, canUndo, canRedo, undo, redo } = useBeam();
+  return (
+    <div className="flex gap-2 lg:flex-col">
+      <div className="flex gap-1 rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] p-1 lg:flex-col">
+        {TOOLS.map((t) => {
+          const active = tool === t.id;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              title={`${t.label} — ${t.hint}`}
+              aria-label={t.label}
+              aria-pressed={active}
+              onClick={() => setTool(t.id)}
+              className={cn(
+                "flex size-10 items-center justify-center rounded-lg transition-colors [&_svg]:size-[18px]",
+                active
+                  ? "bg-[var(--color-primary)] text-[var(--color-primary-foreground)] shadow-sm"
+                  : "text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)] hover:text-[var(--color-foreground)]",
+              )}
+            >
+              <t.icon />
+            </button>
+          );
+        })}
+      </div>
+      <div className="flex gap-1 rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] p-1 lg:flex-col">
+        <DockBtn label="Undo" disabled={!canUndo} onClick={undo}>
+          <Undo2 />
+        </DockBtn>
+        <DockBtn label="Redo" disabled={!canRedo} onClick={redo}>
+          <Redo2 />
+        </DockBtn>
+      </div>
+    </div>
+  );
+}
+
+function DockBtn({
+  label,
+  onClick,
+  disabled,
+  children,
+}: {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+      title={label}
+      className="flex size-10 items-center justify-center rounded-lg text-[var(--color-muted-foreground)] transition-colors hover:bg-[var(--color-muted)] hover:text-[var(--color-foreground)] disabled:opacity-30 [&_svg]:size-[18px]"
+    >
+      {children}
+    </button>
+  );
+}
+
+/**
+ * The setup column — beam geometry, material, section, load cases, templates,
+ * and project I/O, grouped into collapsible sections so the common controls
+ * stay visible and the rest folds away (progressive disclosure).
+ */
+export function SetupColumn() {
   const {
     beam,
-    tool,
     units,
-    setTool,
     loadBeam,
     setLength,
     setMaterial,
     setSection,
-    canUndo,
-    canRedo,
-    undo,
-    redo,
     activeCase,
     setActiveCase,
     addLoadCase,
@@ -84,160 +150,150 @@ export function ToolsPanel() {
   const fileRef = useRef<HTMLInputElement>(null);
   const props = sectionProps(beam.section);
   const loadCases = beam.loadCases;
+  const activeTemplate = beam.name;
 
   return (
-    <div className="space-y-3">
-      <Panel title="Tools">
-        <div className="grid grid-cols-4 gap-1.5">
-          {TOOLS.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              title={t.hint}
-              onClick={() => setTool(t.id)}
-              className={cn(
-                "flex flex-col items-center gap-1 rounded-lg px-1 py-2 text-[10px] font-medium transition-colors [&_svg]:size-4",
-                tool === t.id
-                  ? "bg-[var(--color-primary)] text-[var(--color-primary-foreground)]"
-                  : "text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]",
-              )}
-            >
-              <t.icon />
-              {t.label}
-            </button>
-          ))}
-        </div>
-        <p className="mt-2 text-[11px] text-[var(--color-muted-foreground)]">
-          {TOOLS.find((t) => t.id === tool)?.hint}
-        </p>
-        <div className="mt-2 flex gap-1.5">
-          <IconBtn label="Undo" disabled={!canUndo} onClick={undo}>
-            <Undo2 />
-          </IconBtn>
-          <IconBtn label="Redo" disabled={!canRedo} onClick={redo}>
-            <Redo2 />
-          </IconBtn>
-        </div>
-      </Panel>
+    <div className="space-y-2.5">
+      <Group title="Beam & section" defaultOpen>
+        <div className="space-y-3">
+          <Field label={`Span length`}>
+            <NumberInput
+              value={U.lengthFromSI(beam.length, units).toFixed(2)}
+              step={0.5}
+              suffix={U.UNIT_LABELS[units].len}
+              onChange={(e) =>
+                setLength(U.lengthToSI(Number(e.target.value), units))
+              }
+            />
+          </Field>
 
-      <Panel title="Templates">
-        <div className="grid grid-cols-2 gap-1.5">
-          {PRESETS.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              title={p.hint}
-              onClick={() => {
-                loadBeam(buildPreset(p.id));
-                toast.success(`${p.label} loaded`);
+          <Field label="Material">
+            <Select
+              value={beam.material.id}
+              onChange={(e) => {
+                const m = MATERIALS.find((x) => x.id === e.target.value);
+                if (m) setMaterial(m);
               }}
-              className="rounded-lg border border-[var(--color-border)] px-2 py-1.5 text-[11px] font-medium transition-colors hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
             >
-              {p.label}
-            </button>
-          ))}
-        </div>
-      </Panel>
+              {MATERIALS.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}
+                </option>
+              ))}
+            </Select>
+            <div className="mt-1.5 flex justify-between text-[11px] text-[var(--color-muted-foreground)]">
+              <span className="readout">
+                E {U.fmtStress(beam.material.E, units, 0)}
+              </span>
+              <span className="readout">
+                σy {U.fmtStress(beam.material.yield, units, 0)}
+              </span>
+            </div>
+          </Field>
 
-      <Panel title="Beam">
-        <Field label={`Length (${U.UNIT_LABELS[units].len})`}>
-          <NumberInput
-            value={U.lengthFromSI(beam.length, units).toFixed(2)}
-            step={0.5}
-            onChange={(e) =>
-              setLength(U.lengthToSI(Number(e.target.value), units))
-            }
-          />
-        </Field>
-      </Panel>
+          <Field label="Cross-section">
+            <Select
+              value={beam.section.type}
+              onChange={(e) =>
+                setSection({
+                  type: e.target.value as SectionType,
+                  dims: defaultDims(e.target.value as SectionType),
+                })
+              }
+            >
+              {Object.entries(SECTION_LABELS).map(([id, label]) => (
+                <option key={id} value={id}>
+                  {label}
+                </option>
+              ))}
+            </Select>
+          </Field>
 
-      <Panel title="Material">
-        <Select
-          value={beam.material.id}
-          onChange={(e) => {
-            const m = MATERIALS.find((x) => x.id === e.target.value);
-            if (m) setMaterial(m);
-          }}
-        >
-          {MATERIALS.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.name}
-            </option>
-          ))}
-        </Select>
-        <div className="mt-2 grid grid-cols-2 gap-x-3 text-[11px] text-[var(--color-muted-foreground)]">
-          <span>E = {U.fmtStress(beam.material.E, units, 0)}</span>
-          <span>σy = {U.fmtStress(beam.material.yield, units, 0)}</span>
-        </div>
-      </Panel>
-
-      <Panel title="Cross-section">
-        <Select
-          value={beam.section.type}
-          onChange={(e) =>
-            setSection({
-              type: e.target.value as SectionType,
-              dims: defaultDims(e.target.value as SectionType),
-            })
-          }
-        >
-          {Object.entries(SECTION_LABELS).map(([id, label]) => (
-            <option key={id} value={id}>
-              {label}
-            </option>
-          ))}
-        </Select>
-        <div className="mt-2 grid grid-cols-2 gap-2">
-          {Object.entries(SECTION_DIM_LABELS[beam.section.type]).map(
-            ([key, label]) => (
-              <Field key={key} label={`${label} (${U.UNIT_LABELS[units].dim})`}>
-                <NumberInput
-                  value={U.dimFromSI(
-                    beam.section.dims[key] ?? 0,
-                    units,
-                  ).toFixed(1)}
-                  step={1}
-                  min={0.1}
-                  onChange={(e) =>
-                    setSection({
-                      ...beam.section,
-                      dims: {
-                        ...beam.section.dims,
-                        [key]: U.dimToSI(Number(e.target.value), units),
-                      },
-                    })
-                  }
-                />
-              </Field>
-            ),
-          )}
-        </div>
-        <div className="mt-2 space-y-0.5 rounded-lg bg-[var(--color-muted)] p-2 text-[11px] text-[var(--color-muted-foreground)]">
-          <div>
-            A = {(props.area * 1e6).toFixed(0)} mm² · I ={" "}
-            {(props.I * 1e12).toExponential(2)} mm⁴
+          <div className="grid grid-cols-2 gap-2">
+            {Object.entries(SECTION_DIM_LABELS[beam.section.type]).map(
+              ([key, label]) => (
+                <Field key={key} label={label}>
+                  <NumberInput
+                    value={U.dimFromSI(
+                      beam.section.dims[key] ?? 0,
+                      units,
+                    ).toFixed(1)}
+                    step={1}
+                    min={0.1}
+                    suffix={U.UNIT_LABELS[units].dim}
+                    onChange={(e) =>
+                      setSection({
+                        ...beam.section,
+                        dims: {
+                          ...beam.section.dims,
+                          [key]: U.dimToSI(Number(e.target.value), units),
+                        },
+                      })
+                    }
+                  />
+                </Field>
+              ),
+            )}
           </div>
-          <div>
-            S = {(props.S * 1e9).toFixed(0)} mm³ · r ={" "}
-            {(props.r * 1000).toFixed(1)} mm
-          </div>
-        </div>
-      </Panel>
 
-      <Panel
-        title="Load cases"
-        action={
-          <Layers className="size-4 text-[var(--color-muted-foreground)]" />
-        }
-      >
+          {/* Live section properties, styled as an instrument spec plate. */}
+          <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 rounded-lg border border-[var(--color-hair)] bg-[var(--color-surface-2)] p-2.5">
+            <SpecCell
+              label="Area A"
+              value={`${(props.area * 1e6).toFixed(0)} mm²`}
+            />
+            <SpecCell
+              label="Inertia I"
+              value={`${(props.I * 1e12).toExponential(2)} mm⁴`}
+            />
+            <SpecCell
+              label="Modulus S"
+              value={`${(props.S * 1e9).toFixed(0)} mm³`}
+            />
+            <SpecCell
+              label="Gyration r"
+              value={`${(props.r * 1000).toFixed(1)} mm`}
+            />
+          </dl>
+        </div>
+      </Group>
+
+      <Group title="Templates" defaultOpen={false}>
+        <div className="grid grid-cols-2 gap-1.5">
+          {PRESETS.map((p) => {
+            const active = activeTemplate === p.label;
+            return (
+              <button
+                key={p.id}
+                type="button"
+                title={p.hint}
+                onClick={() => {
+                  loadBeam(buildPreset(p.id));
+                  toast.success(`${p.label} loaded`);
+                }}
+                className={cn(
+                  "rounded-lg border px-2 py-2 text-[11px] font-medium transition-colors",
+                  active
+                    ? "border-[var(--color-primary)] bg-[var(--color-primary)]/8 text-[var(--color-primary)]"
+                    : "border-[var(--color-border)] text-[var(--color-muted-foreground)] hover:border-[var(--color-primary)]/50 hover:text-[var(--color-foreground)]",
+                )}
+              >
+                {p.label}
+              </button>
+            );
+          })}
+        </div>
+      </Group>
+
+      <Group title="Load cases" defaultOpen={false}>
         <div className="space-y-1.5">
           {loadCases.map((c) => (
             <div
               key={c.id}
               className={cn(
-                "flex items-center gap-2 rounded-lg border px-2 py-1.5 text-xs",
+                "flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-xs transition-colors",
                 activeCase === c.id
-                  ? "border-[var(--color-primary)] bg-[var(--color-primary)]/10"
+                  ? "border-[var(--color-primary)] bg-[var(--color-primary)]/8"
                   : "border-[var(--color-border)]",
               )}
             >
@@ -256,7 +312,7 @@ export function ToolsPanel() {
                     if (activeCase === c.id) setActiveCase(loadCases[0]!.id);
                   }}
                   aria-label="Delete case"
-                  className="text-[var(--color-muted-foreground)] hover:text-rose-500 [&_svg]:size-3.5"
+                  className="text-[var(--color-muted-foreground)] hover:text-[var(--color-crit)] [&_svg]:size-3.5"
                 >
                   <X />
                 </button>
@@ -266,14 +322,14 @@ export function ToolsPanel() {
           <button
             type="button"
             onClick={addLoadCase}
-            className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-[var(--color-border)] py-1.5 text-[11px] font-medium text-[var(--color-primary)] [&_svg]:size-3.5"
+            className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-[var(--color-border)] py-1.5 text-[11px] font-medium text-[var(--color-primary)] hover:bg-[var(--color-primary)]/6 [&_svg]:size-3.5"
           >
             <Plus /> Add load case
           </button>
         </div>
-      </Panel>
+      </Group>
 
-      <Panel title="Project">
+      <Group title="Project" defaultOpen={false}>
         <input
           ref={fileRef}
           type="file"
@@ -287,7 +343,7 @@ export function ToolsPanel() {
               if (b?.supports && b?.loads) {
                 loadBeam(b);
                 toast.success("Project loaded");
-              } else throw new Error("Invalid file");
+              } else throw new Error("Not a beam project file");
             } catch (err) {
               toast.error("Import failed", {
                 description: err instanceof Error ? err.message : undefined,
@@ -323,32 +379,18 @@ export function ToolsPanel() {
             <Save /> Save
           </button>
         </div>
-      </Panel>
+      </Group>
     </div>
   );
 }
 
-function IconBtn({
-  label,
-  onClick,
-  disabled,
-  children,
-}: {
-  label: string;
-  onClick: () => void;
-  disabled?: boolean;
-  children: React.ReactNode;
-}) {
+function SpecCell({ label, value }: { label: string; value: string }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      aria-label={label}
-      title={label}
-      className="flex size-8 items-center justify-center rounded-lg text-[var(--color-muted-foreground)] transition-colors hover:bg-[var(--color-muted)] hover:text-[var(--color-foreground)] disabled:opacity-40 [&_svg]:size-4"
-    >
-      {children}
-    </button>
+    <div className="min-w-0">
+      <dt className="microlabel truncate">{label}</dt>
+      <dd className="readout mt-0.5 text-xs text-[var(--color-foreground)]">
+        {value}
+      </dd>
+    </div>
   );
 }

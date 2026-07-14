@@ -17,8 +17,8 @@ import type { BeamResult, Diagram, Load, Support, UnitSystem } from "../types";
  */
 
 const PAD_X = 60;
-const BEAM_Y = 90; // screen y of the beam axis within the canvas viewport
-const H = 200; // canvas logical height
+const BEAM_Y = 84; // screen y of the beam axis within the canvas viewport
+const H = 162; // canvas logical height (tightened to remove dead grid space)
 const SNAP_PX = 8;
 
 export function BeamCanvas() {
@@ -117,7 +117,7 @@ export function BeamCanvas() {
   return (
     <div
       ref={measure}
-      className="relative w-full overflow-hidden rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)]"
+      className="relative w-full overflow-hidden rounded-[calc(var(--radius)-4px)]"
       style={{ height: H + 40 }}
     >
       <svg

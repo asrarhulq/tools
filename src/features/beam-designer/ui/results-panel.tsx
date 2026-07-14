@@ -17,21 +17,21 @@ import { useBeam } from "../state/store";
 import { useBeamAnalysis } from "../state/use-analysis";
 import {
   Panel,
+  Group,
   Row,
   Field,
   NumberInput,
   Select,
-  Stat,
   Pill,
 } from "./primitives";
+import { fosTone } from "./result-status";
 import { autoSizeBeam, buildSuggestions } from "../lib/optimize";
 import { solveBeam } from "../lib/solver";
 import { generateBeamReport } from "../lib/report";
 import * as U from "../lib/units";
 import type { BeamResult, Load, UnitSystem } from "../types";
-import { cn } from "@/lib/utils";
 
-/** Right panel: selection editor, results/scores, suggestions, sizing, compare, export, diagnostics. */
+/** Inspector column: selection editor, full spec sheet, assistant, sizing, compare, diagnostics, export. */
 export function ResultsPanel() {
   const { beam, units, selectedSupport, selectedLoad, loadBeam } = useBeam();
   const { result, diagnostics } = useBeamAnalysis();
@@ -39,13 +39,7 @@ export function ResultsPanel() {
   const suggestions = buildSuggestions(beam, result);
   const errors = diagnostics.filter((d) => d.severity === "error");
   const warnings = diagnostics.filter((d) => d.severity === "warning");
-
-  const fosColor =
-    result.factorOfSafety >= 2
-      ? "#22c55e"
-      : result.factorOfSafety >= 1
-        ? "#f59e0b"
-        : "#ef4444";
+  const stressTone = fosTone(result.factorOfSafety);
 
   const doExport = async (kind: "pdf" | "csv" | "json" | "png") => {
     try {
@@ -85,62 +79,29 @@ export function ResultsPanel() {
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2.5">
       {selectedSupport ? <SupportEditor id={selectedSupport} /> : null}
       {selectedLoad ? <LoadEditor id={selectedLoad} /> : null}
       {!selectedSupport && !selectedLoad ? (
-        <Panel title="Selection">
+        <Panel title="Inspector" className="border-dashed">
           <p className="text-xs text-[var(--color-muted-foreground)]">
-            Select a support or load on the canvas to edit it.
+            Select a support or load on the beam to edit its properties here.
           </p>
         </Panel>
       ) : null}
 
-      <Panel title="Results">
-        {result.solved ? (
-          <>
-            <div className="mb-3 grid grid-cols-2 gap-2">
-              <Stat
-                label="Max moment"
-                value={U.fmtMoment(result.maxMoment, units).split(" ")[0]}
-                unit={U.UNIT_LABELS[units].moment}
-                accent="#8b5cf6"
-              />
-              <Stat
-                label="Max shear"
-                value={U.fmtForce(result.maxShear, units).split(" ")[0]}
-                unit={U.UNIT_LABELS[units].force}
-                accent="#0ea5e9"
-              />
-              <Stat
-                label="Max deflection"
-                value={
-                  U.fmtSmallLength(
-                    Math.abs(result.maxDeflection),
-                    units,
-                    1,
-                  ).split(" ")[0]
-                }
-                unit={U.UNIT_LABELS[units].smallLen}
-                accent="#f59e0b"
-              />
-              <Stat
-                label="Factor of safety"
-                value={
-                  Number.isFinite(result.factorOfSafety)
-                    ? result.factorOfSafety.toFixed(2)
-                    : "∞"
-                }
-                accent={fosColor}
-              />
-            </div>
+      {result.solved ? (
+        <Panel title="Full results" flush>
+          <div className="px-3.5 pb-3">
             <Row
               label="Max bending stress"
               value={U.fmtStress(result.maxBendingStress, units)}
+              tone={stressTone}
             />
             <Row
               label="Max von Mises"
               value={U.fmtStress(result.maxVonMises, units)}
+              tone={stressTone}
             />
             <Row
               label="Buckling load"
@@ -151,49 +112,43 @@ export function ResultsPanel() {
               value={U.fmtFreq(result.naturalFrequency)}
             />
             <Row label="Beam mass" value={U.fmtMass(result.mass, units)} />
-            <Row label="Est. cost" value={`$${result.cost.toFixed(2)}`} />
-          </>
-        ) : (
-          <div className="flex items-start gap-2 rounded-lg bg-rose-500/10 p-3 text-xs text-rose-600 dark:text-rose-400">
-            <AlertTriangle className="mt-0.5 size-4 shrink-0" />
-            <span>
-              {result.stable
-                ? "Add supports and a load to analyze."
-                : "Beam is unstable — see diagnostics."}
-            </span>
-          </div>
-        )}
-      </Panel>
-
-      <Panel title="Reactions">
-        {result.solved && result.reactions.length ? (
-          result.reactions.map((r) => (
             <Row
-              key={r.supportId}
-              label={`@ ${U.fmtLength(r.x, units)}`}
-              value={`${U.fmtForce(r.Fy, units)}${Math.abs(r.M) > 1 ? ` · ${U.fmtMoment(r.M, units)}` : ""}`}
+              label="Est. material cost"
+              value={`$${result.cost.toFixed(2)}`}
             />
-          ))
-        ) : (
-          <p className="text-xs text-[var(--color-muted-foreground)]">
-            No reactions yet.
-          </p>
-        )}
-      </Panel>
+          </div>
+          <div className="border-t border-[var(--color-hair)] px-3.5 pt-2.5 pb-3">
+            <p className="microlabel mb-1.5">Reactions</p>
+            {result.reactions.length ? (
+              result.reactions.map((r) => (
+                <Row
+                  key={r.supportId}
+                  label={`at ${U.fmtLength(r.x, units)}`}
+                  value={`${U.fmtForce(r.Fy, units)}${Math.abs(r.M) > 1 ? ` · ${U.fmtMoment(r.M, units)}` : ""}`}
+                />
+              ))
+            ) : (
+              <p className="text-xs text-[var(--color-muted-foreground)]">
+                No reactions computed yet.
+              </p>
+            )}
+          </div>
+        </Panel>
+      ) : null}
 
-      <Panel
+      <Group
         title="Engineering assistant"
-        action={<Lightbulb className="size-4 text-[var(--color-primary)]" />}
+        action={<Lightbulb className="size-3.5 text-[var(--color-primary)]" />}
       >
         <ul className="space-y-2">
           {suggestions.map((s, i) => (
             <li key={i} className="flex items-start gap-2 text-xs">
               {s.kind === "warning" ? (
-                <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-500" />
+                <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-[var(--color-warn)]" />
               ) : s.kind === "success" ? (
-                <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-emerald-500" />
+                <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-[var(--color-ok)]" />
               ) : (
-                <Info className="mt-0.5 size-3.5 shrink-0 text-sky-500" />
+                <Info className="mt-0.5 size-3.5 shrink-0 text-[var(--color-primary)]" />
               )}
               <span className="text-[var(--color-muted-foreground)]">
                 {s.text}
@@ -201,9 +156,9 @@ export function ResultsPanel() {
             </li>
           ))}
         </ul>
-      </Panel>
+      </Group>
 
-      <Panel title="Auto beam sizing">
+      <Group title="Auto beam sizing" defaultOpen={false}>
         <div className="flex items-end gap-2">
           <Field label="Target FoS" className="flex-1">
             <NumberInput
@@ -221,43 +176,37 @@ export function ResultsPanel() {
               loadBeam(autoSizeBeam(beam, targetFoS));
               toast.success(`Section sized for FoS ${targetFoS}`);
             }}
-            className="flex items-center gap-1.5 rounded-lg bg-[var(--color-primary)] px-3 py-1.5 text-sm font-medium text-[var(--color-primary-foreground)] [&_svg]:size-4"
+            className="flex items-center gap-1.5 rounded-lg bg-[var(--color-primary)] px-3 py-2 text-sm font-medium text-[var(--color-primary-foreground)] [&_svg]:size-4"
           >
             <Wand2 /> Size
           </button>
         </div>
         <p className="mt-2 text-[11px] text-[var(--color-muted-foreground)]">
-          Scales the cross-section to the lightest size meeting the target
+          Scales the cross-section to the lightest size that meets the target
           factor of safety.
         </p>
-      </Panel>
+      </Group>
 
       <ComparePanel />
 
-      <Panel
+      <Group
         title="Diagnostics"
+        defaultOpen={errors.length > 0 || warnings.length > 0}
         action={
-          <Pill
-            color={
-              errors.length
-                ? "#ef4444"
-                : warnings.length
-                  ? "#f59e0b"
-                  : "#22c55e"
-            }
-          >
+          <Pill tone={errors.length ? "crit" : warnings.length ? "warn" : "ok"}>
             {errors.length
               ? `${errors.length} error${errors.length === 1 ? "" : "s"}`
               : warnings.length
                 ? `${warnings.length} warning${warnings.length === 1 ? "" : "s"}`
-                : "OK"}
+                : "All clear"}
           </Pill>
         }
       >
         <ul className="max-h-44 space-y-2 overflow-y-auto">
           {diagnostics.length === 0 ? (
             <li className="flex items-center gap-2 text-xs text-[var(--color-muted-foreground)]">
-              <CheckCircle2 className="size-4 text-emerald-500" /> No issues.
+              <CheckCircle2 className="size-4 text-[var(--color-ok)]" /> No
+              issues detected.
             </li>
           ) : (
             diagnostics.map((d, i) => (
@@ -266,21 +215,21 @@ export function ResultsPanel() {
                 className="flex items-start gap-2 text-xs text-[var(--color-muted-foreground)]"
               >
                 {d.severity === "error" ? (
-                  <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-rose-500" />
+                  <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-[var(--color-crit)]" />
                 ) : d.severity === "warning" ? (
-                  <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-500" />
+                  <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-[var(--color-warn)]" />
                 ) : (
-                  <Info className="mt-0.5 size-3.5 shrink-0 text-sky-500" />
+                  <Info className="mt-0.5 size-3.5 shrink-0 text-[var(--color-primary)]" />
                 )}
                 <span>{d.message}</span>
               </li>
             ))
           )}
         </ul>
-      </Panel>
+      </Group>
 
-      <Panel title="Export">
-        <div className="grid grid-cols-2 gap-1.5">
+      <Panel title="Export" flush>
+        <div className="grid grid-cols-2 gap-1.5 px-3.5 pb-3.5">
           <ExpBtn onClick={() => doExport("pdf")} icon={<FileText />}>
             PDF report
           </ExpBtn>
@@ -476,14 +425,15 @@ function ComparePanel() {
   const { result } = useBeamAnalysis();
   const snap = compareSnapshot ? solveBeam(compareSnapshot) : null;
   return (
-    <Panel
+    <Group
       title="Compare designs"
+      defaultOpen={!!compareSnapshot}
       action={
         compareSnapshot ? (
           <button
             type="button"
             onClick={clearCompare}
-            className="text-[11px] text-[var(--color-muted-foreground)] hover:text-rose-500"
+            className="text-[11px] text-[var(--color-muted-foreground)] hover:text-[var(--color-crit)]"
           >
             Clear
           </button>
@@ -542,7 +492,7 @@ function ComparePanel() {
           </tbody>
         </table>
       )}
-    </Panel>
+    </Group>
   );
 }
 function Cmp({
@@ -557,16 +507,16 @@ function Cmp({
   better: boolean;
 }) {
   return (
-    <tr className="border-t border-[var(--color-border)]">
+    <tr className="border-t border-[var(--color-hair)]">
       <td className="py-1">{label}</td>
-      <td className="py-1 text-right text-[var(--color-muted-foreground)] tabular-nums">
+      <td className="readout py-1 text-right text-[var(--color-muted-foreground)]">
         {a}
       </td>
       <td
-        className={cn(
-          "py-1 text-right font-medium tabular-nums",
-          better ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500",
-        )}
+        className="readout py-1 text-right font-medium"
+        style={{
+          color: better ? "var(--color-ok)" : "var(--color-crit)",
+        }}
       >
         {b}
       </td>

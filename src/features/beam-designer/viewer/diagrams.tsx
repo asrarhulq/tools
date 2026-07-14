@@ -104,7 +104,6 @@ export function Diagrams() {
 
 function DiagramChart({
   label,
-  unit,
   color,
   d,
   fmt,
@@ -150,25 +149,26 @@ function DiagramChart({
     setHoverX(Math.max(0, Math.min(length, x)));
   };
 
+  const peak = fmt(
+    Math.abs(d.maxValue) >= Math.abs(d.minValue) ? d.maxValue : d.minValue,
+  );
   return (
     <div
-      className="rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] p-2"
+      className="overflow-hidden rounded-[calc(var(--radius)-4px)] border border-[var(--color-border)] bg-[var(--color-surface)]/85 p-2 backdrop-blur-sm"
       ref={(el) => {
         if (el) setW(el.clientWidth);
       }}
     >
       <div className="mb-1 flex items-center justify-between px-1 text-[11px]">
-        <span className="font-semibold" style={{ color }}>
-          {label}
+        <span className="flex items-center gap-1.5 font-semibold">
+          <span
+            className="size-2 rounded-[2px]"
+            style={{ backgroundColor: color }}
+          />
+          <span style={{ color }}>{label}</span>
         </span>
-        <span className="text-[var(--color-muted-foreground)]">
-          max{" "}
-          {fmt(
-            Math.abs(d.maxValue) >= Math.abs(d.minValue)
-              ? d.maxValue
-              : d.minValue,
-          )}{" "}
-          {unit}
+        <span className="readout text-[var(--color-muted-foreground)]">
+          peak {peak}
         </span>
       </div>
       <svg
@@ -214,10 +214,10 @@ function DiagramChart({
         <circle
           cx={maxPx.x}
           cy={maxPx.y}
-          r={3}
+          r={3.5}
           fill={color}
-          stroke="#fff"
-          strokeWidth={1}
+          stroke="var(--color-surface)"
+          strokeWidth={1.5}
         />
         {/* hover crosshair */}
         {hoverX != null ? (

@@ -13,9 +13,11 @@ import {
 import { useBeam } from "../state/store";
 import { BeamCanvas } from "../viewer/beam-canvas";
 import { Diagrams } from "../viewer/diagrams";
-import { ToolsPanel } from "./tools-panel";
+import { ToolDock, SetupColumn } from "./tools-panel";
 import { ResultsPanel } from "./results-panel";
 import { LearningPanel } from "./learning-panel";
+import { ResultHud } from "./hud";
+import { Segmented } from "./primitives";
 import type { LoadType } from "../types";
 import { cn } from "@/lib/utils";
 
@@ -36,7 +38,13 @@ const LOAD_TYPES: Array<{ type: LoadType; label: string }> = [
   { type: "moment", label: "Moment" },
 ];
 
-/** The full beam workspace: header · canvas · diagrams · side panels. */
+const UNIT_OPTIONS = [
+  { value: "si" as const, label: "SI", title: "SI base units (m, N, Pa)" },
+  { value: "metric" as const, label: "Metric", title: "kN, mm, MPa" },
+  { value: "imperial" as const, label: "Imperial", title: "kip, in, ksi" },
+];
+
+/** The full beam workspace: header · results HUD · dock · setup · stage · inspector. */
 export function Workspace() {
   const {
     beam,
@@ -83,27 +91,30 @@ export function Workspace() {
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Header */}
-      <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
+      {/* ── Header ─────────────────────────────────────────────────────── */}
+      <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
         <div className="flex items-center gap-3">
-          <span className="flex size-10 items-center justify-center rounded-xl bg-[var(--color-primary)]/12 text-[var(--color-primary)]">
+          <span className="flex size-11 items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-primary)] shadow-[var(--shadow-glow)]">
             <SquareStack className="size-5" />
           </span>
           <div>
-            <h1 className="text-lg font-semibold">Beam Designer</h1>
-            <p className="text-xs text-[var(--color-muted-foreground)]">
+            <h1 className="text-base font-semibold tracking-tight">
+              Beam Designer
+            </h1>
+            <p className="readout text-[11px] text-[var(--color-muted-foreground)]">
               {beam.name}
             </p>
           </div>
         </div>
+
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative">
             <button
               type="button"
               onClick={() => setLoadMenu((v) => !v)}
-              className="flex items-center gap-1.5 rounded-lg bg-[var(--color-primary)] px-2.5 py-1.5 text-xs font-medium text-[var(--color-primary-foreground)] [&_svg]:size-3.5"
+              className="flex items-center gap-1.5 rounded-lg bg-[var(--color-primary)] px-3 py-1.5 text-xs font-medium text-[var(--color-primary-foreground)] shadow-sm transition-transform active:scale-[0.97] [&_svg]:size-3.5"
             >
-              <Plus /> Add load <ChevronDown className="size-3" />
+              <Plus /> Add load <ChevronDown className="size-3 opacity-70" />
             </button>
             <AnimatePresence>
               {loadMenu ? (
@@ -113,10 +124,11 @@ export function Workspace() {
                     onClick={() => setLoadMenu(false)}
                   />
                   <motion.div
-                    initial={{ opacity: 0, y: -6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -6 }}
-                    className="absolute right-0 z-50 mt-1 w-44 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-1 shadow-xl"
+                    initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                    transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+                    className="absolute right-0 z-50 mt-1.5 w-48 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-1 shadow-xl"
                   >
                     {LOAD_TYPES.map((l) => (
                       <button
@@ -130,8 +142,17 @@ export function Workspace() {
                           });
                           setLoadMenu(false);
                         }}
-                        className="w-full rounded-lg px-2.5 py-1.5 text-left text-sm hover:bg-[var(--color-muted)]"
+                        className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-sm transition-colors hover:bg-[var(--color-muted)]"
                       >
+                        <span
+                          className="size-2 rounded-full"
+                          style={{
+                            backgroundColor:
+                              l.type === "moment"
+                                ? "var(--color-primary)"
+                                : "var(--color-crit)",
+                          }}
+                        />
                         {l.label}
                       </button>
                     ))}
@@ -140,23 +161,9 @@ export function Workspace() {
               ) : null}
             </AnimatePresence>
           </div>
-          <div className="flex overflow-hidden rounded-lg border border-[var(--color-border)]">
-            {(["si", "metric", "imperial"] as const).map((u) => (
-              <button
-                key={u}
-                type="button"
-                onClick={() => setUnits(u)}
-                className={cn(
-                  "px-2.5 py-1.5 text-xs font-medium capitalize transition-colors",
-                  units === u
-                    ? "bg-[var(--color-primary)] text-[var(--color-primary-foreground)]"
-                    : "text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]",
-                )}
-              >
-                {u === "si" ? "SI" : u}
-              </button>
-            ))}
-          </div>
+
+          <Segmented value={units} onChange={setUnits} options={UNIT_OPTIONS} />
+
           <button
             type="button"
             onClick={() => setLearning(!learning)}
@@ -164,7 +171,7 @@ export function Workspace() {
               "flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors [&_svg]:size-3.5",
               learning
                 ? "border-[var(--color-primary)] bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
-                : "border-[var(--color-border)] text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]",
+                : "border-[var(--color-border)] text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)] hover:text-[var(--color-foreground)]",
             )}
           >
             <GraduationCap /> Learn
@@ -172,56 +179,10 @@ export function Workspace() {
         </div>
       </div>
 
-      {/* View toggles + moving load */}
-      <div className="flex flex-wrap items-center gap-2 rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2">
-        <span className="text-[11px] font-semibold tracking-wide text-[var(--color-muted-foreground)] uppercase">
-          Show
-        </span>
-        {VIEW_TOGGLES.map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            onClick={() => setView({ [t.key]: !view[t.key] })}
-            className={cn(
-              "rounded-full px-2.5 py-1 text-xs font-medium transition-colors",
-              view[t.key]
-                ? "bg-[var(--color-primary)] text-[var(--color-primary-foreground)]"
-                : "text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]",
-            )}
-          >
-            {t.label}
-          </button>
-        ))}
-        <span className="flex-1" />
-        {view.deflected ? (
-          <span className="flex items-center gap-1.5 text-[11px] text-[var(--color-muted-foreground)]">
-            Scale
-            <input
-              type="range"
-              min={0.2}
-              max={5}
-              step={0.1}
-              value={view.deflScale}
-              onChange={(e) => setView({ deflScale: Number(e.target.value) })}
-              className="w-24 accent-[var(--color-primary)]"
-            />
-          </span>
-        ) : null}
-        <button
-          type="button"
-          onClick={() => setMoving((m) => !m)}
-          className={cn(
-            "flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium [&_svg]:size-3.5",
-            moving
-              ? "border-[var(--color-primary)] text-[var(--color-primary)]"
-              : "border-[var(--color-border)] text-[var(--color-muted-foreground)]",
-          )}
-        >
-          {moving ? <PauseCircle /> : <PlayCircle />} Moving load
-        </button>
-      </div>
+      {/* ── Results HUD (the summary, above the fold) ──────────────────── */}
+      <ResultHud />
 
-      {/* Mobile tabs */}
+      {/* ── Mobile tabs ────────────────────────────────────────────────── */}
       <div className="flex gap-1 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] p-1 lg:hidden">
         {(["setup", "workspace", "results"] as const).map((t) => (
           <button
@@ -240,25 +201,99 @@ export function Workspace() {
         ))}
       </div>
 
-      {/* Layout */}
-      <div className="grid gap-3 lg:grid-cols-[264px_1fr_320px]">
+      {/* ── Main grid: dock · setup · stage · inspector ────────────────── */}
+      <div className="grid gap-3 lg:grid-cols-[auto_236px_1fr_320px]">
+        {/* Tool dock (slim rail) */}
+        <div
+          className={cn(
+            "lg:block",
+            mobileTab === "workspace" || mobileTab === "setup"
+              ? "block"
+              : "hidden",
+          )}
+        >
+          <ToolDock />
+        </div>
+
+        {/* Setup column */}
         <div
           className={cn("lg:block", mobileTab === "setup" ? "block" : "hidden")}
         >
-          <ToolsPanel />
+          <SetupColumn />
         </div>
+
+        {/* Stage — the elevated instrument surface */}
         <div
           className={cn(
-            "min-w-0 space-y-2 lg:block",
+            "min-w-0 lg:block",
             mobileTab === "workspace" ? "block" : "hidden",
           )}
         >
-          <div className="beam-canvas">
-            <BeamCanvas />
+          <div className="instrument-stage rounded-[var(--radius)] border border-[var(--color-border)] p-2.5">
+            {/* View controls bar over the stage */}
+            <div className="mb-2 flex flex-wrap items-center gap-1.5">
+              {VIEW_TOGGLES.map((t) => (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() => setView({ [t.key]: !view[t.key] })}
+                  className={cn(
+                    "rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors",
+                    view[t.key]
+                      ? "border-transparent bg-[var(--color-primary)] text-[var(--color-primary-foreground)]"
+                      : "border-[var(--color-border)] text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]",
+                  )}
+                >
+                  {t.label}
+                </button>
+              ))}
+              <span className="flex-1" />
+              {view.deflected ? (
+                <span className="flex items-center gap-1.5 text-[11px] text-[var(--color-muted-foreground)]">
+                  Scale
+                  <input
+                    type="range"
+                    min={0.2}
+                    max={5}
+                    step={0.1}
+                    value={view.deflScale}
+                    onChange={(e) =>
+                      setView({ deflScale: Number(e.target.value) })
+                    }
+                    className="w-20 accent-[var(--color-primary)]"
+                  />
+                </span>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => setMoving((m) => !m)}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors [&_svg]:size-3.5",
+                  moving
+                    ? "border-[var(--color-primary)] text-[var(--color-primary)]"
+                    : "border-[var(--color-border)] text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]",
+                )}
+              >
+                {moving ? <PauseCircle /> : <PlayCircle />} Moving load
+              </button>
+            </div>
+
+            <div className="beam-canvas">
+              <BeamCanvas />
+            </div>
+            <div className="mt-2">
+              <Diagrams />
+            </div>
           </div>
-          <Diagrams />
-          {learning ? <LearningPanel /> : null}
+
+          {learning ? (
+            <div className="mt-3">
+              <LearningPanel />
+            </div>
+          ) : null}
         </div>
+
+        {/* Inspector */}
         <div
           className={cn(
             "lg:block",
@@ -270,7 +305,7 @@ export function Workspace() {
       </div>
 
       <p className="text-center text-[11px] text-[var(--color-muted-foreground)]">
-        Euler-Bernoulli finite-element analysis · validated against textbook
+        Euler–Bernoulli finite-element analysis · validated against textbook
         cases · A Product by Asrar ul Haq · tools.asrarul.com
       </p>
     </div>
