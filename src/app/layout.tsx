@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { fontMono, fontSans } from "@/lib/fonts";
+import { fontMono, fontSans, fontDisplay } from "@/lib/fonts";
 import { buildMetadata } from "@/lib/metadata";
 import { siteConfig } from "@/config/site";
 import { organizationSchema, websiteSchema } from "@/lib/json-ld";
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a0a0f" },
+    { media: "(prefers-color-scheme: dark)", color: "#0e0f11" },
   ],
   colorScheme: "light dark",
   width: "device-width",
@@ -44,7 +44,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${fontSans.variable} ${fontMono.variable}`}
+      className={`${fontSans.variable} ${fontMono.variable} ${fontDisplay.variable}`}
     >
       <body className="flex min-h-dvh flex-col">
         <JsonLd data={[organizationSchema(), websiteSchema()]} />

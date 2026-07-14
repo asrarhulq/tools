@@ -98,7 +98,7 @@ export function Workspace() {
             <SquareStack className="size-5" />
           </span>
           <div>
-            <h1 className="text-base font-semibold tracking-tight">
+            <h1 className="font-display text-lg font-semibold">
               Beam Designer
             </h1>
             <p className="readout text-[11px] text-[var(--color-muted-foreground)]">

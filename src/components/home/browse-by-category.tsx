@@ -40,7 +40,7 @@ export function BrowseByCategory({
           </p>
           <h2
             id="browse-heading"
-            className="font-semibold tracking-tight"
+            className="font-display font-semibold"
             style={{ fontSize: "var(--text-h2)" }}
           >
             Browse by category

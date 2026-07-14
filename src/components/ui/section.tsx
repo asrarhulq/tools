@@ -46,7 +46,7 @@ export function Section({
             ) : null}
             <h2
               id={headingId}
-              className="flex items-center gap-2.5 font-semibold tracking-tight"
+              className="font-display flex items-center gap-2.5 font-semibold"
               style={{ fontSize: "var(--text-h2)" }}
             >
               {icon ? (

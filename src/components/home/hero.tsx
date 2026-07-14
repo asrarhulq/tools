@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { Command, Shuffle, ArrowRight } from "lucide-react";
+import { Command, Shuffle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Container } from "@/components/ui/container";
@@ -11,10 +11,11 @@ import { categories } from "@/data/categories";
 import { fadeUp, staggerContainer } from "@/lib/motion";
 
 /**
- * Editorial hero in the "precision instrument" language: a technical eyebrow,
- * a large left-aligned display headline (no gradient text), and a mono
- * category ledger on the right that reads like an index. A faint blueprint
- * grid grounds it; one restrained accent underline carries the emphasis.
+ * Hero as an engineering-drawing **titleblock**. The layout borrows the corner
+ * block of a technical drawing: a ruled specification strip (catalog no.,
+ * revision, categories, date) frames a large display headline. Drafting-blue
+ * accent only; a blueprint grid grounds the section. No gradient text, no glass
+ * card, no badge-over-headline — deliberately outside the generic hub template.
  */
 export function Hero({ toolCount }: { toolCount: number }) {
   const { open } = useCommandPalette();
@@ -28,131 +29,130 @@ export function Hero({ toolCount }: { toolCount: number }) {
   }
 
   return (
-    <section className="relative overflow-hidden border-b border-[var(--color-border)]">
-      {/* Blueprint grid backdrop */}
+    <section className="blueprint-field relative overflow-hidden border-b border-[var(--color-border)]">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 [mask-image:radial-gradient(ellipse_80%_60%_at_30%_0%,black,transparent)] opacity-[0.4]"
+        className="pointer-events-none absolute inset-0 [mask-image:radial-gradient(ellipse_90%_70%_at_20%_0%,black,transparent)]"
         style={{
-          backgroundImage:
-            "linear-gradient(var(--color-hair) 1px, transparent 1px), linear-gradient(90deg, var(--color-hair) 1px, transparent 1px)",
-          backgroundSize: "40px 40px",
+          background:
+            "radial-gradient(circle at 20% 0%, var(--glow), transparent 55%)",
         }}
       />
-      <div className="hero-aurora opacity-60" aria-hidden="true" />
 
-      <Container className="relative py-20 sm:py-28">
-        <div className="grid items-end gap-12 lg:grid-cols-[1fr_auto]">
-          {/* Headline column */}
+      <Container className="relative py-16 sm:py-24">
+        {/* Titleblock top rule: drawing identity strip */}
+        <motion.div
+          variants={reduce ? undefined : staggerContainer}
+          initial="hidden"
+          animate="visible"
+        >
           <motion.div
-            variants={reduce ? undefined : staggerContainer}
-            initial="hidden"
-            animate="visible"
-            className="max-w-2xl"
+            variants={fadeUp}
+            className="mb-8 flex items-center gap-3 border-b border-[var(--color-border)] pb-3 font-mono text-[11px] tracking-wide text-[var(--color-muted-foreground)]"
           >
-            <motion.p
-              variants={fadeUp}
-              className="microlabel mb-6 flex items-center gap-2 text-[var(--color-primary)]"
-            >
-              <span className="inline-block h-px w-8 bg-[var(--color-primary)]" />
-              asrarul.tools · index
-            </motion.p>
-
-            <motion.h1
-              variants={fadeUp}
-              className="font-semibold tracking-tight text-balance"
-              style={{ fontSize: "var(--text-display)", lineHeight: 1.02 }}
-            >
-              A handcrafted
-              <br />
-              collection of{" "}
-              <span className="relative whitespace-nowrap text-[var(--color-primary)]">
-                interactive
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 300 12"
-                  preserveAspectRatio="none"
-                  className="absolute -bottom-1 left-0 h-2 w-full text-[var(--color-primary)]"
-                >
-                  <path
-                    d="M2 8 Q 150 2 298 8"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </span>{" "}
-              tools
-            </motion.h1>
-
-            <motion.p
-              variants={fadeUp}
-              className="mt-7 max-w-lg text-lg text-pretty text-[var(--color-muted-foreground)]"
-            >
-              Philosophy, engineering, economics, and general-purpose tools —
-              engineered for speed, built with real analysis, and a joy to use.
-            </motion.p>
-
-            <motion.div
-              variants={fadeUp}
-              className="mt-8 flex flex-wrap items-center gap-3"
-            >
-              <button
-                type="button"
-                onClick={open}
-                className="group flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2.5 text-sm font-medium text-[var(--color-primary-foreground)] shadow-sm transition-transform active:scale-[0.98]"
-              >
-                <Command className="size-4" aria-hidden="true" />
-                Search tools
-                <kbd className="ml-1 hidden rounded bg-black/15 px-1.5 py-0.5 font-mono text-[10px] sm:inline">
-                  ⌘K
-                </kbd>
-              </button>
-              <button
-                type="button"
-                onClick={randomTool}
-                className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm font-medium transition-colors hover:border-[var(--color-primary)]/50 hover:text-[var(--color-primary)]"
-              >
-                <Shuffle className="size-4" aria-hidden="true" />
-                Random tool
-              </button>
-            </motion.div>
+            <span className="text-[var(--color-primary)]">◈</span>
+            <span className="uppercase">asrarul.tools</span>
+            <span className="text-[var(--color-border)]">/</span>
+            <span className="uppercase">catalog index</span>
+            <span className="ml-auto hidden sm:inline">
+              REV 2026.07 · {String(toolCount).padStart(3, "0")} SHEETS
+            </span>
           </motion.div>
 
-          {/* Category ledger — a mono index that reinforces the instrument feel */}
-          <motion.dl
-            initial={reduce ? undefined : { opacity: 0, x: 12 }}
-            animate={reduce ? undefined : { opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="hidden min-w-[220px] rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)]/70 p-4 backdrop-blur-sm lg:block"
-          >
-            <div className="mb-3 flex items-baseline justify-between border-b border-[var(--color-hair)] pb-3">
-              <span className="microlabel">Catalog</span>
-              <span className="readout text-2xl font-semibold text-[var(--color-foreground)]">
-                {String(toolCount).padStart(2, "0")}
-              </span>
+          <div className="grid gap-10 lg:grid-cols-[1fr_auto] lg:items-end">
+            {/* Drawing title */}
+            <div className="max-w-3xl">
+              <motion.h1
+                variants={fadeUp}
+                className="font-display font-semibold text-balance"
+                style={{ fontSize: "var(--text-display)", lineHeight: 0.98 }}
+              >
+                A workshop of
+                <br />
+                <span className="text-[var(--color-primary)]">
+                  interactive tools
+                </span>
+                , drawn to spec.
+              </motion.h1>
+
+              <motion.p
+                variants={fadeUp}
+                className="mt-6 max-w-xl text-lg text-pretty text-[var(--color-muted-foreground)]"
+              >
+                Philosophy, engineering, economics, and general-purpose
+                instruments — each built on real analysis, measured to the
+                millimetre, and fast enough to think with.
+              </motion.p>
+
+              <motion.div
+                variants={fadeUp}
+                className="mt-8 flex flex-wrap items-center gap-2.5"
+              >
+                <button
+                  type="button"
+                  onClick={open}
+                  className="group flex items-center gap-2 rounded-md bg-[var(--color-primary)] px-4 py-2.5 text-sm font-medium text-[var(--color-primary-foreground)] transition-transform active:scale-[0.98]"
+                >
+                  <Command className="size-4" aria-hidden="true" />
+                  Search the catalog
+                  <kbd className="ml-1 hidden rounded bg-black/15 px-1.5 py-0.5 font-mono text-[10px] sm:inline">
+                    ⌘K
+                  </kbd>
+                </button>
+                <button
+                  type="button"
+                  onClick={randomTool}
+                  className="flex items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm font-medium transition-colors hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+                >
+                  <Shuffle className="size-4" aria-hidden="true" />
+                  Open one at random
+                </button>
+              </motion.div>
             </div>
-            <div className="space-y-2">
-              {categories.map((c) => (
+
+            {/* Specification block — ruled cells, like a drawing's titleblock */}
+            <motion.dl
+              variants={fadeUp}
+              className="hidden w-[260px] overflow-hidden rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] font-mono text-xs lg:block"
+            >
+              <div className="flex items-stretch border-b border-[var(--color-border)]">
+                <div className="flex-1 border-r border-[var(--color-border)] px-3 py-2">
+                  <dt className="microlabel">Sheets</dt>
+                  <dd className="readout mt-1 text-2xl font-semibold text-[var(--color-foreground)]">
+                    {String(toolCount).padStart(2, "0")}
+                  </dd>
+                </div>
+                <div className="flex-1 px-3 py-2">
+                  <dt className="microlabel">Sections</dt>
+                  <dd className="readout mt-1 text-2xl font-semibold text-[var(--color-foreground)]">
+                    {String(categories.length).padStart(2, "0")}
+                  </dd>
+                </div>
+              </div>
+              {categories.map((c, i) => (
                 <a
                   key={c.id}
                   href={`/?category=${c.id}`}
-                  className="group flex items-center justify-between text-sm text-[var(--color-muted-foreground)] transition-colors hover:text-[var(--color-foreground)]"
+                  className="group flex items-center justify-between border-b border-[var(--color-border)] px-3 py-2 text-[var(--color-muted-foreground)] transition-colors last:border-b-0 hover:bg-[var(--color-muted)] hover:text-[var(--color-foreground)]"
                 >
                   <span className="flex items-center gap-2">
+                    <span className="text-[var(--color-primary)]">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
                     <span
-                      className="size-1.5 rounded-full"
+                      className="size-1.5"
                       style={{ backgroundColor: c.accent }}
                     />
                     {c.label}
                   </span>
-                  <ArrowRight className="size-3.5 -translate-x-1 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
+                  <span className="opacity-40 transition-opacity group-hover:opacity-100">
+                    →
+                  </span>
                 </a>
               ))}
-            </div>
-          </motion.dl>
-        </div>
+            </motion.dl>
+          </div>
+        </motion.div>
       </Container>
     </section>
   );
