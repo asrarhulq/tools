@@ -1,6 +1,7 @@
 import { Container } from "@/components/ui/container";
 import { categories } from "@/data/categories";
 import { siteConfig } from "@/config/site";
+import { CategoryLink } from "@/components/home/category-link";
 
 export function Footer() {
   const year = 2026; // Static: avoids a dynamic Date() during prerender.
@@ -20,12 +21,12 @@ export function Footer() {
             <ul className="grid grid-cols-2 gap-x-10 gap-y-2 sm:grid-cols-4">
               {categories.map((category) => (
                 <li key={category.id}>
-                  <a
-                    href={`/?category=${category.id}`}
+                  <CategoryLink
+                    category={category.id}
                     className="text-sm text-[var(--color-muted-foreground)] transition-colors hover:text-[var(--color-foreground)]"
                   >
                     {category.label}
-                  </a>
+                  </CategoryLink>
                 </li>
               ))}
             </ul>

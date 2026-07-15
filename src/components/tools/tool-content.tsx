@@ -58,8 +58,18 @@ const BeamDesignerTool = dynamic(
   { loading: () => loadingSkeleton },
 );
 
+// The Ethics Compass is light (data + framer-motion) but lazy-loaded for parity.
+const EthicsCompassTool = dynamic(
+  () =>
+    import("@/features/ethics-compass/ethics-compass-tool").then(
+      (m) => m.EthicsCompassTool,
+    ),
+  { loading: () => loadingSkeleton },
+);
+
 /** Map of tool id → live renderer. Add an entry when a tool ships. */
 const renderers: Record<string, React.ComponentType<{ tool: ToolWithHref }>> = {
+  "phil-tool-3": EthicsCompassTool,
   "eng-tool-1": StlAnalyzerTool,
   "eng-tool-5": TrussAnalyzerTool,
   "eng-tool-6": BeamDesignerTool,

@@ -6,12 +6,22 @@ import { motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import type { ToolWithHref } from "@/types/tool";
 import { getCategory } from "@/data/categories";
-import { fadeUp, staggerContainer } from "@/lib/motion";
+import { fadeUp } from "@/lib/motion";
+import { Reveal } from "@/components/ui/reveal";
 import { Icon } from "@/components/ui/icon";
 
-/** The 3D running figure is code-split so R3F never loads on the initial page. */
+/**
+ * The 3D running figure is code-split so R3F/three never load on the initial
+ * page. It is purely decorative, so if its chunk fails to load (e.g. a stale
+ * cached tab hitting a new deploy) we degrade to no figure rather than letting
+ * a ChunkLoadError bubble to the route error boundary. `ssr: false` keeps three
+ * off the server bundle entirely.
+ */
 const RunningFigure = dynamic(
-  () => import("./running-figure").then((m) => m.RunningFigure),
+  () =>
+    import("./running-figure")
+      .then((m) => ({ default: m.RunningFigure }))
+      .catch(() => ({ default: () => null })),
   { ssr: false },
 );
 
@@ -32,17 +42,11 @@ const DIFFICULTY_TONE: Record<string, string> = {
  */
 export function ToolShowcase({ tools }: { tools: readonly ToolWithHref[] }) {
   return (
-    <motion.div
-      variants={staggerContainer}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: "-80px" }}
-      className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
-    >
+    <Reveal className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {tools.map((tool, i) => (
         <ShowcaseTile key={tool.id} tool={tool} lead={i === 0} />
       ))}
-    </motion.div>
+    </Reveal>
   );
 }
 

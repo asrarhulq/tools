@@ -16,6 +16,24 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
+    // A ChunkLoadError means the browser asked for a JS chunk that no longer
+    // exists — typically a stale tab after a new deploy (or dev HMR rebuild).
+    // The fresh HTML references new chunk hashes, so a single hard reload
+    // self-heals it. Guard with sessionStorage so we never reload-loop if the
+    // chunk is genuinely, permanently missing.
+    const isChunkError =
+      error.name === "ChunkLoadError" ||
+      /Loading chunk|Failed to load chunk|error loading dynamically imported module/i.test(
+        error.message,
+      );
+    if (isChunkError && typeof window !== "undefined") {
+      const KEY = "chunk-reload-once";
+      if (!sessionStorage.getItem(KEY)) {
+        sessionStorage.setItem(KEY, "1");
+        window.location.reload();
+        return;
+      }
+    }
     // Replace with a real logger/monitoring call in production.
     console.error(error);
   }, [error]);

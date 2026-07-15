@@ -43,16 +43,37 @@ export const tools: readonly Tool[] = [
   },
   {
     id: "phil-tool-3",
-    slug: "phil-tool-3",
+    slug: "ethics-compass",
     title: "Ethics Compass",
     description:
-      "Compare decisions across utilitarian, deontological, and virtue lenses.",
+      "Map your moral instincts across five great ethical theories through classic dilemmas.",
+    longDescription:
+      "An interactive moral-philosophy instrument. Work through fifteen classic " +
+      "dilemmas in two layers: first judge whether an action is right or wrong, " +
+      "then drag a reasoning node across a four-way compass — Utility, Duty, " +
+      "Divine Command, and Culture/Virtue — to register why. Your choices are " +
+      "scored against five theories (Mill's utilitarianism, Kant's deontology, " +
+      "theological voluntarism, Aristotelian virtue ethics, and cultural " +
+      "relativism) to reveal the ethical core your instincts most resemble.",
     category: "philosophy",
-    icon: "compass",
+    icon: "scale",
     difficulty: "intermediate",
-    status: "coming-soon",
-    addedAt: "2026-07-05",
-    keywords: ["ethics", "morality", "framework"],
+    status: "live",
+    featured: true,
+    popular: true,
+    addedAt: "2026-07-15",
+    keywords: [
+      "ethics",
+      "morality",
+      "moral philosophy",
+      "trolley problem",
+      "utilitarianism",
+      "deontology",
+      "kant",
+      "mill",
+      "virtue ethics",
+      "framework",
+    ],
   },
   {
     id: "phil-tool-4",
