@@ -4,6 +4,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Command, Shuffle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import dynamic from "next/dynamic";
 import { Container } from "@/components/ui/container";
 import { useCommandPalette } from "@/components/command/command-palette-provider";
 import { allTools, getToolCountByCategory } from "@/lib/tools";
@@ -11,6 +12,19 @@ import { categories } from "@/data/categories";
 import { Icon } from "@/components/ui/icon";
 import { CategoryLink } from "./category-link";
 import { fadeUp, staggerContainer } from "@/lib/motion";
+
+/**
+ * The animated canvas backdrop is client-only and code-split so its JS stays
+ * off other routes; if its chunk ever fails it simply doesn't render (the hero
+ * keeps its static blueprint grid + glow).
+ */
+const MechanicalGrid = dynamic(
+  () =>
+    import("./mechanical-grid")
+      .then((m) => ({ default: m.MechanicalGrid }))
+      .catch(() => ({ default: () => null })),
+  { ssr: false },
+);
 
 /**
  * Homepage hero. A calm, editorial layout in the site's drafting-blue language:
@@ -31,7 +45,17 @@ export function Hero({ toolCount }: { toolCount: number }) {
   }
 
   return (
-    <section className="blueprint-field relative overflow-hidden border-b border-[var(--color-border)]">
+    <section className="relative overflow-hidden border-b border-[var(--color-border)] bg-[var(--color-background)]">
+      {/* Animated node-network backdrop (decorative, hero-scoped). The canvas
+          provides the grid/network, so no static blueprint layer here. A gentle
+          bottom fade blends it into the page below. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 [mask-image:linear-gradient(to_bottom,black_60%,transparent)]"
+      >
+        <MechanicalGrid />
+      </div>
+
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 [mask-image:radial-gradient(ellipse_90%_70%_at_20%_0%,black,transparent)]"
@@ -41,7 +65,7 @@ export function Hero({ toolCount }: { toolCount: number }) {
         }}
       />
 
-      <Container className="relative py-20 sm:py-28">
+      <Container className="relative z-10 py-20 sm:py-28">
         <motion.div
           variants={reduce ? undefined : staggerContainer}
           initial="hidden"
