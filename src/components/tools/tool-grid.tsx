@@ -1,8 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
 import type { ToolWithHref } from "@/types/tool";
-import { staggerContainer } from "@/lib/motion";
+import { Reveal } from "@/components/ui/reveal";
 import { ToolCard, type ToolRowVariant } from "./tool-card";
 
 /**
@@ -22,13 +21,7 @@ export function ToolGrid({
   // For the changelog, the newest entry (first, since input is date-sorted)
   // gets a NEW tag.
   return (
-    <motion.div
-      variants={staggerContainer}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: "-80px" }}
-      className="divide-y divide-[var(--color-hair)] overflow-hidden rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)]"
-    >
+    <Reveal className="divide-y divide-[var(--color-hair)] overflow-hidden rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)]">
       {tools.map((tool, i) => (
         <ToolCard
           key={tool.id}
@@ -38,6 +31,6 @@ export function ToolGrid({
           isNewest={variant === "changelog" && i === 0}
         />
       ))}
-    </motion.div>
+    </Reveal>
   );
 }

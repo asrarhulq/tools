@@ -5,7 +5,8 @@ import { motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import type { ToolWithHref } from "@/types/tool";
 import { getCategory } from "@/data/categories";
-import { fadeUp, staggerContainer } from "@/lib/motion";
+import { fadeUp } from "@/lib/motion";
+import { Reveal } from "@/components/ui/reveal";
 import { Icon } from "@/components/ui/icon";
 
 const MONTHS = [
@@ -40,11 +41,8 @@ function fmtDate(iso: string): { day: string; month: string; year: string } {
  */
 export function ToolTimeline({ tools }: { tools: readonly ToolWithHref[] }) {
   return (
-    <motion.ol
-      variants={staggerContainer}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: "-80px" }}
+    <Reveal
+      as="ol"
       className="relative ml-2 border-l border-[var(--color-border)] pl-0"
     >
       {tools.map((tool, i) => {
@@ -117,6 +115,6 @@ export function ToolTimeline({ tools }: { tools: readonly ToolWithHref[] }) {
           </motion.li>
         );
       })}
-    </motion.ol>
+    </Reveal>
   );
 }

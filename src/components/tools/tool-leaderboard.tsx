@@ -4,7 +4,8 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import type { ToolWithHref } from "@/types/tool";
 import { getCategory } from "@/data/categories";
-import { fadeUp, staggerContainer } from "@/lib/motion";
+import { fadeUp } from "@/lib/motion";
+import { Reveal } from "@/components/ui/reveal";
 import { Icon } from "@/components/ui/icon";
 
 /**
@@ -16,13 +17,7 @@ import { Icon } from "@/components/ui/icon";
 export function ToolLeaderboard({ tools }: { tools: readonly ToolWithHref[] }) {
   const n = tools.length || 1;
   return (
-    <motion.ol
-      variants={staggerContainer}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: "-80px" }}
-      className="space-y-1.5"
-    >
+    <Reveal as="ol" className="space-y-1.5">
       {tools.map((tool, i) => {
         const category = getCategory(tool.category);
         const rank = i + 1;
@@ -76,13 +71,12 @@ export function ToolLeaderboard({ tools }: { tools: readonly ToolWithHref[] }) {
                         : category.accent,
                       opacity: podium ? 1 : 0.55,
                     }}
-                    initial={{ width: 0 }}
-                    whileInView={{ width: `${pct}%` }}
-                    viewport={{ once: true }}
-                    transition={{
-                      duration: 0.7,
-                      delay: 0.05 * i,
-                      ease: [0.16, 1, 0.3, 1],
+                    variants={{
+                      hidden: { width: 0 },
+                      visible: {
+                        width: `${pct}%`,
+                        transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] },
+                      },
                     }}
                   />
                 </span>
@@ -94,6 +88,6 @@ export function ToolLeaderboard({ tools }: { tools: readonly ToolWithHref[] }) {
           </motion.li>
         );
       })}
-    </motion.ol>
+    </Reveal>
   );
 }
