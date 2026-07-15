@@ -56,15 +56,6 @@ export function Hero({ toolCount }: { toolCount: number }) {
         <MechanicalGrid />
       </div>
 
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 [mask-image:radial-gradient(ellipse_90%_70%_at_20%_0%,black,transparent)]"
-        style={{
-          background:
-            "radial-gradient(circle at 20% 0%, var(--glow), transparent 55%)",
-        }}
-      />
-
       <Container className="relative z-10 py-20 sm:py-28">
         <motion.div
           variants={reduce ? undefined : staggerContainer}
@@ -96,20 +87,18 @@ export function Hero({ toolCount }: { toolCount: number }) {
                 lineHeight: 0.98,
               }}
             >
-              More than calculators.
+              For every problem
               <br />
-              Less than <span className="text-[var(--color-primary)]">CAD</span>
-              .
-              <br className="hidden sm:block" /> Exactly what you need.
+              <span className="text-[var(--color-primary)]">
+                worth solving.
+              </span>
             </motion.h1>
 
             <motion.p
               variants={fadeUp}
-              className="mt-6 max-w-xl text-lg text-pretty text-[var(--color-muted-foreground)]"
+              className="mt-6 max-w-md text-xl font-medium text-pretty text-[var(--color-foreground)]/80 sm:text-2xl"
             >
-              Advanced engineering simulations, philosophical reasoning,
-              economic models, and everyday utilities — each built on real
-              analysis and tuned for an exceptional experience.
+              The right tool beats the hard way.
             </motion.p>
 
             <motion.div
@@ -138,10 +127,18 @@ export function Hero({ toolCount }: { toolCount: number }) {
             </motion.div>
           </div>
 
-          {/* Catalog panel — headline totals + category navigation */}
+          {/* Catalog panel — headline totals + category navigation.
+              Outline glow matched to the mechanical-grid accent (the engineering
+              sky-blue used by the node network), so the panel reads as part of
+              the same lit field. Subtle and theme-aware. */}
           <motion.dl
             variants={fadeUp}
-            className="hidden w-[320px] self-center overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-glow)] lg:block"
+            className="hidden w-[320px] self-center overflow-hidden rounded-xl border bg-[var(--color-surface)]/90 backdrop-blur-sm lg:block"
+            style={{
+              borderColor: "rgba(56,189,248,0.35)",
+              boxShadow:
+                "0 0 0 1px rgba(56,189,248,0.25), 0 0 24px -2px rgba(56,189,248,0.35), 0 8px 44px -12px rgba(56,189,248,0.45)",
+            }}
           >
             {/* Prominent totals */}
             <div className="flex items-stretch border-b border-[var(--color-border)]">

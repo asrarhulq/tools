@@ -54,7 +54,8 @@ const nextConfig: NextConfig = {
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob:",
       "font-src 'self'",
-      "connect-src 'self' blob: data:",
+      // api.web3forms.com receives the "Suggest a tool" form submissions.
+      "connect-src 'self' blob: data: https://api.web3forms.com",
       // Web Worker for off-main-thread STL analysis (bundled as a blob).
       "worker-src 'self' blob:",
       "object-src 'none'",
