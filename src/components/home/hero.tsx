@@ -4,6 +4,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Command, Shuffle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import dynamic from "next/dynamic";
 import { Container } from "@/components/ui/container";
 import { useCommandPalette } from "@/components/command/command-palette-provider";
 import { allTools, getToolCountByCategory } from "@/lib/tools";
@@ -11,6 +12,19 @@ import { categories } from "@/data/categories";
 import { Icon } from "@/components/ui/icon";
 import { CategoryLink } from "./category-link";
 import { fadeUp, staggerContainer } from "@/lib/motion";
+
+/**
+ * The animated canvas backdrop is client-only and code-split so its JS stays
+ * off other routes; if its chunk ever fails it simply doesn't render (the hero
+ * keeps its static blueprint grid + glow).
+ */
+const MechanicalGrid = dynamic(
+  () =>
+    import("./mechanical-grid")
+      .then((m) => ({ default: m.MechanicalGrid }))
+      .catch(() => ({ default: () => null })),
+  { ssr: false },
+);
 
 /**
  * Homepage hero. A calm, editorial layout in the site's drafting-blue language:
@@ -31,17 +45,18 @@ export function Hero({ toolCount }: { toolCount: number }) {
   }
 
   return (
-    <section className="blueprint-field relative overflow-hidden border-b border-[var(--color-border)]">
+    <section className="relative overflow-hidden border-b border-[var(--color-border)] bg-[var(--color-background)]">
+      {/* Animated node-network backdrop (decorative, hero-scoped). The canvas
+          provides the grid/network, so no static blueprint layer here. A gentle
+          bottom fade blends it into the page below. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 [mask-image:radial-gradient(ellipse_90%_70%_at_20%_0%,black,transparent)]"
-        style={{
-          background:
-            "radial-gradient(circle at 20% 0%, var(--glow), transparent 55%)",
-        }}
-      />
+        className="pointer-events-none absolute inset-0 [mask-image:linear-gradient(to_bottom,black_60%,transparent)]"
+      >
+        <MechanicalGrid />
+      </div>
 
-      <Container className="relative py-20 sm:py-28">
+      <Container className="relative z-10 py-20 sm:py-28">
         <motion.div
           variants={reduce ? undefined : staggerContainer}
           initial="hidden"
@@ -72,20 +87,18 @@ export function Hero({ toolCount }: { toolCount: number }) {
                 lineHeight: 0.98,
               }}
             >
-              More than calculators.
+              For every problem
               <br />
-              Less than <span className="text-[var(--color-primary)]">CAD</span>
-              .
-              <br className="hidden sm:block" /> Exactly what you need.
+              <span className="text-[var(--color-primary)]">
+                worth solving.
+              </span>
             </motion.h1>
 
             <motion.p
               variants={fadeUp}
-              className="mt-6 max-w-xl text-lg text-pretty text-[var(--color-muted-foreground)]"
+              className="mt-6 max-w-md text-xl font-medium text-pretty text-[var(--color-foreground)]/80 sm:text-2xl"
             >
-              Advanced engineering simulations, philosophical reasoning,
-              economic models, and everyday utilities — each built on real
-              analysis and tuned for an exceptional experience.
+              The right tool beats the hard way.
             </motion.p>
 
             <motion.div
@@ -114,10 +127,18 @@ export function Hero({ toolCount }: { toolCount: number }) {
             </motion.div>
           </div>
 
-          {/* Catalog panel — headline totals + category navigation */}
+          {/* Catalog panel — headline totals + category navigation.
+              Outline glow matched to the mechanical-grid accent (the engineering
+              sky-blue used by the node network), so the panel reads as part of
+              the same lit field. Subtle and theme-aware. */}
           <motion.dl
             variants={fadeUp}
-            className="hidden w-[320px] self-center overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-glow)] lg:block"
+            className="hidden w-[320px] self-center overflow-hidden rounded-xl border bg-[var(--color-surface)]/90 backdrop-blur-sm lg:block"
+            style={{
+              borderColor: "rgba(56,189,248,0.35)",
+              boxShadow:
+                "0 0 0 1px rgba(56,189,248,0.25), 0 0 24px -2px rgba(56,189,248,0.35), 0 8px 44px -12px rgba(56,189,248,0.45)",
+            }}
           >
             {/* Prominent totals */}
             <div className="flex items-stretch border-b border-[var(--color-border)]">
