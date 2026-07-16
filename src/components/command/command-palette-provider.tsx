@@ -38,7 +38,11 @@ export function CommandPaletteProvider({
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key.toLowerCase() === "k" && (event.metaKey || event.ctrlKey)) {
+      // `event.key` can be undefined for some events (autofill, IME) — guard it.
+      if (
+        event.key?.toLowerCase() === "k" &&
+        (event.metaKey || event.ctrlKey)
+      ) {
         event.preventDefault();
         toggle();
       }
