@@ -14,25 +14,25 @@ Intended to be deployed at `https://tools.asrarul.com`.
 Every dependency is pinned to the latest stable release compatible with the
 whole toolchain.
 
-| Area | Choice |
-| --- | --- |
-| Framework | **Next.js 16** (App Router, Turbopack, **Cache Components / PPR**) |
-| UI runtime | **React 19** |
-| Language | **TypeScript 5.9** (strict) |
-| Styling | **Tailwind CSS v4** (CSS-first, no JS config) |
-| Animation | **Framer Motion** (`framer-motion`) |
-| 3D | **Three.js + React Three Fiber + Drei** |
-| Search | **Fuse.js** (fuzzy) |
-| Command palette | **cmdk** |
-| Toasts | **sonner** |
-| Theming | **next-themes** (system + light/dark) |
-| Icons | **lucide-react** (via a serializable icon registry) |
-| Validation | **Zod 4** (env + input) |
-| Tooling | ESLint 9 (flat), Prettier, Husky, lint-staged, Commitlint |
+| Area            | Choice                                                             |
+| --------------- | ------------------------------------------------------------------ |
+| Framework       | **Next.js 16** (App Router, Turbopack, **Cache Components / PPR**) |
+| UI runtime      | **React 19**                                                       |
+| Language        | **TypeScript 5.9** (strict)                                        |
+| Styling         | **Tailwind CSS v4** (CSS-first, no JS config)                      |
+| Animation       | **Framer Motion** (`framer-motion`)                                |
+| 3D              | **Three.js + React Three Fiber + Drei**                            |
+| Search          | **Fuse.js** (fuzzy)                                                |
+| Command palette | **cmdk**                                                           |
+| Toasts          | **sonner**                                                         |
+| Theming         | **next-themes** (system + light/dark)                              |
+| Icons           | **lucide-react** (via a serializable icon registry)                |
+| Validation      | **Zod 4** (env + input)                                            |
+| Tooling         | ESLint 9 (flat), Prettier, Husky, lint-staged, Commitlint          |
 
 > **Version notes.** TypeScript is held at 5.9 and ESLint at 9 because
 > `eslint-config-next@16` / `typescript-eslint` don't yet support TS 7 / ESLint 10
-> (the current `latest` tags). Pinning to the newest *compatible* versions keeps
+> (the current `latest` tags). Pinning to the newest _compatible_ versions keeps
 > `lint`, `typecheck`, and `build` all green. Revisit when the plugins catch up.
 
 ---
@@ -47,15 +47,15 @@ pnpm dev                     # http://localhost:3000
 
 ### Scripts
 
-| Command | Description |
-| --- | --- |
-| `pnpm dev` | Dev server (Turbopack) |
-| `pnpm build` | Production build |
-| `pnpm start` | Serve the production build |
-| `pnpm lint` / `pnpm lint:fix` | ESLint |
-| `pnpm format` / `pnpm format:check` | Prettier |
-| `pnpm typecheck` | `tsc --noEmit` |
-| `pnpm analyze` | Build with the bundle analyzer (`ANALYZE=true`) |
+| Command                             | Description                                     |
+| ----------------------------------- | ----------------------------------------------- |
+| `pnpm dev`                          | Dev server (Turbopack)                          |
+| `pnpm build`                        | Production build                                |
+| `pnpm start`                        | Serve the production build                      |
+| `pnpm lint` / `pnpm lint:fix`       | ESLint                                          |
+| `pnpm format` / `pnpm format:check` | Prettier                                        |
+| `pnpm typecheck`                    | `tsc --noEmit`                                  |
+| `pnpm analyze`                      | Build with the bundle analyzer (`ANALYZE=true`) |
 
 ---
 
@@ -181,3 +181,4 @@ inputs · `poweredByHeader` disabled.
 
 Deploy to any Node host (Vercel recommended). Set the environment variables from
 `.env.example` — in production, `NEXT_PUBLIC_SITE_URL=https://tools.asrarul.com`.
+.
