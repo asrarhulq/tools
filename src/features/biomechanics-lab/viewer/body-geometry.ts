@@ -164,38 +164,92 @@ export interface BodyBuildResult {
   dispose: () => void;
 }
 
+/** A body region key used to look up a heat colour per part. */
+export type RegionKey =
+  | "thighL"
+  | "thighR"
+  | "shankL"
+  | "shankR"
+  | "upperArmL"
+  | "upperArmR"
+  | "forearmL"
+  | "forearmR"
+  | "trunk"
+  | "pelvis"
+  | "head"
+  | "footL"
+  | "footR";
+
+/** Optional per-region colour provider for heat-map rendering (RGB 0..1). */
+export type RegionColor = (region: RegionKey) => [number, number, number];
+
+/** Paint every vertex of a part with a flat RGB colour (adds a `color` attr). */
+function paint(g: THREE.BufferGeometry, rgb: [number, number, number]) {
+  const n = g.getAttribute("position").count;
+  const arr = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) {
+    arr[i * 3] = rgb[0];
+    arr[i * 3 + 1] = rgb[1];
+    arr[i * 3 + 2] = rgb[2];
+  }
+  g.setAttribute("color", new THREE.Float32BufferAttribute(arr, 3));
+}
+
 /**
  * Build the full continuous body geometry for a pose. `girth` scales all soft
- * tissue (from the body "build" parameter). Returns one merged, smooth-normal
- * BufferGeometry ready to render with a single skin material.
+ * tissue (from the body "build" parameter). When `regionColor` is supplied,
+ * each anatomical region is painted with vertex colours so the mesh renders as
+ * a true per-region heat map (thigh, calf, trunk, arms… each tinted by its own
+ * load/activation) rather than a single flat body tint. Returns one merged,
+ * smooth-normal BufferGeometry.
  */
-export function buildBody(pose: Pose, girth = 1): THREE.BufferGeometry {
+export function buildBody(
+  pose: Pose,
+  girth = 1,
+  regionColor?: RegionColor,
+): THREE.BufferGeometry {
   const p = pose.points;
   const parts: THREE.BufferGeometry[] = [];
   const g = girth;
 
-  const seg = (aKey: string, bKey: string, profile: Profile) => {
+  const seg = (
+    aKey: string,
+    bKey: string,
+    profile: Profile,
+    region?: RegionKey,
+  ) => {
     const a = p[aKey];
     const b = p[bKey];
-    if (a && b) parts.push(tube(V(a), V(b), scale(g, profile)));
+    if (a && b) {
+      const t = tube(V(a), V(b), scale(g, profile));
+      if (regionColor && region) paint(t, regionColor(region));
+      parts.push(t);
+    }
+  };
+
+  const blob = (geo: THREE.BufferGeometry, region?: RegionKey) => {
+    if (regionColor && region) paint(geo, regionColor(region));
+    parts.push(geo);
   };
 
   // Legs
-  seg("hipL", "kneeL", thighProfile);
-  seg("kneeL", "ankleL", shankProfile);
-  seg("hipR", "kneeR", thighProfile);
-  seg("kneeR", "ankleR", shankProfile);
+  seg("hipL", "kneeL", thighProfile, "thighL");
+  seg("kneeL", "ankleL", shankProfile, "shankL");
+  seg("hipR", "kneeR", thighProfile, "thighR");
+  seg("kneeR", "ankleR", shankProfile, "shankR");
   // Arms
-  seg("shoulderL", "elbowL", upperArmProfile);
-  seg("elbowL", "handL", forearmProfile);
-  seg("shoulderR", "elbowR", upperArmProfile);
-  seg("elbowR", "handR", forearmProfile);
+  seg("shoulderL", "elbowL", upperArmProfile, "upperArmL");
+  seg("elbowL", "handL", forearmProfile, "forearmL");
+  seg("shoulderR", "elbowR", upperArmProfile, "upperArmR");
+  seg("elbowR", "handR", forearmProfile, "forearmR");
 
   // Torso: a lofted tube from pelvis→trunkTop, broad at the chest.
   if (p.pelvis && p.trunkTop) {
     const torsoProfile: Profile = (t) =>
       (0.12 + 0.05 * Math.sin(t * Math.PI) + 0.03 * t) * g;
-    parts.push(tube(V(p.pelvis), V(p.trunkTop), torsoProfile));
+    const torso = tube(V(p.pelvis), V(p.trunkTop), torsoProfile);
+    if (regionColor) paint(torso, regionColor("trunk"));
+    parts.push(torso);
     // Chest breadth: a flattened ellipsoid across the shoulders.
     if (p.shoulderL && p.shoulderR) {
       const sMid = V(p.shoulderL).add(V(p.shoulderR)).multiplyScalar(0.5);
@@ -203,25 +257,25 @@ export function buildBody(pose: Pose, girth = 1): THREE.BufferGeometry {
         .subVectors(V(p.trunkTop), V(p.pelvis))
         .normalize();
       const q = new THREE.Quaternion().setFromUnitVectors(UP, dir);
-      parts.push(ellipsoid(sMid, [0.19 * g, 0.11 * g, 0.13 * g], q));
+      blob(ellipsoid(sMid, [0.19 * g, 0.11 * g, 0.13 * g], q), "trunk");
     }
   }
 
   // Pelvis mass
   if (p.pelvis)
-    parts.push(ellipsoid(V(p.pelvis), [0.15 * g, 0.1 * g, 0.13 * g]));
+    blob(ellipsoid(V(p.pelvis), [0.15 * g, 0.1 * g, 0.13 * g]), "pelvis");
 
   // Neck + head
   if (p.trunkTop && p.headTop) {
-    seg("trunkTop", "headTop", () => 0.045 * g);
-    parts.push(ellipsoid(V(p.headTop), [0.088, 0.1, 0.088]));
+    seg("trunkTop", "headTop", () => 0.045 * g, "head");
+    blob(ellipsoid(V(p.headTop), [0.088, 0.1, 0.088]), "head");
   }
 
   // Hands: a small tube from wrist→hand tip so they fuse with the forearm
   // instead of floating as separate blobs.
-  for (const [wrist, hand] of [
-    ["elbowL", "handL"],
-    ["elbowR", "handR"],
+  for (const [wrist, hand, region] of [
+    ["elbowL", "handL", "forearmL"],
+    ["elbowR", "handR", "forearmR"],
   ] as const) {
     const w = p[wrist];
     const hnd = p[hand];
@@ -231,24 +285,24 @@ export function buildBody(pose: Pose, girth = 1): THREE.BufferGeometry {
         hv = V(hnd);
       const dir = new THREE.Vector3().subVectors(hv, wv).normalize();
       const tip = hv.clone().add(dir.multiplyScalar(0.05 * g));
-      parts.push(
-        tube(
-          hv.clone().sub(dir.clone().multiplyScalar(0.04 * g)),
-          tip,
-          () => 0.035 * g,
-        ),
+      const h = tube(
+        hv.clone().sub(dir.clone().multiplyScalar(0.04 * g)),
+        tip,
+        () => 0.035 * g,
       );
+      if (regionColor) paint(h, regionColor(region));
+      parts.push(h);
     }
   }
   for (const f of [
-    ["ankleL", "toeL"],
-    ["ankleR", "toeR"],
+    ["ankleL", "toeL", "footL"],
+    ["ankleR", "toeR", "footR"],
   ] as const) {
     const a = p[f[0]];
     const b = p[f[1]];
     if (a && b) {
       const mid = V(a).add(V(b)).multiplyScalar(0.5);
-      parts.push(ellipsoid(mid, [0.04 * g, 0.035 * g, 0.11 * g]));
+      blob(ellipsoid(mid, [0.04 * g, 0.035 * g, 0.11 * g]), f[2]);
     }
   }
 

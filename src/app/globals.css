@@ -197,6 +197,42 @@
     letter-spacing: -0.02em;
   }
 
+  /* Focus-timer: gentle breathing pulse for the running ring glow. */
+  .focus-breathe {
+    animation: focus-breathe 4.5s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .focus-breathe {
+      animation: none;
+    }
+  }
+
+  /* Ambient drifting aura behind the timer (focus vs break tint via --aura). */
+  .focus-aura {
+    position: absolute;
+    inset: -20%;
+    pointer-events: none;
+    background:
+      radial-gradient(
+        40% 40% at 30% 30%,
+        color-mix(in oklch, var(--aura) 18%, transparent),
+        transparent 70%
+      ),
+      radial-gradient(
+        45% 45% at 70% 65%,
+        color-mix(in oklch, var(--aura) 14%, transparent),
+        transparent 70%
+      );
+    filter: blur(40px);
+    animation: focus-drift 22s ease-in-out infinite alternate;
+    transition: background 600ms ease;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .focus-aura {
+      animation: none;
+    }
+  }
+
   /* Blueprint field — a fine drafting grid used behind hero / stage areas.
      Two ruling weights (major every 5th line) evoke engineering graph paper. */
   .blueprint-field {
@@ -272,5 +308,26 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes focus-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.75;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+@keyframes focus-drift {
+  from {
+    transform: translate3d(-3%, -2%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(3%, 2%, 0) scale(1.08);
   }
 }

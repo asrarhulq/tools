@@ -11,7 +11,7 @@ import type {
   Vec3,
 } from "../types";
 import { rampColor } from "../lib/colormap";
-import { buildBody } from "./body-geometry";
+import { buildBody, type RegionColor, type RegionKey } from "./body-geometry";
 
 /**
  * The human figure. Rather than ball-and-stick primitives, the body is ONE
@@ -67,11 +67,22 @@ export function HumanModel({
   tint?: string;
 }) {
   const skeleton = mode === "skeleton";
+  // Heat-map & muscle modes paint the body per region so load/activation is
+  // legible across the whole figure (a real heat map), not a single flat tint.
+  const perRegion = mode === "heatmap" || mode === "muscle";
 
-  // Rebuild the continuous surface when the pose changes (frame-fresh geometry).
+  // A per-region colour driven by the local muscle activation + joint load, so
+  // e.g. the quads light up in a squat while the calves stay cool.
+  const regionColor = useMemo<RegionColor | undefined>(() => {
+    if (!perRegion || tint) return undefined;
+    const load = regionLoadMap(frame);
+    return (region: RegionKey) => rampColor(load[region] ?? 0.05);
+  }, [perRegion, tint, frame]);
+
+  // Rebuild the continuous surface when the pose (or heat colouring) changes.
   const geometry = useMemo(
-    () => (skeleton ? null : buildBody(pose, girth)),
-    [pose, girth, skeleton],
+    () => (skeleton ? null : buildBody(pose, girth, regionColor)),
+    [pose, girth, skeleton, regionColor],
   );
 
   // Dispose old geometry to avoid GPU leaks as frames advance.
@@ -84,13 +95,13 @@ export function HumanModel({
     };
   }, [geometry]);
 
-  // Whole-body tint from the current load/activation in analytical modes.
+  // Whole-body tint for the modes that don't paint per-region vertex colours.
+  // (muscle/heatmap use `regionColor` + vertexColors instead, so here they just
+  // fall through to plain white which lets the vertex colours show at full
+  // strength.)
   const bodyColor = useMemo(() => {
     if (tint) return new THREE.Color(tint);
-    if (mode === "muscle" || mode === "heatmap") {
-      const peak = Math.max(0, ...frame.muscles.map((m) => m.activation));
-      return SKIN.clone().lerp(rgb(peak), 0.55);
-    }
+    if (perRegion) return new THREE.Color("#ffffff"); // vertex colours drive it
     if (mode === "joint" || mode === "injury") {
       const peak = Math.max(0, ...frame.jointLoads.map((j) => j.loadFraction));
       return SKIN.clone().lerp(rgb(peak), 0.4);
@@ -98,7 +109,7 @@ export function HumanModel({
     if (mode === "force")
       return SKIN.clone().lerp(new THREE.Color("#8b8ff5"), 0.25);
     return SKIN;
-  }, [tint, mode, frame.muscles, frame.jointLoads]);
+  }, [tint, perRegion, mode, frame.jointLoads]);
 
   if (skeleton) {
     return (
@@ -136,13 +147,16 @@ export function HumanModel({
         <mesh geometry={geometry} castShadow receiveShadow>
           <meshStandardMaterial
             color={bodyColor}
+            vertexColors={perRegion && !tint}
             transparent={opacity < 1}
             opacity={opacity}
             metalness={0.0}
-            roughness={0.55}
+            roughness={0.5}
             envMapIntensity={0.7}
-            emissive={bodyColor}
-            emissiveIntensity={0.04}
+            emissive={
+              perRegion && !tint ? new THREE.Color("#000000") : bodyColor
+            }
+            emissiveIntensity={perRegion ? 0.12 : 0.04}
             flatShading={false}
           />
         </mesh>
@@ -171,6 +185,76 @@ export function HumanModel({
         : null}
     </group>
   );
+}
+
+/**
+ * Collapse the frame's muscle activations + joint loads into a single 0..1 heat
+ * value per drawable body region, so the whole figure reads as a heat map. Each
+ * region takes the max of any muscle spanning it and the reaction load of its
+ * bounding joints — whichever is hotter wins, which matches intuition (a working
+ * quad OR a heavily loaded knee both make the thigh "hot").
+ */
+function regionLoadMap(frame: FrameAnalysis): Record<string, number> {
+  const m: Record<string, number> = {};
+  const bump = (k: string, v: number) => {
+    if (v > (m[k] ?? 0)) m[k] = v;
+  };
+  // Muscle groups carry a `segment` id (thighL, shankR, trunk, upperArmL…).
+  for (const mu of frame.muscles) bump(mu.segment, mu.activation);
+  // Joint loads spill onto the adjacent segments.
+  for (const j of frame.jointLoads) {
+    const f = j.loadFraction;
+    switch (j.joint) {
+      case "kneeL":
+        bump("thighL", f);
+        bump("shankL", f);
+        break;
+      case "kneeR":
+        bump("thighR", f);
+        bump("shankR", f);
+        break;
+      case "hipL":
+        bump("thighL", f);
+        bump("pelvis", f);
+        break;
+      case "hipR":
+        bump("thighR", f);
+        bump("pelvis", f);
+        break;
+      case "ankleL":
+        bump("shankL", f);
+        bump("footL", f);
+        break;
+      case "ankleR":
+        bump("shankR", f);
+        bump("footR", f);
+        break;
+      case "shoulderL":
+        bump("upperArmL", f);
+        bump("trunk", f * 0.6);
+        break;
+      case "shoulderR":
+        bump("upperArmR", f);
+        bump("trunk", f * 0.6);
+        break;
+      case "elbowL":
+        bump("upperArmL", f);
+        bump("forearmL", f);
+        break;
+      case "elbowR":
+        bump("upperArmR", f);
+        bump("forearmR", f);
+        break;
+      case "lumbar":
+        bump("trunk", f);
+        bump("pelvis", f);
+        break;
+      case "neck":
+        bump("head", f);
+        break;
+    }
+  }
+  return m;
 }
 
 function jointPointKey(joint: JointId): string | null {
