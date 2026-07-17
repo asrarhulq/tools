@@ -150,7 +150,7 @@ The active category lives in the URL (`?category=`) so links are shareable, with
 R3F loaders behind React Suspense. **STEP** is modeled as a conversion format:
 the architecture converts STEP → GLTF upstream, then reuses the same renderer —
 no viewer changes required. Drag-and-drop a file, or explore the built-in demo
-model.
+model..
 
 ---
 
