@@ -121,24 +121,32 @@ function solve(
     0,
   ];
 
-  // Legs (sagittal). Hip angle measured from downward vertical, + = forward.
+  // Legs (sagittal). A segment hanging straight down is the vector (0,-1);
+  // flexing the hip **forward** by `hip` rotates it toward +x (forward), giving
+  // the world direction (sin θ, -cos θ). The knee then flexes the shank BACK
+  // relative to the thigh (behind the leg), so the shank angle from vertical is
+  // `hip - knee`. Positive angles therefore read as a natural forward step /
+  // sit-back, never a backward hyperextension.
+  const limbPoint = (
+    from: Vec3,
+    angleFromDown: number,
+    length: number,
+  ): Vec3 => [
+    from[0] + Math.sin(angleFromDown) * length,
+    from[1] - Math.cos(angleFromDown) * length,
+    from[2],
+  ];
+
   const leg = (side: 1 | -1, hip: number, knee: number, ankle: number) => {
     const hipC: Vec3 = [pelvis[0], pelvis[1], side * hipWidth];
-    const thighDir = -Math.PI + hip; // start pointing down, flex forward
-    const kneeC: Vec3 = [
-      hipC[0] + Math.sin(thighDir) * thigh,
-      hipC[1] - Math.cos(hip) * thigh,
-      hipC[2],
-    ];
-    const shankDir = hip - knee;
-    const ankleC: Vec3 = [
-      kneeC[0] + Math.sin(shankDir) * shank,
-      kneeC[1] - Math.cos(shankDir) * shank,
-      hipC[2],
-    ];
+    const thighAngle = hip; // from downward vertical, + = forward
+    const kneeC = limbPoint(hipC, thighAngle, thigh);
+    const shankAngle = hip - knee; // knee flexion swings the shank rearward
+    const ankleC = limbPoint(kneeC, shankAngle, shank);
+    // Foot points forward (+x) from the ankle, tilting with ankle dorsi/plantar.
     const toe: Vec3 = [
-      ankleC[0] + Math.cos(shankDir - ankle) * foot,
-      ankleC[1] - Math.sin(Math.abs(shankDir)) * foot * 0.15,
+      ankleC[0] + Math.cos(ankle) * foot,
+      ankleC[1] - Math.sin(ankle) * foot,
       hipC[2],
     ];
     return { hipC, kneeC, ankleC, toe };
@@ -147,21 +155,17 @@ function solve(
   const legL = leg(1, a.hipL, a.kneeL, a.ankleL);
   const legR = leg(-1, a.hipR, a.kneeR, a.ankleR);
 
-  // Arms (sagittal), hanging then swinging.
+  // Arms (sagittal), hanging then swinging. Same convention as the legs: a
+  // straight-down upper arm is (0,-1); positive shoulder flexion rotates it
+  // forward (+x). The elbow flexes the forearm forward from the upper-arm line,
+  // so the forearm angle from vertical is `shoulder + elbow` — a curl/guard
+  // brings the hand up and in FRONT, never bending backward.
   const arm = (side: 1 | -1, shoulder: number, elbow: number) => {
     const shC: Vec3 = [trunkTop[0], trunkTop[1], side * shoulderWidth];
-    const upDir = -Math.PI + shoulder;
-    const elbowC: Vec3 = [
-      shC[0] + Math.sin(upDir) * uArm,
-      shC[1] - Math.cos(shoulder) * uArm,
-      shC[2],
-    ];
-    const foreDir = shoulder - elbow;
-    const handC: Vec3 = [
-      elbowC[0] + Math.sin(foreDir) * fArm,
-      elbowC[1] - Math.cos(foreDir) * fArm,
-      shC[2],
-    ];
+    const upperAngle = shoulder;
+    const elbowC = limbPoint(shC, upperAngle, uArm);
+    const foreAngle = shoulder + elbow;
+    const handC = limbPoint(elbowC, foreAngle, fArm);
     return { shC, elbowC, handC };
   };
 
@@ -309,10 +313,13 @@ function squat(phase: number, body: BodyParams): Pose {
       kneeR: knee,
       ankleL: ankle,
       ankleR: ankle,
-      shoulderL: 70 * DEG,
-      shoulderR: 70 * DEG,
-      elbowL: 90 * DEG,
-      elbowR: 90 * DEG,
+      // Arms held forward gripping a bar in front of the chest. With the elbow
+      // now flexing forward *from* the upper-arm line, keep the sum modest so
+      // the forearms stay horizontal-ish rather than swinging overhead.
+      shoulderL: 30 * DEG,
+      shoulderR: 30 * DEG,
+      elbowL: 55 * DEG,
+      elbowR: 55 * DEG,
       pelvisY,
       pelvisX: -depth * 0.05,
     },

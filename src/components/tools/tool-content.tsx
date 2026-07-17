@@ -67,9 +67,20 @@ const EthicsCompassTool = dynamic(
   { loading: () => loadingSkeleton },
 );
 
+// The focus timer (rAF engine + WebAudio + localStorage) — lazy-loaded so its
+// client-only machinery stays off every other route's bundle.
+const FocusTimerTool = dynamic(
+  () =>
+    import("@/features/focus-timer/focus-timer-tool").then(
+      (m) => m.FocusTimerTool,
+    ),
+  { loading: () => loadingSkeleton },
+);
+
 /** Map of tool id → live renderer. Add an entry when a tool ships. */
 const renderers: Record<string, React.ComponentType<{ tool: ToolWithHref }>> = {
   "phil-tool-3": EthicsCompassTool,
+  "general-tool-2": FocusTimerTool,
   "eng-tool-1": StlAnalyzerTool,
   "eng-tool-5": TrussAnalyzerTool,
   "eng-tool-6": BeamDesignerTool,

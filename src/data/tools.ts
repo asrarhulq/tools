@@ -15,20 +15,6 @@ import type { Tool } from "@/types/tool";
 export const tools: readonly Tool[] = [
   // ── Philosophy ────────────────────────────────────────────────────────────
   {
-    id: "phil-tool-1",
-    slug: "phil-tool-1",
-    title: "Thought Experiment Lab",
-    description: "Run classic thought experiments and branch your reasoning.",
-    category: "philosophy",
-    icon: "git-branch",
-    difficulty: "beginner",
-    status: "coming-soon",
-    featured: true,
-    popular: true,
-    addedAt: "2026-07-10",
-    keywords: ["trolley problem", "reasoning", "logic"],
-  },
-  {
     id: "phil-tool-2",
     slug: "phil-tool-2",
     title: "Argument Mapper",
@@ -129,31 +115,6 @@ export const tools: readonly Tool[] = [
     },
   },
   {
-    id: "eng-tool-2",
-    slug: "eng-tool-2",
-    title: "Unit Converter",
-    description: "Convert length, mass, pressure, and more with precision.",
-    category: "engineering",
-    icon: "ruler",
-    difficulty: "beginner",
-    status: "coming-soon",
-    popular: true,
-    addedAt: "2026-07-09",
-    keywords: ["units", "metric", "imperial", "conversion"],
-  },
-  {
-    id: "eng-tool-3",
-    slug: "eng-tool-3",
-    title: "Beam Calculator",
-    description: "Compute deflection and stress for simple structural beams.",
-    category: "engineering",
-    icon: "calculator",
-    difficulty: "advanced",
-    status: "coming-soon",
-    addedAt: "2026-07-02",
-    keywords: ["structural", "stress", "deflection", "statics"],
-  },
-  {
     id: "eng-tool-4",
     slug: "eng-tool-4",
     title: "Tolerance Grid",
@@ -244,20 +205,6 @@ export const tools: readonly Tool[] = [
 
   // ── Economics ─────────────────────────────────────────────────────────────
   {
-    id: "econ-tool-1",
-    slug: "econ-tool-1",
-    title: "Compound Interest Lab",
-    description: "Model growth, contributions, and inflation over time.",
-    category: "economics",
-    icon: "trending-up",
-    difficulty: "beginner",
-    status: "coming-soon",
-    featured: true,
-    popular: true,
-    addedAt: "2026-07-07",
-    keywords: ["investing", "savings", "growth", "finance"],
-  },
-  {
     id: "econ-tool-2",
     slug: "econ-tool-2",
     title: "Supply & Demand Simulator",
@@ -297,30 +244,38 @@ export const tools: readonly Tool[] = [
 
   // ── General ───────────────────────────────────────────────────────────────
   {
-    id: "general-tool-1",
-    slug: "general-tool-1",
-    title: "Color Studio",
-    description: "Generate accessible palettes with contrast checking.",
-    category: "general",
-    icon: "palette",
-    difficulty: "beginner",
-    status: "coming-soon",
-    featured: true,
-    popular: true,
-    addedAt: "2026-07-12",
-    keywords: ["color", "palette", "contrast", "wcag", "design"],
-  },
-  {
     id: "general-tool-2",
-    slug: "general-tool-2",
+    slug: "focus-timer",
     title: "Pomodoro Timer",
-    description: "A focused, beautiful timer for deep work sessions.",
+    description:
+      "A calm, beautiful focus timer with stats, streaks, and a Zen mode.",
+    longDescription:
+      "A distraction-free Pomodoro timer built around a buttery-smooth animated " +
+      "ring. Focus, short-break, and long-break modes with customizable " +
+      "durations, automatic 4-session cycling, keyboard shortcuts, and a " +
+      "fullscreen Focus Mode. Tracks today's and weekly sessions, total focus " +
+      "hours, current and longest streaks, and a dynamic Focus Score — with a " +
+      "365-day productivity heatmap, a recent-session timeline, rotating " +
+      "philosophical quotes, optional sounds, and browser notifications. All " +
+      "settings and statistics persist locally in your browser.",
     category: "general",
     icon: "clock",
     difficulty: "beginner",
-    status: "coming-soon",
-    addedAt: "2026-07-04",
-    keywords: ["focus", "productivity", "timer"],
+    status: "live",
+    featured: true,
+    popular: true,
+    addedAt: "2026-07-17",
+    keywords: [
+      "focus",
+      "productivity",
+      "timer",
+      "pomodoro",
+      "deep work",
+      "streak",
+      "concentration",
+      "study",
+      "zen",
+    ],
   },
   {
     id: "general-tool-3",
