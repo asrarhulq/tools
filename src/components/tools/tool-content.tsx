@@ -77,8 +77,18 @@ const FocusTimerTool = dynamic(
   { loading: () => loadingSkeleton },
 );
 
+// The Argument Mapper pulls in React Flow + elkjs + zustand — load it only here.
+const ArgumentMapperTool = dynamic(
+  () =>
+    import("@/features/argument-mapper/argument-mapper-tool").then(
+      (m) => m.ArgumentMapperTool,
+    ),
+  { loading: () => loadingSkeleton },
+);
+
 /** Map of tool id → live renderer. Add an entry when a tool ships. */
 const renderers: Record<string, React.ComponentType<{ tool: ToolWithHref }>> = {
+  "phil-tool-2": ArgumentMapperTool,
   "phil-tool-3": EthicsCompassTool,
   "general-tool-2": FocusTimerTool,
   "eng-tool-1": StlAnalyzerTool,

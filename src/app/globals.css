@@ -331,3 +331,62 @@
     transform: translate3d(3%, 2%, 0) scale(1.08);
   }
 }
+
+/* ── Argument Mapper ─────────────────────────────────────────────────────── */
+
+/* Flowing dashes along supporting/attacking edges (direction of reasoning). */
+.am-edge-flow {
+  animation: am-dash 0.9s linear infinite;
+}
+@keyframes am-dash {
+  to {
+    stroke-dashoffset: -13;
+  }
+}
+
+/* Soft entrance for newly created nodes / library loads. */
+@keyframes am-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Shared form control for the mapper's inspector / dialogs. */
+.am-input {
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+  padding: 0.4rem 0.6rem;
+  font-size: 0.875rem;
+  color: var(--color-foreground);
+  outline: none;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+.am-input:focus {
+  border-color: color-mix(in oklch, var(--color-primary) 60%, transparent);
+  box-shadow: 0 0 0 3px
+    color-mix(in oklch, var(--color-primary) 18%, transparent);
+}
+
+/* React Flow theme bridge — let its controls/minimap inherit our tokens. */
+.am-canvas .react-flow__controls-button svg {
+  fill: var(--color-foreground);
+}
+.am-canvas .react-flow__attribution {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .am-edge-flow {
+    animation: none;
+    stroke-dasharray: 6 5;
+  }
+}
