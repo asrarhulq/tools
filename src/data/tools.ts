@@ -16,16 +16,37 @@ export const tools: readonly Tool[] = [
   // ── Philosophy ────────────────────────────────────────────────────────────
   {
     id: "phil-tool-2",
-    slug: "phil-tool-2",
+    slug: "argument-mapper",
     title: "Argument Mapper",
     description:
-      "Diagram premises and conclusions to test an argument's validity.",
+      "Map premises, evidence, and objections on an infinite canvas — with live validity and fallacy checks.",
+    longDescription:
+      "A visual reasoning canvas — think Figma for arguments. Lay out premises, " +
+      "conclusions, assumptions, evidence, objections, and rebuttals as nodes, " +
+      "connect them with typed relationships (supports, attacks, depends on…), " +
+      "and watch a live logic engine grade the structure: unsupported claims, " +
+      "circular reasoning, contradictions, and a running catalog of logical " +
+      "fallacies, each explained. Auto-layout untangles the graph, a confidence " +
+      "and evidence-quality system makes uncertainty visible, and a library of " +
+      "famous arguments gets you started. All local, all offline.",
     category: "philosophy",
     icon: "scroll-text",
     difficulty: "intermediate",
-    status: "coming-soon",
-    addedAt: "2026-07-08",
-    keywords: ["syllogism", "fallacy", "debate"],
+    status: "live",
+    featured: true,
+    popular: true,
+    addedAt: "2026-07-18",
+    keywords: [
+      "syllogism",
+      "fallacy",
+      "debate",
+      "logic",
+      "reasoning",
+      "critical thinking",
+      "argument map",
+      "premises",
+      "philosophy",
+    ],
   },
   {
     id: "phil-tool-3",

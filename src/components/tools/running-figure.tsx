@@ -1,7 +1,14 @@
 "use client";
 
-import { Component, useMemo, useRef, type ReactNode } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import {
+  Component,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Line } from "@react-three/drei";
 import * as THREE from "three";
 import { generatePose } from "@/features/biomechanics-lab/lib/kinematics";
@@ -14,13 +21,22 @@ import type { Vec3 } from "@/features/biomechanics-lab/types";
  * kinematics (`generatePose("run", …)`) but renders only the bone chain — no
  * analysis engine, no surface mesh — so it stays cheap enough for the homepage.
  *
- * The phase advances in a **ref** each frame and the bone endpoints are mutated
- * in place (no per-frame React setState — that thrashed on every frame and could
- * throw across the client-side navigation into/out of the tool, blanking the
- * tile). The whole Canvas is wrapped in an error boundary + WebGL context-loss
- * guard so, if anything goes wrong (e.g. the browser's live-context limit is hit
- * after opening the full lab), it silently degrades to nothing instead of
- * showing a white error screen.
+ * ── Why the WebGL bookkeeping below matters ──────────────────────────────────
+ * Browsers cap the number of simultaneous live WebGL contexts (~8–16). Opening
+ * the full Biomechanics Lab spins up its own heavier context; if this decorative
+ * canvas is ALSO alive at that moment, returning to the homepage can leave the
+ * browser over the limit and the tile's canvas silently fails to acquire a
+ * context — rendering as a blank white box with a broken-image glyph (no JS
+ * error, so an error boundary alone can't catch it).
+ *
+ * The fix is threefold:
+ *   1. Mount the <Canvas> ONLY while the tile is actually on screen (an
+ *      IntersectionObserver gate). Navigating to the lab unmounts it, so the two
+ *      contexts are essentially never alive together.
+ *   2. On unmount, explicitly `forceContextLoss()` so the browser frees the GL
+ *      context immediately instead of lazily.
+ *   3. If WebGL is unavailable/fails entirely, fall back to a static SVG figure
+ *      so the tile is never blank.
  */
 
 const BONES: Array<[string, string]> = [
@@ -43,6 +59,22 @@ const BONES: Array<[string, string]> = [
 ];
 
 const V = (p: Vec3) => new THREE.Vector3(p[0], p[1], p[2]);
+
+/** Force the GL context to be released the moment this canvas unmounts. */
+function ContextReleaser() {
+  const gl = useThree((s) => s.gl);
+  useEffect(() => {
+    return () => {
+      try {
+        gl.forceContextLoss();
+        gl.dispose();
+      } catch {
+        /* best-effort */
+      }
+    };
+  }, [gl]);
+  return null;
+}
 
 function Runner({ color }: { color: string }) {
   const group = useRef<THREE.Group>(null);
@@ -105,12 +137,53 @@ function Runner({ color }: { color: string }) {
 }
 
 /**
- * Error boundary that renders nothing on failure. A decorative WebGL preview
- * must never take down the homepage; if the Canvas throws (context limit, lost
- * context, chunk mismatch), we degrade to the blueprint background alone.
+ * A static SVG side-profile of the running figure — the graceful fallback when
+ * WebGL can't run (no context available, disabled, or the boundary tripped).
+ * Uses the same running pose so the tile still reads as "biomechanics".
+ */
+function StaticFigure({ color }: { color: string }) {
+  const pose = useMemo(() => generatePose("run", 0.15, DEFAULT_BODY), []);
+  // Project the sagittal (x,y) plane to SVG, y-up → y-down, centred.
+  const SC = 150;
+  const OX = 130;
+  const OY = 150;
+  const px = (p: Vec3) => OX + p[0] * SC;
+  const py = (p: Vec3) => OY - p[1] * SC + 84;
+  const head = pose.points.headTop;
+  return (
+    <svg
+      viewBox="0 0 260 240"
+      className="absolute inset-0 h-full w-full opacity-80"
+      aria-hidden="true"
+    >
+      {BONES.map(([a, b], i) => {
+        const pa = pose.points[a];
+        const pb = pose.points[b];
+        if (!pa || !pb) return null;
+        return (
+          <line
+            key={i}
+            x1={px(pa)}
+            y1={py(pa)}
+            x2={px(pb)}
+            y2={py(pb)}
+            stroke={color}
+            strokeWidth={3}
+            strokeLinecap="round"
+          />
+        );
+      })}
+      {head ? <circle cx={px(head)} cy={py(head)} r={9} fill={color} /> : null}
+    </svg>
+  );
+}
+
+/**
+ * Error boundary that swaps to the static figure on failure. A decorative WebGL
+ * preview must never blank the tile; if the Canvas throws we degrade gracefully.
  */
 class CanvasBoundary extends Component<
-  { children: ReactNode },
+  { children: ReactNode; fallback: ReactNode },
   { failed: boolean }
 > {
   override state = { failed: false };
@@ -118,33 +191,80 @@ class CanvasBoundary extends Component<
     return { failed: true };
   }
   override render() {
-    return this.state.failed ? null : this.props.children;
+    return this.state.failed ? this.props.fallback : this.props.children;
   }
 }
 
 export function RunningFigure({ color = "#dfe3ee" }: { color?: string }) {
+  const hostRef = useRef<HTMLDivElement>(null);
+  // Gate the Canvas on visibility so it only holds a GL context while on screen.
+  const [visible, setVisible] = useState(false);
+  const [webglOk, setWebglOk] = useState(true);
+
+  useEffect(() => {
+    // Probe WebGL availability once (a one-time capability check → SVG fallback).
+    let ok = true;
+    try {
+      const c = document.createElement("canvas");
+      const gl =
+        c.getContext("webgl2") ||
+        c.getContext("webgl") ||
+        c.getContext("experimental-webgl");
+      if (!gl) ok = false;
+    } catch {
+      ok = false;
+    }
+    if (!ok) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time capability probe
+      setWebglOk(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const el = hostRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") {
+      setVisible(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) setVisible(e.isIntersecting);
+      },
+      { rootMargin: "120px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  const fallback = <StaticFigure color={color} />;
+
   return (
-    <CanvasBoundary>
-      <Canvas
-        camera={{ position: [1.6, 0.6, 2.4], fov: 42 }}
-        dpr={[1, 2]}
-        gl={{ antialias: true, alpha: true, powerPreference: "low-power" }}
-        className="!absolute inset-0"
-        // If the GPU drops this context (common after opening the full lab,
-        // which spins up its own heavier context), swallow the event so it
-        // doesn't surface as an uncaught error.
-        onCreated={({ gl }) => {
-          gl.domElement.addEventListener(
-            "webglcontextlost",
-            (e) => e.preventDefault(),
-            false,
-          );
-        }}
-      >
-        <ambientLight intensity={0.8} />
-        <directionalLight position={[3, 5, 2]} intensity={0.6} />
-        <Runner color={color} />
-      </Canvas>
-    </CanvasBoundary>
+    <div ref={hostRef} className="absolute inset-0">
+      {webglOk && visible ? (
+        <CanvasBoundary fallback={fallback}>
+          <Canvas
+            camera={{ position: [1.6, 0.6, 2.4], fov: 42 }}
+            dpr={[1, 2]}
+            gl={{ antialias: true, alpha: true, powerPreference: "low-power" }}
+            className="!absolute inset-0"
+            onCreated={({ gl }) => {
+              // Swallow context-loss so it never surfaces as an uncaught error.
+              gl.domElement.addEventListener(
+                "webglcontextlost",
+                (e) => e.preventDefault(),
+                false,
+              );
+            }}
+          >
+            <ContextReleaser />
+            <ambientLight intensity={0.8} />
+            <directionalLight position={[3, 5, 2]} intensity={0.6} />
+            <Runner color={color} />
+          </Canvas>
+        </CanvasBoundary>
+      ) : (
+        fallback
+      )}
+    </div>
   );
 }

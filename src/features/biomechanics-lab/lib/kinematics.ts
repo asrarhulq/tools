@@ -143,10 +143,15 @@ function solve(
     const kneeC = limbPoint(hipC, thighAngle, thigh);
     const shankAngle = hip - knee; // knee flexion swings the shank rearward
     const ankleC = limbPoint(kneeC, shankAngle, shank);
-    // Foot points forward (+x) from the ankle, tilting with ankle dorsi/plantar.
+    // The foot is articulated relative to the SHANK: at a neutral ankle it sits
+    // ~90° forward of the shin line (a flat, forward-pointing foot), and the
+    // ankle angle dorsi-/plantar-flexes it about that. Deriving it from the
+    // shank (rather than world-forward) keeps the foot correctly oriented as the
+    // leg bends, instead of pitching down or floating at odd angles.
+    const footAngleFromDown = shankAngle + Math.PI / 2 - ankle;
     const toe: Vec3 = [
-      ankleC[0] + Math.cos(ankle) * foot,
-      ankleC[1] - Math.sin(ankle) * foot,
+      ankleC[0] + Math.sin(footAngleFromDown) * foot,
+      ankleC[1] - Math.cos(footAngleFromDown) * foot,
       hipC[2],
     ];
     return { hipC, kneeC, ankleC, toe };
