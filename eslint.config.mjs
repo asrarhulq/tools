@@ -18,6 +18,8 @@ const eslintConfig = [
       "build/**",
       "next-env.d.ts",
       "node_modules/**",
+      // Vendored third-party Stockfish engine build — not our source.
+      "public/engine/**",
     ],
   },
   ...next,

@@ -48,15 +48,17 @@ const nextConfig: NextConfig = {
     const isDev = process.env.NODE_ENV !== "production";
 
     // Content-Security-Policy. `unsafe-eval` is only needed by the dev bundler.
+    // `wasm-unsafe-eval` is needed in all environments for the Move & Meaning
+    // Stockfish WASM engine (WebAssembly.instantiateStreaming).
     const csp = [
       "default-src 'self'",
-      `script-src 'self' 'unsafe-inline' blob:${isDev ? " 'unsafe-eval'" : ""}`,
+      `script-src 'self' 'unsafe-inline' blob: 'wasm-unsafe-eval'${isDev ? " 'unsafe-eval'" : ""}`,
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob:",
       "font-src 'self'",
       // api.web3forms.com receives the "Suggest a tool" form submissions.
       "connect-src 'self' blob: data: https://api.web3forms.com",
-      // Web Worker for off-main-thread STL analysis (bundled as a blob).
+      // Web Worker for off-main-thread STL analysis and the Stockfish chess engine.
       "worker-src 'self' blob:",
       "object-src 'none'",
       "base-uri 'self'",

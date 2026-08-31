@@ -86,10 +86,20 @@ const ArgumentMapperTool = dynamic(
   { loading: () => loadingSkeleton },
 );
 
+// Move & Meaning pulls in chess.js + a Stockfish WASM worker — load it only here.
+const MoveAndMeaningTool = dynamic(
+  () =>
+    import("@/features/move-and-meaning/move-and-meaning-tool").then(
+      (m) => m.MoveAndMeaningTool,
+    ),
+  { loading: () => loadingSkeleton },
+);
+
 /** Map of tool id → live renderer. Add an entry when a tool ships. */
 const renderers: Record<string, React.ComponentType<{ tool: ToolWithHref }>> = {
   "phil-tool-2": ArgumentMapperTool,
   "phil-tool-3": EthicsCompassTool,
+  "phil-tool-5": MoveAndMeaningTool,
   "general-tool-2": FocusTimerTool,
   "eng-tool-1": StlAnalyzerTool,
   "eng-tool-5": TrussAnalyzerTool,

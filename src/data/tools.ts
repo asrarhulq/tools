@@ -83,6 +83,42 @@ export const tools: readonly Tool[] = [
     ],
   },
   {
+    id: "phil-tool-5",
+    slug: "move-and-meaning",
+    title: "Move & Meaning",
+    description:
+      "Annotate your chess games with engine analysis and prompts drawn from six philosophers of play.",
+    longDescription:
+      "A study for PHIL 29300: Introduction to Chess as Philosophical Inquiry. Play " +
+      "out a game or import a PGN on a custom board, flag critical positions, and " +
+      "examine each one through two lenses at once — Stockfish's tactical read " +
+      "(eval, best line, forks, pins, skewers, discovered attacks) and a genuine " +
+      "writing prompt from Ryle, Dewey, C. Thi Nguyen, Suits, Wittgenstein, or " +
+      "Hurka. A dual-mode toggle hides the engine until you've recorded your own " +
+      "read of the position, then generates a short reflective diff between your " +
+      "intuition and its evaluation. Every note, flag, and lens response exports " +
+      "as a clean Markdown or PDF journal, ready to submit. Stockfish runs fully " +
+      "client-side via WebAssembly — no server, no API key.",
+    category: "philosophy",
+    icon: "castle",
+    difficulty: "advanced",
+    status: "live",
+    featured: true,
+    addedAt: "2026-08-30",
+    keywords: [
+      "chess",
+      "philosophy of games",
+      "stockfish",
+      "annotation",
+      "wittgenstein",
+      "dewey",
+      "ryle",
+      "reflective practice",
+      "pgn",
+      "phil 29300",
+    ],
+  },
+  {
     id: "phil-tool-4",
     slug: "phil-tool-4",
     title: "Infinity Explorer",
