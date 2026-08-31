@@ -7,11 +7,25 @@ import { useMmStore } from "../store";
 
 export function PgnIoBar() {
   const loadPgnGame = useMmStore((s) => s.loadPgnGame);
+  const newGame = useMmStore((s) => s.newGame);
   const history = useMmStore((s) => s.history);
   const pgnHeaders = useMmStore((s) => s.pgnHeaders);
+  const vsEngine = useMmStore((s) => s.vsEngine);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState("");
+
+  const handleNewGame = () => {
+    if (
+      history.length > 0 &&
+      !window.confirm(
+        "Start a new game? This clears the current board, notes, and reflections.",
+      )
+    ) {
+      return;
+    }
+    newGame();
+  };
 
   const handleFile = async (file: File) => {
     const text = await file.text();
@@ -54,6 +68,16 @@ export function PgnIoBar() {
           e.target.value = "";
         }}
       />
+      <button
+        type="button"
+        onClick={handleNewGame}
+        disabled={vsEngine !== null}
+        title={vsEngine ? "End the current game vs. Engine first" : undefined}
+        className="rounded-md border px-2.5 py-1.5 text-xs font-medium disabled:opacity-40"
+        style={buttonStyle}
+      >
+        New game
+      </button>
       <button
         type="button"
         onClick={() => fileInputRef.current?.click()}

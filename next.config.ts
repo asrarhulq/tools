@@ -86,6 +86,17 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      {
+        // Force the correct MIME type for the vendored Stockfish WASM binary.
+        // Combined with the global `X-Content-Type-Options: nosniff` above,
+        // a host that serves this with any other Content-Type (a common gap
+        // in static-file/CDN configs, which often don't know the `.wasm`
+        // extension) makes `WebAssembly.instantiateStreaming` reject outright
+        // — and the vendored engine script has no non-streaming fallback, so
+        // it throws, which surfaces in the app as "the engine hit an error."
+        source: "/engine/stockfish-18-lite-single.wasm",
+        headers: [{ key: "Content-Type", value: "application/wasm" }],
+      },
     ];
   },
 };

@@ -94,9 +94,7 @@ export function MoveAndMeaningTool({ tool }: { tool: ToolWithHref }) {
   const requestEngineMove = useCallback(
     (targetFen: string, skillLevel: number, movetimeMs: number) => {
       engineMoveFenRef.current = targetFen;
-      stockfish.setSkillLevel(skillLevel);
-      stockfish.setPosition(targetFen);
-      stockfish.go({ movetimeMs });
+      stockfish.analyze(targetFen, { skillLevel, movetimeMs });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
@@ -114,10 +112,9 @@ export function MoveAndMeaningTool({ tool }: { tool: ToolWithHref }) {
       }
       return;
     }
-    stockfish.setSkillLevel(20);
     if (mode !== "assisted") return;
-    stockfish.setPosition(fen);
-    stockfish.go({
+    stockfish.analyze(fen, {
+      skillLevel: 20,
       depth: DEFAULT_ENGINE_DEPTH,
       movetimeMs: DEFAULT_ENGINE_MOVETIME_MS,
     });

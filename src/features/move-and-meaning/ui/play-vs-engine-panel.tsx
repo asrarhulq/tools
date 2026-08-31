@@ -5,6 +5,10 @@ import { DIFFICULTY_PRESETS, STUDY_PALETTE } from "../config";
 import { isGameOver } from "../lib/chess-engine-adapter";
 import { currentFen, useMmStore } from "../store";
 import type { Color } from "../types";
+import { FlagButton } from "./flag-button";
+import { JournalExportBar } from "./journal-export-bar";
+import { LensPromptCard } from "./lens-prompt-card";
+import { LensSwitcher } from "./lens-switcher";
 
 export function PlayVsEnginePanel() {
   const vsEngine = useMmStore((s) => s.vsEngine);
@@ -59,6 +63,24 @@ export function PlayVsEnginePanel() {
         >
           End game — back to free play
         </button>
+
+        {history.length > 0 && (
+          <div
+            className="space-y-3 border-t pt-3"
+            style={{ borderColor: STUDY_PALETTE.border }}
+          >
+            <p
+              className="text-xs font-semibold tracking-wide uppercase"
+              style={{ color: STUDY_PALETTE.muted }}
+            >
+              Reflect on this position
+            </p>
+            <FlagButton />
+            <LensSwitcher />
+            <LensPromptCard />
+            <JournalExportBar />
+          </div>
+        )}
       </div>
     );
   }

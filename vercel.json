@@ -1,0 +1,8 @@
+{
+  "headers": [
+    {
+      "source": "/engine/stockfish-18-lite-single.wasm",
+      "headers": [{ "key": "Content-Type", "value": "application/wasm" }]
+    }
+  ]
+}
