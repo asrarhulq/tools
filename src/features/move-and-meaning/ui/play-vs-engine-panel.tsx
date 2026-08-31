@@ -35,9 +35,17 @@ export function PlayVsEnginePanel() {
           >
             Game over — {gameOver.reason}.
           </p>
+        ) : engineStatus === "loading" ? (
+          <p className="text-xs italic" style={{ color: STUDY_PALETTE.muted }}>
+            Loading the chess engine (~7MB, first time only)…
+          </p>
         ) : engineStatus === "thinking" ? (
           <p className="text-xs italic" style={{ color: STUDY_PALETTE.muted }}>
             Engine is thinking…
+          </p>
+        ) : engineStatus === "error" ? (
+          <p className="text-xs" style={{ color: STUDY_PALETTE.danger }}>
+            The engine hit an error. End the game and try again.
           </p>
         ) : null}
         <button

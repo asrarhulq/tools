@@ -6,7 +6,12 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { softwareApplicationSchema } from "@/lib/json-ld";
 import type { ToolWithHref } from "@/types/tool";
 import { ChessBoard } from "./board/chess-board";
-import { DEFAULT_ENGINE_DEPTH, STUDY_PALETTE } from "./config";
+import {
+  DEFAULT_ENGINE_DEPTH,
+  DEFAULT_ENGINE_MOVETIME_MS,
+  ENGINE_WATCHDOG_BUFFER_MS,
+  STUDY_PALETTE,
+} from "./config";
 import { fontSerif } from "./fonts";
 import { useStockfish } from "./hooks/use-stockfish";
 import { isGameOver, turnOf } from "./lib/chess-engine-adapter";
@@ -86,6 +91,17 @@ export function MoveAndMeaningTool({ tool }: { tool: ToolWithHref }) {
   // engine's own thinking IS the analysis (its `info` stream still updates
   // the eval bar), and analysis mode's separate auto-trigger is suppressed.
   const engineMoveFenRef = useRef<string | null>(null);
+  const requestEngineMove = useCallback(
+    (targetFen: string, skillLevel: number, movetimeMs: number) => {
+      engineMoveFenRef.current = targetFen;
+      stockfish.setSkillLevel(skillLevel);
+      stockfish.setPosition(targetFen);
+      stockfish.go({ movetimeMs });
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
   useEffect(() => {
     if (vsEngine) {
       const engineColor = vsEngine.humanColor === "w" ? "b" : "w";
@@ -94,17 +110,17 @@ export function MoveAndMeaningTool({ tool }: { tool: ToolWithHref }) {
         !isGameOver(fen).over &&
         engineMoveFenRef.current !== fen
       ) {
-        engineMoveFenRef.current = fen;
-        stockfish.setSkillLevel(vsEngine.skillLevel);
-        stockfish.setPosition(fen);
-        stockfish.go({ movetimeMs: vsEngine.movetimeMs });
+        requestEngineMove(fen, vsEngine.skillLevel, vsEngine.movetimeMs);
       }
       return;
     }
     stockfish.setSkillLevel(20);
     if (mode !== "assisted") return;
     stockfish.setPosition(fen);
-    stockfish.go({ depth: DEFAULT_ENGINE_DEPTH });
+    stockfish.go({
+      depth: DEFAULT_ENGINE_DEPTH,
+      movetimeMs: DEFAULT_ENGINE_MOVETIME_MS,
+    });
     // `stockfish` itself is stable (useCallback-memoized); re-run only on
     // mode/position/opponent changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -125,6 +141,25 @@ export function MoveAndMeaningTool({ tool }: { tool: ToolWithHref }) {
     makeMoveAt(from, to, promotion);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stockfish.bestMoveUci]);
+
+  // Watchdog: async postMessage communication with the engine worker can
+  // silently drop a reply (a suspended background tab, a crashed worker)
+  // with nothing else to catch it. If "thinking" outlasts a generous ceiling,
+  // restart the worker and retry once rather than leaving the student stuck
+  // on "Engine is thinking…" forever.
+  useEffect(() => {
+    if (!vsEngine || stockfish.status !== "thinking") return;
+    const pendingFen = engineMoveFenRef.current;
+    if (!pendingFen) return;
+    const timer = setTimeout(() => {
+      if (engineMoveFenRef.current === pendingFen) {
+        stockfish.terminate();
+        requestEngineMove(pendingFen, vsEngine.skillLevel, vsEngine.movetimeMs);
+      }
+    }, vsEngine.movetimeMs + ENGINE_WATCHDOG_BUFFER_MS);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vsEngine, stockfish.status]);
 
   const currentMove = history[cursorPly - 1];
   // Memoized on the move's own uci, not recreated as a fresh object every

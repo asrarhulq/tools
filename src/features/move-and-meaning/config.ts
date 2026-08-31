@@ -10,6 +10,18 @@ export const ENGINE_WORKER_PATH = "/engine/stockfish-18-lite-single.js";
 export const DEFAULT_ENGINE_DEPTH = 16;
 export const DEFAULT_ENGINE_MOVETIME_MS = 1200;
 
+/**
+ * Worst-case time (added on top of the requested movetime) before Play vs.
+ * Engine gives up waiting on a reply and restarts the engine worker. Async
+ * postMessage communication can silently drop a response (a suspended
+ * background tab, a crashed worker) with nothing in-app to catch — this is
+ * the backstop so "Engine is thinking…" can never persist forever. Generous
+ * on purpose: it must comfortably cover the engine's one-time ~7MB WASM
+ * compile on a slow device, which happens inside this same window on a
+ * game's first move.
+ */
+export const ENGINE_WATCHDOG_BUFFER_MS = 15000;
+
 /** Centipawn swing between two evals that triggers the eval-bar glow pulse. */
 export const SWING_THRESHOLD_CP = 150;
 

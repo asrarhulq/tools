@@ -101,11 +101,17 @@ export function useStockfish(): UseStockfishResult {
       const worker = ensureWorker();
       isSearchingRef.current = true;
       setStatus("thinking");
-      if (opts?.movetimeMs) {
-        worker.postMessage(`go movetime ${opts.movetimeMs}`);
-      } else {
-        worker.postMessage(`go depth ${opts?.depth ?? DEFAULT_ENGINE_DEPTH}`);
+      // Depth and movetime can both be given — Stockfish stops at whichever
+      // limit it hits first. A depth-only search has no time bound at all,
+      // which on a hard position with this single-threaded build can run for
+      // many seconds; callers should generally pass a movetimeMs cap too.
+      const parts = ["go"];
+      if (opts?.depth) parts.push(`depth ${opts.depth}`);
+      if (opts?.movetimeMs) parts.push(`movetime ${opts.movetimeMs}`);
+      if (!opts?.depth && !opts?.movetimeMs) {
+        parts.push(`depth ${DEFAULT_ENGINE_DEPTH}`);
       }
+      worker.postMessage(parts.join(" "));
     },
     [ensureWorker],
   );
