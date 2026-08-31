@@ -50,7 +50,7 @@ export function downloadJournalMarkdown(model: JournalModel): void {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `move-and-meaning-journal-${model.date}.md`;
+    link.download = `philosophical-chess-journal-${model.date}.md`;
     link.click();
     URL.revokeObjectURL(url);
   } catch {

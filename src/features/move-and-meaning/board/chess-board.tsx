@@ -1,7 +1,8 @@
 "use client";
 
 import { Chess, type Square } from "chess.js";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { BOARD_COLORS } from "../config";
 import {
   isPromotionMove,
   legalDestinations,
@@ -21,13 +22,24 @@ interface ChessBoardProps {
   orientation?: Orientation;
   lastMove?: { from: Square; to: Square } | null;
   onMove: (from: Square, to: Square, promotion?: "q" | "r" | "b" | "n") => void;
+  /** Restrict drag/click to one side's pieces — used by Play vs. Engine so
+   * the human can't move for the engine while it's "thinking". `null`/
+   * omitted means both sides are interactive (free/study play). */
+  interactiveColor?: "w" | "b" | null;
 }
 
-export function ChessBoard({
+/**
+ * Memoized: this board's `layout`-animated pieces (see `PieceLayer`) would
+ * otherwise re-render — and visibly jitter — every time a sibling in the
+ * tool re-renders for an unrelated reason (e.g. an engine "thinking" tick),
+ * even though none of this component's actual props changed.
+ */
+export const ChessBoard = memo(function ChessBoard({
   fen,
   orientation = "white",
   lastMove,
   onMove,
+  interactiveColor = null,
 }: ChessBoardProps) {
   const boardRef = useRef<HTMLDivElement>(null);
   const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
@@ -126,6 +138,7 @@ export function ChessBoard({
 
   const onPointerDownPiece = useCallback(
     (square: Square, event: React.PointerEvent<HTMLDivElement>) => {
+      if (interactiveColor && turnColor !== interactiveColor) return;
       const piece = chess.get(square);
       if (selectedSquare && selectedSquare !== square) {
         // A piece was already selected — treat this as a capture attempt.
@@ -146,7 +159,14 @@ export function ChessBoard({
       const rectWidth = boardRef.current?.getBoundingClientRect().width ?? 320;
       setDragCellSize(rectWidth / 8);
     },
-    [chess, turnColor, selectedSquare, legalTargets, attemptMove],
+    [
+      chess,
+      turnColor,
+      selectedSquare,
+      legalTargets,
+      attemptMove,
+      interactiveColor,
+    ],
   );
 
   const onBoardBackgroundClick = useCallback(
@@ -175,7 +195,8 @@ export function ChessBoard({
     <div className="relative w-full">
       <div
         ref={boardRef}
-        className="relative aspect-square w-full overflow-hidden rounded-lg border-4 border-[#3a2a1c] shadow-2xl select-none"
+        className="relative aspect-square w-full overflow-hidden rounded-lg border-4 shadow-2xl select-none"
+        style={{ borderColor: BOARD_COLORS.border }}
         onPointerDown={onBoardBackgroundClick}
       >
         {Array.from({ length: 8 }).map((_, row) =>
@@ -248,4 +269,4 @@ export function ChessBoard({
       )}
     </div>
   );
-}
+});

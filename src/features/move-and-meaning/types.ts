@@ -1,7 +1,7 @@
 import type { Color, PieceSymbol, Square } from "chess.js";
 
 /**
- * Domain model for Move & Meaning. Kept independent of chess.js's own `Move`
+ * Domain model for Philosophical Chess. Kept independent of chess.js's own `Move`
  * class so the store, persistence, and UI can stay stable even if the chess
  * engine adapter's internals change.
  */
@@ -60,6 +60,13 @@ export interface UciInfo {
 }
 
 export type EngineStatus = "idle" | "loading" | "ready" | "thinking" | "error";
+
+export interface EngineOpponent {
+  humanColor: Color;
+  label: string;
+  skillLevel: number;
+  movetimeMs: number;
+}
 
 export interface JournalEntry {
   ply: number;

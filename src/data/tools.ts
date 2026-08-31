@@ -84,15 +84,16 @@ export const tools: readonly Tool[] = [
   },
   {
     id: "phil-tool-5",
-    slug: "move-and-meaning",
-    title: "Move & Meaning",
+    slug: "philosophical-chess",
+    title: "Philosophical Chess",
     description:
-      "Annotate your chess games with engine analysis and prompts drawn from six philosophers of play.",
+      "Play or annotate your chess games with engine analysis and prompts drawn from six philosophers of play.",
     longDescription:
       "A study for PHIL 29300: Introduction to Chess as Philosophical Inquiry. Play " +
-      "out a game or import a PGN on a custom board, flag critical positions, and " +
-      "examine each one through two lenses at once — Stockfish's tactical read " +
-      "(eval, best line, forks, pins, skewers, discovered attacks) and a genuine " +
+      "out a game — against the built-in Stockfish engine or against yourself — " +
+      "or import a PGN on a custom board, flag critical positions, and examine " +
+      "each one through two lenses at once — Stockfish's tactical read (eval, " +
+      "best line, forks, pins, skewers, discovered attacks) and a genuine " +
       "writing prompt from Ryle, Dewey, C. Thi Nguyen, Suits, Wittgenstein, or " +
       "Hurka. A dual-mode toggle hides the engine until you've recorded your own " +
       "read of the position, then generates a short reflective diff between your " +

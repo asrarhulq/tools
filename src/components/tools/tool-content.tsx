@@ -86,7 +86,7 @@ const ArgumentMapperTool = dynamic(
   { loading: () => loadingSkeleton },
 );
 
-// Move & Meaning pulls in chess.js + a Stockfish WASM worker — load it only here.
+// Philosophical Chess pulls in chess.js + a Stockfish WASM worker — load it only here.
 const MoveAndMeaningTool = dynamic(
   () =>
     import("@/features/move-and-meaning/move-and-meaning-tool").then(

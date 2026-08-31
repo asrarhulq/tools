@@ -13,6 +13,26 @@ export const DEFAULT_ENGINE_MOVETIME_MS = 1200;
 /** Centipawn swing between two evals that triggers the eval-bar glow pulse. */
 export const SWING_THRESHOLD_CP = 150;
 
+/**
+ * Difficulty ladder for Play vs. Engine. `skillLevel` maps to Stockfish's
+ * own `Skill Level` UCI option (0–20, its built-in strength handicap);
+ * `movetimeMs` bounds how long the engine thinks per move so easy games stay
+ * snappy. Only used while playing against the engine — free-analysis mode
+ * always runs at full strength (`DEFAULT_ENGINE_DEPTH`, skill reset to 20).
+ */
+export interface DifficultyPreset {
+  label: string;
+  skillLevel: number;
+  movetimeMs: number;
+}
+
+export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
+  { label: "Beginner", skillLevel: 1, movetimeMs: 300 },
+  { label: "Casual", skillLevel: 6, movetimeMs: 600 },
+  { label: "Club", skillLevel: 12, movetimeMs: 1200 },
+  { label: "Strong", skillLevel: 20, movetimeMs: 2500 },
+] as const;
+
 export const STARTING_FEN =
   "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -26,12 +46,16 @@ export const PIECE_VALUES: Record<string, number> = {
   k: 20000,
 };
 
+/** Deep forest green + warm ivory — a "library table" pairing that still
+ * reads warm alongside the room's brass accents, without the literal
+ * wood-brown of the first pass. */
 export const BOARD_COLORS = {
-  light: "#e9dcc3",
-  dark: "#8a6a4a",
-  lastMoveLight: "#d9c98f",
-  lastMoveDark: "#a3874f",
+  light: "#e8e1d0",
+  dark: "#3f5d4a",
+  lastMoveLight: "#d7c66f",
+  lastMoveDark: "#7c9169",
   checkGlow: "#c1553f",
+  border: "#2b3a30",
 } as const;
 
 /**

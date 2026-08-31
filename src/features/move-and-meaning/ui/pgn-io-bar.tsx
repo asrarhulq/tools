@@ -28,7 +28,7 @@ export function PgnIoBar() {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = "move-and-meaning-game.pgn";
+      link.download = "philosophical-chess-game.pgn";
       link.click();
       URL.revokeObjectURL(url);
     } catch {

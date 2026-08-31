@@ -10,13 +10,15 @@ import { FlagButton } from "./flag-button";
 import { LensPromptCard } from "./lens-prompt-card";
 import { LensSwitcher } from "./lens-switcher";
 import { MotifBadges } from "./motif-badges";
+import { PlayVsEnginePanel } from "./play-vs-engine-panel";
 import { ReflectionDiff } from "./reflection-diff";
 
-type Tab = "philosophy" | "analysis" | "annotate";
+type Tab = "philosophy" | "analysis" | "play" | "annotate";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "philosophy", label: "Philosophy" },
   { id: "analysis", label: "Analysis" },
+  { id: "play", label: "Play" },
   { id: "annotate", label: "Annotate" },
 ];
 
@@ -30,6 +32,7 @@ export function SidePanelTabs({
   const [tab, setTab] = useState<Tab>("philosophy");
   const engineInfo = useMmStore((s) => s.engineInfo);
   const currentMove = useMmStore((s) => s.history[s.cursorPly - 1]);
+  const vsEngine = useMmStore((s) => s.vsEngine);
 
   return (
     <div
@@ -59,20 +62,31 @@ export function SidePanelTabs({
         ))}
       </div>
 
-      {tab === "analysis" && (
-        <div className="space-y-3">
-          <AssistToggle />
-          <BestLinePanel fen={fen} info={engineInfo} visible={engineVisible} />
-          {currentMove && <MotifBadges motifs={currentMove.motifs} />}
-          <ReflectionDiff />
-        </div>
-      )}
+      {tab === "analysis" &&
+        (vsEngine ? (
+          <p className="text-sm italic" style={{ color: STUDY_PALETTE.muted }}>
+            The engine is currently playing as your opponent on the Play tab —
+            free analysis resumes once that game ends.
+          </p>
+        ) : (
+          <div className="space-y-3">
+            <AssistToggle />
+            <BestLinePanel
+              fen={fen}
+              info={engineInfo}
+              visible={engineVisible}
+            />
+            {currentMove && <MotifBadges motifs={currentMove.motifs} />}
+            <ReflectionDiff />
+          </div>
+        ))}
       {tab === "philosophy" && (
         <div className="space-y-3">
           <LensSwitcher />
           <LensPromptCard />
         </div>
       )}
+      {tab === "play" && <PlayVsEnginePanel />}
       {tab === "annotate" && (
         <div className="space-y-3">
           <FlagButton />

@@ -12,6 +12,7 @@ export interface UseStockfishResult {
   error: string | null;
   setPosition: (fen: string, moves?: string[]) => void;
   go: (opts?: { depth?: number; movetimeMs?: number }) => void;
+  setSkillLevel: (level: number) => void;
   stop: () => void;
   terminate: () => void;
 }
@@ -109,6 +110,16 @@ export function useStockfish(): UseStockfishResult {
     [ensureWorker],
   );
 
+  const setSkillLevel = useCallback(
+    (level: number) => {
+      const worker = ensureWorker();
+      worker.postMessage(
+        `setoption name Skill Level value ${Math.max(0, Math.min(20, level))}`,
+      );
+    },
+    [ensureWorker],
+  );
+
   const stop = useCallback(() => {
     if (!workerRef.current || !isSearchingRef.current) return;
     ignoreNextBestMoveRef.current = true;
@@ -130,5 +141,15 @@ export function useStockfish(): UseStockfishResult {
     };
   }, []);
 
-  return { status, info, bestMoveUci, error, setPosition, go, stop, terminate };
+  return {
+    status,
+    info,
+    bestMoveUci,
+    error,
+    setPosition,
+    go,
+    setSkillLevel,
+    stop,
+    terminate,
+  };
 }

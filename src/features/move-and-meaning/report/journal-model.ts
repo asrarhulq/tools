@@ -36,7 +36,7 @@ export function buildJournalModel(state: JournalSourceState): JournalModel {
     }));
 
   return {
-    title: "Move & Meaning — Reflective Journal",
+    title: "Philosophical Chess — Reflective Journal",
     players: {
       white: pgnHeaders.White ?? "White",
       black: pgnHeaders.Black ?? "Black",

@@ -8,6 +8,7 @@ import { detectMotifs } from "./lib/motifs";
 import type { PersistedMmState } from "./lib/persist";
 import type {
   AssistMode,
+  EngineOpponent,
   EngineStatus,
   LensId,
   MoveRecord,
@@ -37,10 +38,13 @@ export interface MmState {
   flags: number[];
   engineStatus: EngineStatus;
   engineInfo: (UciInfo & { fen: string }) | null;
+  vsEngine: EngineOpponent | null;
   hydrated: boolean;
 
   newGame: (startFen?: string) => void;
   loadPgnGame: (pgn: string) => void;
+  startEngineGame: (opponent: EngineOpponent) => void;
+  stopEngineGame: () => void;
   makeMoveAt: (
     from: Square,
     to: Square,
@@ -78,6 +82,7 @@ const initial = {
   flags: [] as number[],
   engineStatus: "idle" as EngineStatus,
   engineInfo: null as (UciInfo & { fen: string }) | null,
+  vsEngine: null as EngineOpponent | null,
   hydrated: false,
 };
 
@@ -94,8 +99,24 @@ export const useMmStore = create<MmState>((set, get) => ({
       lensResponses: {},
       flags: [],
       engineInfo: null,
+      vsEngine: null,
     });
   },
+
+  startEngineGame: (opponent) => {
+    set({
+      pgnHeaders: {},
+      history: [],
+      cursorPly: 0,
+      unassistedGuesses: {},
+      lensResponses: {},
+      flags: [],
+      engineInfo: null,
+      vsEngine: opponent,
+    });
+  },
+
+  stopEngineGame: () => set({ vsEngine: null }),
 
   loadPgnGame: (pgn) => {
     try {
@@ -129,6 +150,7 @@ export const useMmStore = create<MmState>((set, get) => ({
         lensResponses: {},
         flags: [],
         engineInfo: null,
+        vsEngine: null,
       });
     } catch {
       /* Invalid PGN — leave the current game untouched; the UI surfaces the error. */
@@ -214,6 +236,7 @@ export const useMmStore = create<MmState>((set, get) => ({
       activeLensId: persisted.activeLensId,
       lensResponses: persisted.lensResponses,
       flags: persisted.flags,
+      vsEngine: persisted.vsEngine ?? null,
       hydrated: true,
     }),
 
@@ -230,6 +253,7 @@ export const useMmStore = create<MmState>((set, get) => ({
       activeLensId: s.activeLensId,
       lensResponses: s.lensResponses,
       flags: s.flags,
+      vsEngine: s.vsEngine,
     };
   },
 }));

@@ -2,7 +2,7 @@ import { jsPDF } from "jspdf";
 import type { JournalEntry, JournalModel } from "../types";
 
 /**
- * ── Move & Meaning — journal PDF export ──────────────────────────────────────
+ * ── Philosophical Chess — journal PDF export ─────────────────────────────────
  * Mirrors the engineering-tool report idiom used elsewhere in this codebase
  * (see truss-analyzer/lib/report.ts): A4, mm units, a running `y` cursor
  * threaded through section functions, `ensureSpace` for page breaks, a
@@ -60,7 +60,7 @@ function buildReport(model: JournalModel, opts: JournalReportOptions): void {
   }
 
   addFooters(doc, pageW, pageH);
-  doc.save(`move-and-meaning-journal-${sanitize(model.date)}.pdf`);
+  doc.save(`philosophical-chess-journal-${sanitize(model.date)}.pdf`);
 }
 
 function titleBlock(
@@ -220,7 +220,7 @@ function addFooters(doc: jsPDF, pageW: number, pageH: number): void {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     doc.setTextColor(...MUTED);
-    doc.text("Move & Meaning — Reflective Chess Journal", MARGIN, pageH - 8);
+    doc.text("Philosophical Chess — Reflective Journal", MARGIN, pageH - 8);
     doc.text("tools.asrarul.com", pageW / 2, pageH - 8, { align: "center" });
     doc.text(`Page ${i} of ${pages}`, pageW - MARGIN, pageH - 8, {
       align: "right",

@@ -1,4 +1,4 @@
-import type { AssistMode, LensId, MoveRecord } from "../types";
+import type { AssistMode, EngineOpponent, LensId, MoveRecord } from "../types";
 
 /**
  * Tiny localStorage persistence for the working game — same shape as
@@ -18,6 +18,8 @@ export interface PersistedMmState {
   activeLensId: LensId;
   lensResponses: Record<string, string>;
   flags: number[];
+  /** Optional — absent on state saved before Play vs. Engine existed. */
+  vsEngine?: EngineOpponent | null;
 }
 
 interface Stored {

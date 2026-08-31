@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { STUDY_PALETTE, SWING_THRESHOLD_CP } from "../config";
+import { useMmStore } from "../store";
 import type { UciInfo } from "../types";
 
 interface EvalBarProps {
-  info: UciInfo | null;
   visible: boolean;
 }
 
@@ -24,8 +24,15 @@ function formatEvalLabel(info: UciInfo): string {
   return `${pawns > 0 ? "+" : ""}${pawns.toFixed(1)}`;
 }
 
-/** A vertical eval bar with a brief amber glow on a significant swing. */
-export function EvalBar({ info, visible }: EvalBarProps) {
+/**
+ * A vertical eval bar with a brief amber glow on a significant swing. Reads
+ * `engineInfo` straight from the store (rather than as a prop) so its rapid
+ * updates during "thinking" only re-render this bar, not the whole tool —
+ * ChessBoard sits as a sibling and would otherwise re-render (and visibly
+ * jitter its `layout`-animated pieces) on every one of those ticks.
+ */
+export function EvalBar({ visible }: EvalBarProps) {
+  const info = useMmStore((s) => s.engineInfo);
   const [glow, setGlow] = useState(false);
   const prevCpRef = useRef<number | null>(null);
 

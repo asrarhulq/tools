@@ -157,3 +157,7 @@ export function fromPgn(pgn: string): ParsedPgn {
 export function inCheck(fen: string): boolean {
   return new Chess(fen).inCheck();
 }
+
+export function turnOf(fen: string): "w" | "b" {
+  return new Chess(fen).turn();
+}
