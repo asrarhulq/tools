@@ -25,6 +25,7 @@ const TOUR_IDS = [
   "triton",
   "pluto",
   "charon",
+  "halley",
 ];
 
 export function TourPanel() {

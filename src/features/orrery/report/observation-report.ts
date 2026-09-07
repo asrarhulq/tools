@@ -7,9 +7,10 @@ import {
   formatMassKg,
   formatPeriod,
   formatRotation,
+  formatSpeed,
   lightTravelTime,
 } from "../lib/format";
-import { heliocentricPosition } from "../lib/kepler";
+import { heliocentricPosition, orbitalSpeedKmS } from "../lib/kepler";
 import { julianDateToDate } from "../lib/julian-date";
 import type { CelestialBody } from "../types";
 
@@ -91,6 +92,16 @@ function buildReport(model: ObservationReportModel): void {
     orbitalRows.push([
       "Orbital period",
       formatPeriod(body.elements.periodDays),
+    ]);
+    orbitalRows.push([
+      "Orbital speed",
+      formatSpeed(
+        orbitalSpeedKmS(
+          body.elements.semiMajorAxisAu,
+          pos.radiusAu,
+          parent?.physical.massKg,
+        ),
+      ),
     ]);
     orbitalRows.push([
       "Orbital eccentricity",

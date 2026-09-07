@@ -47,6 +47,10 @@ export function lightTravelTime(distanceKm: number): string {
   return `${hours.toFixed(2)} hr`;
 }
 
+export function formatSpeed(kmPerSecond: number): string {
+  return `${kmPerSecond.toLocaleString(undefined, { maximumFractionDigits: 2 })} km/s`;
+}
+
 export function formatDateShort(date: Date): string {
   return date.toLocaleDateString(undefined, {
     year: "numeric",

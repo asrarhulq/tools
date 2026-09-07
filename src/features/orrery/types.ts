@@ -22,7 +22,8 @@ export interface OrbitalElements {
   periodDays: number;
 }
 
-export type BodyKind = "star" | "planet" | "dwarf-planet" | "moon" | "belt";
+export type BodyKind =
+  "star" | "planet" | "dwarf-planet" | "moon" | "belt" | "comet";
 
 export interface PhysicalData {
   radiusKm: number;
@@ -47,6 +48,14 @@ export interface CelestialBody {
   elements: OrbitalElements;
   physical: PhysicalData;
   hasRings?: boolean;
+}
+
+export interface ScenePosition {
+  x: number;
+  y: number;
+  z: number;
+  /** True distance from the immediate focus (Sun, or parent for a moon), in AU — before scene-scale compression. */
+  radiusAu: number;
 }
 
 export interface HeliocentricPosition {

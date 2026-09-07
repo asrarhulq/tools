@@ -1,22 +1,24 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Info, List, Settings, Sparkles } from "lucide-react";
+import { Info, List, Settings, Sparkles, TrendingUp } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Viewer } from "../viewer/viewer";
 import { TimeControlsBar } from "./time-controls-bar";
 import { BodyInfoPanel } from "./body-info-panel";
 import { BodyListSearch } from "./body-list-search";
+import { SkyTrackPanel } from "./sky-track-panel";
 import { ViewSettingsPanel } from "./view-settings-panel";
 import { TourPanel } from "./tour-panel";
 import { Card } from "./primitives";
 
-type Tab = "info" | "bodies" | "settings" | "tour";
+type Tab = "info" | "bodies" | "sky" | "settings" | "tour";
 
 const TABS: { id: Tab; label: string; icon: typeof Info }[] = [
   { id: "info", label: "Info", icon: Info },
   { id: "bodies", label: "Bodies", icon: List },
+  { id: "sky", label: "Sky track", icon: TrendingUp },
   { id: "settings", label: "Display", icon: Settings },
   { id: "tour", label: "Tour", icon: Sparkles },
 ];
@@ -85,6 +87,7 @@ export function Workspace() {
                     <BodyListSearch />
                   </Card>
                 ) : null}
+                {tab === "sky" ? <SkyTrackPanel /> : null}
                 {tab === "settings" ? <ViewSettingsPanel /> : null}
                 {tab === "tour" ? <TourPanel /> : null}
               </motion.div>

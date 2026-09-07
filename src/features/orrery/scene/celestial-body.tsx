@@ -3,14 +3,27 @@
 import { Html } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
-import type * as THREE from "three";
+import * as THREE from "three";
 import { computeScenePosition } from "../lib/orbital-mechanics";
-import { radiusToSceneUnits } from "../lib/scale";
-import { getBandedTexture, getRockyTexture } from "../lib/textures";
+import { cometRadiusToSceneUnits, radiusToSceneUnits } from "../lib/scale";
+import {
+  getBandedTexture,
+  getCometTailTexture,
+  getRockyTexture,
+} from "../lib/textures";
 import { useOrrery } from "../state/orrery-context";
 import type { CelestialBody as CelestialBodyData } from "../types";
 import { OrbitPath } from "./orbit-path";
 import { Rings } from "./rings";
+
+const TAIL_UP = new THREE.Vector3(0, 1, 0);
+
+/** How far a comet's tail stretches, in scene units, as a function of its
+ * true distance from the Sun (AU) — short and faint far out, long and bright
+ * near perihelion, the way real comet tails (driven by solar heating) work. */
+function tailLength(radiusAu: number): number {
+  return THREE.MathUtils.clamp(3.2 / Math.sqrt(radiusAu + 0.15), 0.5, 4.5);
+}
 
 const GAS_GIANT_BANDS: Record<string, readonly string[]> = {
   jupiter: [
@@ -41,6 +54,7 @@ interface CelestialBodyProps {
  */
 export function CelestialBody({ body, bodyById }: CelestialBodyProps) {
   const groupRef = useRef<THREE.Group>(null);
+  const tailRef = useRef<THREE.Mesh>(null);
   const {
     jdRef,
     scaleMode,
@@ -51,9 +65,13 @@ export function CelestialBody({ body, bodyById }: CelestialBodyProps) {
   } = useOrrery();
 
   const isMoon = body.kind === "moon";
+  const isComet = body.kind === "comet";
   const radius = useMemo(
-    () => radiusToSceneUnits(body.physical.radiusKm, scaleMode),
-    [body.physical.radiusKm, scaleMode],
+    () =>
+      isComet
+        ? cometRadiusToSceneUnits(body.physical.radiusKm, scaleMode)
+        : radiusToSceneUnits(body.physical.radiusKm, scaleMode),
+    [body.physical.radiusKm, scaleMode, isComet],
   );
 
   const texture = useMemo(() => {
@@ -68,10 +86,33 @@ export function CelestialBody({ body, bodyById }: CelestialBodyProps) {
     const pos = computeScenePosition(body, jdRef.current, scaleMode, bodyById);
     // Ecliptic (x, y, z-out-of-plane) -> three.js Y-up (x, z-out-of-plane, y).
     g.position.set(pos.x, pos.z, pos.y);
+
+    const tail = tailRef.current;
+    if (tail && pos.radiusAu > 0) {
+      // Points radially outward from the Sun (the origin), through the
+      // comet — a straight line the same shape every comet tail actually
+      // takes, since it's driven by the solar wind, not orbital motion.
+      const away = g.position.clone().normalize();
+      const length = tailLength(pos.radiusAu);
+      tail.position.copy(away.clone().multiplyScalar(length / 2));
+      tail.quaternion.setFromUnitVectors(TAIL_UP, away.clone().negate());
+      tail.scale.set(1, length, 1);
+    }
   });
 
   const isSelected = selectedBodyId === body.id;
-  const labelOffset = isMoon ? radius + 0.2 : radius + 0.32;
+  const isSmallBody = isMoon || isComet;
+  const labelOffset = isSmallBody ? radius + 0.2 : radius + 0.32;
+  // drei's <Html> scales its element to 1x CSS size at `distanceFactor`
+  // units from the camera, growing/shrinking from there — a single fixed
+  // constant meant a tiny comet (camera parked ~1.4 units away in Follow
+  // mode) blew its label up to dominate the whole viewport, while the same
+  // constant looked fine on a planet the camera sits much farther from.
+  // Deriving it from each body's own Follow-mode distance keeps every
+  // body's label a similar, legible size regardless of how close following
+  // it actually parks the camera.
+  const followDistance = Math.max(radius * 6, 1.4);
+  const labelDistanceFactor = followDistance * 3;
 
   return (
     <>
@@ -105,6 +146,20 @@ export function CelestialBody({ body, bodyById }: CelestialBodyProps) {
         {body.hasRings && (
           <Rings planetRadius={radius} tiltDeg={body.physical.axialTiltDeg} />
         )}
+        {isComet && (
+          <mesh ref={tailRef}>
+            <coneGeometry args={[0.16, 1, 16, 1, true]} />
+            <meshBasicMaterial
+              color="#cfe3ff"
+              map={getCometTailTexture()}
+              alphaMap={getCometTailTexture()}
+              transparent
+              opacity={0.85}
+              depthWrite={false}
+              side={THREE.DoubleSide}
+            />
+          </mesh>
+        )}
         {showLabels && (
           // A real DOM overlay, not drei's <Text> (troika-three-text) — that
           // tries to fetch a fallback font from an external CDN by default,
@@ -114,13 +169,13 @@ export function CelestialBody({ body, bodyById }: CelestialBodyProps) {
           <Html
             position={[0, labelOffset, 0]}
             center
-            distanceFactor={isMoon ? 9 : 16}
+            distanceFactor={labelDistanceFactor}
             style={{ pointerEvents: "none" }}
           >
             <span
               className="font-sans font-semibold whitespace-nowrap"
               style={{
-                fontSize: isMoon ? 11 : 13,
+                fontSize: isSmallBody ? 11 : 13,
                 color: isSelected ? "#f5c26b" : "#c7d2f0",
                 textShadow:
                   "0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6)",

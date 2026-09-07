@@ -40,6 +40,8 @@ const MIN_MOON_CLEARANCE = 0.35;
  * Mercury's perihelion while still dwarfing every planet.
  */
 const SUN_RADIUS_SCALE = { visual: 0.00288, realistic: 0.00156 } as const;
+/** A comet nucleus is a few km across — real-scale that rounds to nothing. */
+const MIN_COMET_RADIUS = 0.05;
 
 export function auToSceneUnits(au: number, mode: ScaleMode): number {
   const sign = Math.sign(au) || 1;
@@ -67,4 +69,12 @@ export function moonDistanceToSceneUnits(auFromParent: number): number {
     MIN_MOON_CLEARANCE,
     Math.sqrt(Math.abs(auFromParent)) * MOON_DISTANCE_SCALE,
   );
+}
+
+/** A comet nucleus, floored so it stays a visible, clickable dot. */
+export function cometRadiusToSceneUnits(
+  radiusKm: number,
+  mode: ScaleMode,
+): number {
+  return Math.max(MIN_COMET_RADIUS, radiusToSceneUnits(radiusKm, mode));
 }

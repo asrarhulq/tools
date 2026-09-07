@@ -19,6 +19,10 @@ const RAD2DEG = 180 / Math.PI;
 const KEPLER_TOLERANCE = 1e-8;
 const KEPLER_MAX_ITERATIONS = 50;
 
+const AU_M = 149_597_870_700;
+const G = 6.6743e-11; // m^3 kg^-1 s^-2
+const GM_SUN = 1.327_124_400_18e20; // m^3/s^2 — standard gravitational parameter, more precise than G × M☉
+
 /** Solves Kepler's equation M = E - e·sin(E) for the eccentric anomaly E, via Newton-Raphson. */
 export function solveEccentricAnomaly(
   meanAnomalyRad: number,
@@ -109,6 +113,24 @@ export function heliocentricPosition(
     trueAnomalyDeg: trueAnomalyRad * RAD2DEG,
     radiusAu,
   };
+}
+
+/**
+ * Instantaneous orbital speed via the vis-viva equation, v² = GM(2/r - 1/a).
+ * Defaults to the Sun's gravitational parameter; pass a parent body's
+ * `physical.massKg` for a moon so its speed is relative to what it actually
+ * orbits, not the Sun.
+ */
+export function orbitalSpeedKmS(
+  semiMajorAxisAu: number,
+  radiusAu: number,
+  primaryMassKg?: number,
+): number {
+  const aM = semiMajorAxisAu * AU_M;
+  const rM = radiusAu * AU_M;
+  const mu = primaryMassKg ? G * primaryMassKg : GM_SUN;
+  const vMs = Math.sqrt(Math.max(0, mu * (2 / rM - 1 / aM)));
+  return vMs / 1000;
 }
 
 /** Samples a full orbit ellipse (in AU, same frame as `heliocentricPosition`) for drawing the orbit path. */

@@ -81,6 +81,35 @@ export function getSunTexture(): THREE.CanvasTexture {
   return texture;
 }
 
+/** A vertical fade — opaque at one edge, transparent at the other — used as
+ * a comet tail's alpha map so it glows brightest near the nucleus and
+ * dissolves toward its far end, instead of reading as a flat translucent
+ * cone. */
+export function getCometTailTexture(): THREE.CanvasTexture {
+  const cached = cache.get("comet-tail-fade");
+  if (cached) return cached;
+
+  const size = 64;
+  const canvas = document.createElement("canvas");
+  canvas.width = 1;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("2D canvas context unavailable");
+
+  // Canvas row 0 maps to the geometry's apex (near the nucleus) once applied
+  // as an alphaMap on the tail cone — opaque there, fading to transparent at
+  // the far (base) end. Verified against the actual render, not assumed.
+  const gradient = ctx.createLinearGradient(0, 0, 0, size);
+  gradient.addColorStop(0, "rgba(255,255,255,0.9)");
+  gradient.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 1, size);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  cache.set("comet-tail-fade", texture);
+  return texture;
+}
+
 /** A simple mottled/speckled surface for rocky bodies. */
 export function getRockyTexture(
   id: string,

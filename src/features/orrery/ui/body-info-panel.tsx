@@ -8,9 +8,10 @@ import {
   formatMassKg,
   formatPeriod,
   formatRotation,
+  formatSpeed,
   lightTravelTime,
 } from "../lib/format";
-import { heliocentricPosition } from "../lib/kepler";
+import { heliocentricPosition, orbitalSpeedKmS } from "../lib/kepler";
 import { generateObservationReport } from "../report/observation-report";
 import { useOrrery } from "../state/orrery-context";
 import { Card, Metric } from "./primitives";
@@ -62,6 +63,16 @@ export function BodyInfoPanel() {
             <Metric
               label="Orbital period"
               value={formatPeriod(body.elements.periodDays)}
+            />
+            <Metric
+              label="Orbital speed"
+              value={formatSpeed(
+                orbitalSpeedKmS(
+                  body.elements.semiMajorAxisAu,
+                  pos.radiusAu,
+                  parent?.physical.massKg,
+                ),
+              )}
             />
           </>
         )}

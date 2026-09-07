@@ -1,12 +1,8 @@
-import type { CelestialBody, ScaleMode } from "../types";
+import type { CelestialBody, ScaleMode, ScenePosition } from "../types";
 import { heliocentricPosition } from "./kepler";
 import { auToSceneUnits, moonDistanceToSceneUnits } from "./scale";
 
-export interface ScenePosition {
-  x: number;
-  y: number;
-  z: number;
-}
+export type { ScenePosition };
 
 /**
  * A body's position in scene units at Julian Date `jd`, already run through
@@ -36,6 +32,7 @@ export function computeScenePosition(
     x: raw.x * factor,
     y: raw.y * factor,
     z: raw.z * factor,
+    radiusAu: raw.radiusAu,
   };
 
   if (!isMoon || !body.parentId) return local;
@@ -47,5 +44,6 @@ export function computeScenePosition(
     x: local.x + parentPos.x,
     y: local.y + parentPos.y,
     z: local.z + parentPos.z,
+    radiusAu: local.radiusAu,
   };
 }

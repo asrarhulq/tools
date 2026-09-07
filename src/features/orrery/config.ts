@@ -23,6 +23,14 @@ export const SPEED_PRESETS = [
 
 export const DEFAULT_SPEED_INDEX = 3;
 
+/**
+ * The Sun's conservative circumstellar habitable zone — the AU band where a
+ * rocky planet could plausibly hold liquid surface water (Kopparapu et al.
+ * 2013 conservative estimates). Earth (1 AU) sits well inside it; Venus and
+ * Mars sit just outside either edge.
+ */
+export const HABITABLE_ZONE_AU = { inner: 0.95, outer: 1.67 } as const;
+
 /** How often (Hz) the hot simulation clock commits to reactive UI state. */
 export const CLOCK_UI_HZ = 6;
 

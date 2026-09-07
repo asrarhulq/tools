@@ -1,4 +1,5 @@
 import type { CelestialBody } from "../types";
+import { COMETS } from "./comets";
 import { MOONS } from "./moons";
 import { PLANETS, SUN } from "./planets";
 
@@ -27,6 +28,7 @@ export const ALL_BODIES: readonly CelestialBody[] = [
   SUN_BODY,
   ...PLANETS,
   ...MOONS,
+  ...COMETS,
 ];
 export const BODY_BY_ID: ReadonlyMap<string, CelestialBody> = new Map(
   ALL_BODIES.map((b) => [b.id, b]),

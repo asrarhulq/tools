@@ -8,6 +8,7 @@ import { currentSpeedDaysPerSecond, useOrrery } from "../state/orrery-context";
 import { AsteroidBelt } from "./asteroid-belt";
 import { CameraRig } from "./camera-rig";
 import { CelestialBody } from "./celestial-body";
+import { HabitableZone } from "./habitable-zone";
 import { Starfield } from "./starfield";
 import { Sun } from "./sun";
 
@@ -23,6 +24,7 @@ export function OrreryScene() {
     speedIndex,
     showBelt,
     showMoons,
+    showHabitableZone,
     commitDisplayJd,
     screenshotRef,
   } = useOrrery();
@@ -64,6 +66,7 @@ export function OrreryScene() {
     <>
       <Starfield />
       <Sun />
+      {showHabitableZone && <HabitableZone />}
       {bodies.map((body) => (
         <CelestialBody key={body.id} body={body} bodyById={BODY_BY_ID} />
       ))}

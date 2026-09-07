@@ -12,7 +12,7 @@ import { DEFAULT_SPEED_INDEX, SPEED_PRESETS } from "../config";
 import { dateToJulianDate } from "../lib/julian-date";
 import type { CameraMode, ScaleMode } from "../types";
 
-export type InspectorTab = "info" | "bodies" | "settings" | "tour";
+export type InspectorTab = "info" | "bodies" | "sky" | "settings" | "tour";
 
 /**
  * Central store for Orrery: which bodies are shown, the camera/scale modes,
@@ -36,6 +36,7 @@ interface StoreValue {
   showLabels: boolean;
   showBelt: boolean;
   showMoons: boolean;
+  showHabitableZone: boolean;
   activeTab: InspectorTab;
   jdRef: React.RefObject<number>;
   screenshotRef: React.RefObject<(() => string | null) | null>;
@@ -51,6 +52,7 @@ interface StoreValue {
   toggleLabels: () => void;
   toggleBelt: () => void;
   toggleMoons: () => void;
+  toggleHabitableZone: () => void;
   jumpToDate: (date: Date) => void;
   jumpToNow: () => void;
   setActiveTab: (t: InspectorTab) => void;
@@ -73,6 +75,7 @@ export function OrreryProvider({ children }: { children: React.ReactNode }) {
   const [showLabels, setShowLabels] = useState(true);
   const [showBelt, setShowBelt] = useState(true);
   const [showMoons, setShowMoons] = useState(true);
+  const [showHabitableZone, setShowHabitableZone] = useState(false);
   const [activeTab, setActiveTab] = useState<InspectorTab>("info");
   const screenshotRef = useRef<(() => string | null) | null>(null);
 
@@ -89,6 +92,10 @@ export function OrreryProvider({ children }: { children: React.ReactNode }) {
   const toggleLabels = useCallback(() => setShowLabels((v) => !v), []);
   const toggleBelt = useCallback(() => setShowBelt((v) => !v), []);
   const toggleMoons = useCallback(() => setShowMoons((v) => !v), []);
+  const toggleHabitableZone = useCallback(
+    () => setShowHabitableZone((v) => !v),
+    [],
+  );
 
   const jumpToDate = useCallback((date: Date) => {
     const jd = dateToJulianDate(date);
@@ -116,6 +123,7 @@ export function OrreryProvider({ children }: { children: React.ReactNode }) {
       showLabels,
       showBelt,
       showMoons,
+      showHabitableZone,
       activeTab,
       jdRef,
       screenshotRef,
@@ -130,6 +138,7 @@ export function OrreryProvider({ children }: { children: React.ReactNode }) {
       toggleLabels,
       toggleBelt,
       toggleMoons,
+      toggleHabitableZone,
       jumpToDate,
       jumpToNow,
       setActiveTab,
@@ -146,6 +155,7 @@ export function OrreryProvider({ children }: { children: React.ReactNode }) {
       showLabels,
       showBelt,
       showMoons,
+      showHabitableZone,
       activeTab,
       play,
       pause,
@@ -155,6 +165,7 @@ export function OrreryProvider({ children }: { children: React.ReactNode }) {
       toggleLabels,
       toggleBelt,
       toggleMoons,
+      toggleHabitableZone,
       jumpToDate,
       jumpToNow,
       commitDisplayJd,
