@@ -67,7 +67,7 @@ export function OrreryProvider({ children }: { children: React.ReactNode }) {
   const [playing, setPlaying] = useState(true);
   const [speedIndex, setSpeedIndex] = useState(DEFAULT_SPEED_INDEX);
   const [scaleMode, setScaleMode] = useState<ScaleMode>("visual");
-  const [cameraMode, setCameraMode] = useState<CameraMode>("free");
+  const [cameraMode, setCameraMode] = useState<CameraMode>("overview");
   const [selectedBodyId, setSelectedBodyId] = useState<string | null>("earth");
   const [showOrbits, setShowOrbits] = useState(true);
   const [showLabels, setShowLabels] = useState(true);

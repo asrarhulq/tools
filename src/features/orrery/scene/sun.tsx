@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { SUN } from "../data/planets";
-import { radiusToSceneUnits } from "../lib/scale";
+import { sunRadiusToSceneUnits } from "../lib/scale";
 import { getSunTexture } from "../lib/textures";
 import { useOrrery } from "../state/orrery-context";
 
@@ -17,7 +17,7 @@ import { useOrrery } from "../state/orrery-context";
 export function Sun() {
   const { scaleMode, selectBody } = useOrrery();
   const radius = useMemo(
-    () => radiusToSceneUnits(SUN.physical.radiusKm, scaleMode),
+    () => sunRadiusToSceneUnits(SUN.physical.radiusKm, scaleMode),
     [scaleMode],
   );
   const texture = useMemo(() => getSunTexture(), []);

@@ -62,4 +62,4 @@ export interface HeliocentricPosition {
 
 export type ScaleMode = "visual" | "realistic";
 
-export type CameraMode = "free" | "follow" | "top-down";
+export type CameraMode = "overview" | "free" | "follow" | "top-down";

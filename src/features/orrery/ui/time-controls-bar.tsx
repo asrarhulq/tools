@@ -87,6 +87,7 @@ export function TimeControlsBar() {
         />
         <SegmentedControl
           options={[
+            { value: "overview" as const, label: "Overview" },
             { value: "free" as const, label: "Free" },
             { value: "follow" as const, label: "Follow" },
             { value: "top-down" as const, label: "Top-down" },

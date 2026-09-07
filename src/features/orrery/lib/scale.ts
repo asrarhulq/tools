@@ -26,10 +26,20 @@ import type { ScaleMode } from "../types";
  */
 
 const VISUAL_DISTANCE_SCALE = 6.5;
-const REALISTIC_DISTANCE_SCALE = 4;
+const REALISTIC_DISTANCE_SCALE = 6;
 const RADIUS_SCALE = { visual: 0.00627, realistic: 0.0038 } as const;
 const MOON_DISTANCE_SCALE = 42;
 const MIN_MOON_CLEARANCE = 0.35;
+/**
+ * The Sun's own radius scale, deliberately decoupled from `RADIUS_SCALE`
+ * (the same "no single scale works" reasoning as the moon-distance scale
+ * above). Applying the planet radius formula to the Sun's true 696,340 km
+ * radius makes it larger than Mercury's — even Earth's — compressed orbit
+ * distance, so the Sun visually swallows the inner planets and anything
+ * orbiting them. Tuned instead so the Sun stays comfortably clear of
+ * Mercury's perihelion while still dwarfing every planet.
+ */
+const SUN_RADIUS_SCALE = { visual: 0.00288, realistic: 0.00156 } as const;
 
 export function auToSceneUnits(au: number, mode: ScaleMode): number {
   const sign = Math.sign(au) || 1;
@@ -41,6 +51,14 @@ export function auToSceneUnits(au: number, mode: ScaleMode): number {
 
 export function radiusToSceneUnits(radiusKm: number, mode: ScaleMode): number {
   return Math.sqrt(radiusKm) * RADIUS_SCALE[mode];
+}
+
+/** The Sun's rendered radius — see `SUN_RADIUS_SCALE` for why this isn't `radiusToSceneUnits`. */
+export function sunRadiusToSceneUnits(
+  radiusKm: number,
+  mode: ScaleMode,
+): number {
+  return Math.sqrt(radiusKm) * SUN_RADIUS_SCALE[mode];
 }
 
 /** A moon's orbital radius around its (rendered) parent, always visible. */

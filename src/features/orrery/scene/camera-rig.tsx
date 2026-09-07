@@ -4,7 +4,11 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useRef } from "react";
 import * as THREE from "three";
 import { computeScenePosition } from "../lib/orbital-mechanics";
-import { radiusToSceneUnits } from "../lib/scale";
+import {
+  auToSceneUnits,
+  radiusToSceneUnits,
+  sunRadiusToSceneUnits,
+} from "../lib/scale";
 import { useOrrery } from "../state/orrery-context";
 import type { CelestialBody } from "../types";
 
@@ -12,12 +16,18 @@ interface CameraRigProps {
   bodyById: ReadonlyMap<string, CelestialBody>;
 }
 
+/** Pluto is the outermost body with real orbital elements — used as the
+ * reference edge of the system for framing the "Overview" camera. */
+const OUTERMOST_ORBIT_AU = 39.482;
+
 /**
- * Eases the camera toward whatever the current camera mode wants — the
- * selected body (with an offset scaled to that body's own rendered size, so
- * "follow Mercury" doesn't leave the camera absurdly far from a small
- * planet) or a top-down view of the whole system. "Free" mode leaves the
- * camera and OrbitControls target alone entirely.
+ * Eases the camera toward whatever the current camera mode wants: a wide
+ * shot framing the whole system ("overview" — also the initial view, so the
+ * tool never opens already zoomed into one body), the selected body (with
+ * an offset scaled to that body's own rendered size, so "follow Mercury"
+ * doesn't leave the camera absurdly far from a small planet), or a top-down
+ * view. "Free" mode leaves the camera and OrbitControls target alone
+ * entirely, so a manual drag/zoom is never fought.
  */
 export function CameraRig({ bodyById }: CameraRigProps) {
   const { camera, controls } = useThree();
@@ -30,7 +40,14 @@ export function CameraRig({ bodyById }: CameraRigProps) {
       update?: () => void;
     } | null;
 
-    if (cameraMode === "top-down") {
+    if (cameraMode === "overview") {
+      const span = auToSceneUnits(OUTERMOST_ORBIT_AU, scaleMode) * 1.4;
+      camera.position.lerp(
+        new THREE.Vector3(span * 0.5, span * 0.62, span * 0.5),
+        0.05,
+      );
+      desiredTarget.current.set(0, 0, 0);
+    } else if (cameraMode === "top-down") {
       camera.position.lerp(new THREE.Vector3(0.01, 95, 0.01), 0.05);
       desiredTarget.current.set(0, 0, 0);
     } else if (cameraMode === "follow" && selectedBodyId) {
@@ -45,7 +62,9 @@ export function CameraRig({ bodyById }: CameraRigProps) {
         scenePosRaw.z,
         scenePosRaw.y,
       );
-      const radius = radiusToSceneUnits(body.physical.radiusKm, scaleMode);
+      const radius = isStar
+        ? sunRadiusToSceneUnits(body.physical.radiusKm, scaleMode)
+        : radiusToSceneUnits(body.physical.radiusKm, scaleMode);
       const distance = Math.max(radius * 6, 1.4);
       const goalCamPos = scenePos
         .clone()
