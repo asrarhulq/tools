@@ -95,6 +95,12 @@ const MoveAndMeaningTool = dynamic(
   { loading: () => loadingSkeleton },
 );
 
+// Orrery pulls in three/r3f/drei — load it only on its route.
+const OrreryTool = dynamic(
+  () => import("@/features/orrery/orrery-tool").then((m) => m.OrreryTool),
+  { loading: () => loadingSkeleton },
+);
+
 /** Map of tool id → live renderer. Add an entry when a tool ships. */
 const renderers: Record<string, React.ComponentType<{ tool: ToolWithHref }>> = {
   "phil-tool-2": ArgumentMapperTool,
@@ -106,6 +112,7 @@ const renderers: Record<string, React.ComponentType<{ tool: ToolWithHref }>> = {
   "eng-tool-6": BeamDesignerTool,
   "general-tool-5": GanttStudioTool,
   "general-tool-6": BiomechanicsLabTool,
+  "general-tool-7": OrreryTool,
 };
 
 export function ToolContent({ tool }: { tool: ToolWithHref }) {

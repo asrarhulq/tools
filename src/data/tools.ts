@@ -431,4 +431,46 @@ export const tools: readonly Tool[] = [
       "inverse dynamics",
     ],
   },
+  {
+    id: "general-tool-7",
+    slug: "orrery",
+    title: "Orrery",
+    description:
+      "A real-physics 3D solar system: true Keplerian orbits, correct relative motion, any date in history or the future.",
+    longDescription:
+      "An interactive 3D orrery — the historical name for a mechanical model " +
+      "of the solar system, rebuilt as a real physics simulation. Every " +
+      "planet, dwarf planet, and major moon moves on a genuine Keplerian " +
+      "ellipse from its real J2000 orbital elements, solved live via Kepler's " +
+      "equation, so relative motion is actually correct: watch Mercury lap " +
+      "the Sun every 88 days while Neptune barely creeps. Play, pause, and " +
+      "scrub time from any historical date to any future one at speeds from " +
+      "real-time to ten years per second; click any body to fly the camera " +
+      "to it and read its real physical data (mass, gravity, rotation, " +
+      "temperature); toggle between a visually compressed scale that keeps " +
+      "the whole system in view and a true-distance scale that shows how " +
+      "empty space actually is. Includes Saturn and Uranus's rings (tilted " +
+      "to each planet's real, very different axial tilt), an asteroid belt, " +
+      "a guided tour, and a search across every body — all computed and " +
+      "rendered client-side with Three.js and React Three Fiber.",
+    category: "general",
+    icon: "orbit",
+    difficulty: "intermediate",
+    status: "live",
+    featured: true,
+    popular: true,
+    addedAt: "2026-09-06",
+    keywords: [
+      "astronomy",
+      "solar system",
+      "orrery",
+      "planets",
+      "orbital mechanics",
+      "kepler",
+      "space",
+      "3d simulation",
+      "moons",
+      "night sky",
+    ],
+  },
 ] as const;
