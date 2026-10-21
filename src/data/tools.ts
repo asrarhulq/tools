@@ -473,4 +473,36 @@ export const tools: readonly Tool[] = [
       "night sky",
     ],
   },
+  {
+    id: "general-tool-8",
+    slug: "ayas-chess-board",
+    title: "Aya's Chess Board",
+    description:
+      "A beginner-friendly chess board built for one person, with warm little notes after every move and a few words of Arabic along the way.",
+    longDescription:
+      "A local, pass-and-play chess board for someone brand new to the game: " +
+      "click a piece to see every legal move highlighted, no drag precision " +
+      "required, and a little companion message after every move — a nice " +
+      "one for a quiet opening, a food-pun for a capture, and an honest " +
+      "piece of chess history for check and checkmate (the word " +
+      '"checkmate" really does come from Arabic/Persian "shah mat," "the ' +
+      'king is helpless"). A standing glossary keeps a handful of chess ' +
+      "terms in Arabic on screen throughout, and four board themes are " +
+      "named like nail polish shades. Everything runs client-side on " +
+      "chess.js — no accounts, no server, just a board.",
+    category: "general",
+    icon: "heart",
+    difficulty: "beginner",
+    status: "live",
+    addedAt: "2026-10-21",
+    keywords: [
+      "chess",
+      "beginner chess",
+      "learn chess",
+      "arabic",
+      "chess vocabulary",
+      "pass and play",
+      "two player chess",
+    ],
+  },
 ] as const;

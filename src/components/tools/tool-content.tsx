@@ -101,6 +101,15 @@ const OrreryTool = dynamic(
   { loading: () => loadingSkeleton },
 );
 
+// Aya's Chess Board pulls in chess.js + framer-motion — load it only here.
+const AyaChessTool = dynamic(
+  () =>
+    import("@/features/ayas-chess-board/aya-chess-tool").then(
+      (m) => m.AyaChessTool,
+    ),
+  { loading: () => loadingSkeleton },
+);
+
 /** Map of tool id → live renderer. Add an entry when a tool ships. */
 const renderers: Record<string, React.ComponentType<{ tool: ToolWithHref }>> = {
   "phil-tool-2": ArgumentMapperTool,
@@ -113,6 +122,7 @@ const renderers: Record<string, React.ComponentType<{ tool: ToolWithHref }>> = {
   "general-tool-5": GanttStudioTool,
   "general-tool-6": BiomechanicsLabTool,
   "general-tool-7": OrreryTool,
+  "general-tool-8": AyaChessTool,
 };
 
 export function ToolContent({ tool }: { tool: ToolWithHref }) {
