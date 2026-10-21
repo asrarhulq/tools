@@ -1,6 +1,7 @@
 "use client";
 
 import { BOT_DIFFICULTIES } from "../lib/bot";
+import type { DifficultyRecord } from "../lib/record";
 import type { OpponentMode } from "../types";
 
 interface OpponentPanelProps {
@@ -11,6 +12,7 @@ interface OpponentPanelProps {
   difficultyId: string;
   onDifficultyChange: (id: string) => void;
   botThinking: boolean;
+  record: DifficultyRecord | undefined;
 }
 
 export function OpponentPanel({
@@ -21,6 +23,7 @@ export function OpponentPanel({
   difficultyId,
   onDifficultyChange,
   botThinking,
+  record,
 }: OpponentPanelProps) {
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-[var(--radius)] border border-[#f3d3dc] bg-white p-3">
@@ -69,6 +72,12 @@ export function OpponentPanel({
               ))}
             </select>
           </label>
+
+          {record && (record.w > 0 || record.l > 0 || record.d > 0) && (
+            <span className="text-xs text-[#9c7684]">
+              Record: {record.w}W {record.l}L {record.d}D
+            </span>
+          )}
 
           {botThinking && (
             <span className="text-xs text-[#9c7684] italic">thinking… 🤔</span>

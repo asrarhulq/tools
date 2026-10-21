@@ -56,6 +56,15 @@ export const BOARD_PALETTES: readonly BoardPalette[] = [
     checkGlow: "#e8616f",
     border: "#a87c2e",
   },
+  {
+    label: "Blaugrana",
+    light: "#fdf6ec",
+    dark: "#1a4d8f",
+    lastMoveLight: "#ffe9a8",
+    lastMoveDark: "#d4a017",
+    checkGlow: "#a50044",
+    border: "#a50044",
+  },
 ] as const;
 
 /** The chrome palette around the board — deliberately fixed regardless of

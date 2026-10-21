@@ -1,11 +1,13 @@
 "use client";
 
-import { FlipHorizontal2, RotateCcw } from "lucide-react";
+import { FlipHorizontal2, RotateCcw, Undo2 } from "lucide-react";
 import { BOARD_PALETTES, type BoardPalette } from "../config";
 
 interface ControlsBarProps {
   onNewGame: () => void;
   onFlip: () => void;
+  onUndo: () => void;
+  canUndo: boolean;
   palette: BoardPalette;
   onPaletteChange: (palette: BoardPalette) => void;
 }
@@ -13,6 +15,8 @@ interface ControlsBarProps {
 export function ControlsBar({
   onNewGame,
   onFlip,
+  onUndo,
+  canUndo,
   palette,
   onPaletteChange,
 }: ControlsBarProps) {
@@ -24,6 +28,14 @@ export function ControlsBar({
         className="flex items-center gap-1.5 rounded-md bg-[#d9748f] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#c9607d]"
       >
         <RotateCcw className="size-3.5" /> New game
+      </button>
+      <button
+        type="button"
+        onClick={onUndo}
+        disabled={!canUndo}
+        className="flex items-center gap-1.5 rounded-md border border-[#f3d3dc] px-3 py-1.5 text-xs font-medium text-[#4a2c3a] hover:bg-[#fff0f3] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+      >
+        <Undo2 className="size-3.5" /> Undo
       </button>
       <button
         type="button"

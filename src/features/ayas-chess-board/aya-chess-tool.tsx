@@ -2,6 +2,7 @@
 
 import { Heart } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useLocalStorage } from "@/hooks/use-local-storage";
 import { JsonLd } from "@/components/seo/json-ld";
 import { softwareApplicationSchema } from "@/lib/json-ld";
 import type { ToolWithHref } from "@/types/tool";
@@ -10,7 +11,9 @@ import { AyaChessBoard } from "./board/aya-chess-board";
 import { BOARD_PALETTES, STARTING_FEN, type BoardPalette } from "./config";
 import { isGameOver, makeMove, turnOf } from "./lib/chess-adapter";
 import { BOT_DIFFICULTIES, chooseBotMove } from "./lib/bot";
+import { capturedPieces } from "./lib/captured";
 import { generateMoveMessage, WELCOME_MESSAGE } from "./lib/messages";
+import { RECORD_STORAGE_KEY, type RecordStore } from "./lib/record";
 import type { Orientation } from "./lib/board-geometry";
 import type {
   FlavorMessage,
@@ -18,6 +21,7 @@ import type {
   MoveKind,
   OpponentMode,
 } from "./types";
+import { CapturedTray } from "./ui/captured-tray";
 import { ControlsBar } from "./ui/controls-bar";
 import { GlossaryCard } from "./ui/glossary-card";
 import { MessageBanner } from "./ui/message-banner";
@@ -28,33 +32,44 @@ import { OpponentPanel } from "./ui/opponent-panel";
  * move doesn't snap back instantly; the search itself is already fast. */
 const BOT_MOVE_DELAY_MS = 650;
 
+interface Snapshot {
+  fen: string;
+  lastMove: { from: Square; to: Square } | null;
+}
+
+const INITIAL_SNAPSHOT: Snapshot = { fen: STARTING_FEN, lastMove: null };
+const EMPTY_RECORD: RecordStore = {};
+
 /**
- * A local chess board built for one specific person: a complete beginner,
- * Algerian, a nail artist, a lover of good food, and the one teaching me
- * Arabic. Same chess.js engine as `move-and-meaning`, but its own visual
- * identity and its own voice — see `lib/messages.ts` for the part that
- * actually makes this a gift rather than a reskin. Vs.-computer mode uses a
- * small local minimax (`lib/bot.ts`), not Stockfish — a true beginner's
- * opponent needs believable mistakes, not a handicapped-but-still-sharp
- * engine, and it keeps this tool free of a second WASM worker.
+ * A local chess board built for one specific friend: a complete beginner,
+ * Algerian, a nail artist, a Barça/Messi fan, a lover of good food, and the
+ * one teaching me Arabic. Same chess.js engine as `move-and-meaning`, but
+ * its own visual identity and its own voice — see `lib/messages.ts` for the
+ * part that actually makes this a gift rather than a reskin. Vs.-computer
+ * mode (the default) uses a small local minimax (`lib/bot.ts`), not
+ * Stockfish — a true beginner's opponent needs believable mistakes, not a
+ * handicapped-but-still-sharp engine, and it keeps this tool free of a
+ * second WASM worker.
  */
 export function AyaChessTool({ tool }: { tool: ToolWithHref }) {
-  const [fen, setFen] = useState(STARTING_FEN);
-  const [lastMove, setLastMove] = useState<{ from: Square; to: Square } | null>(
-    null,
-  );
+  const [snapshots, setSnapshots] = useState<Snapshot[]>([INITIAL_SNAPSHOT]);
   const [orientation, setOrientation] = useState<Orientation>("white");
   const [palette, setPalette] = useState<BoardPalette>(BOARD_PALETTES[0]!);
   const [moves, setMoves] = useState<MoveLogEntry[]>([]);
   const [message, setMessage] = useState<FlavorMessage>({
     text: WELCOME_MESSAGE,
   });
+  const [record, setRecord] = useLocalStorage<RecordStore>(
+    RECORD_STORAGE_KEY,
+    EMPTY_RECORD,
+  );
 
-  const [opponentMode, setOpponentMode] =
-    useState<OpponentMode>("pass-and-play");
+  const [opponentMode, setOpponentMode] = useState<OpponentMode>("computer");
   const [humanColor, setHumanColor] = useState<"w" | "b">("w");
   const [difficultyId, setDifficultyId] = useState(BOT_DIFFICULTIES[0]!.id);
   const botTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const { fen, lastMove } = snapshots[snapshots.length - 1]!;
 
   // Derived, not stored: "the bot is thinking" is exactly "it's computer
   // mode, the game isn't over, and the current fen's turn isn't the
@@ -82,15 +97,34 @@ export function AyaChessTool({ tool }: { tool: ToolWithHref }) {
       else if (move.isCheck) kind = "check";
       else kind = "normal";
 
-      setFen(fenAfter);
-      setLastMove({ from, to });
+      setSnapshots((prev) => [
+        ...prev,
+        { fen: fenAfter, lastMove: { from, to } },
+      ]);
       setMoves((prev) => [
         ...prev,
         { ply: prev.length, san: move.san, color: move.color },
       ]);
       setMessage(generateMoveMessage(kind));
+
+      if (over.over && opponentMode === "computer") {
+        const outcome: "w" | "l" | "d" =
+          over.reason === "draw" || over.reason === "stalemate"
+            ? "d"
+            : over.winner === humanColor
+              ? "w"
+              : "l";
+        setRecord((prev) => {
+          const current = prev[difficultyId] ?? { w: 0, l: 0, d: 0 };
+          const next: RecordStore = {
+            ...prev,
+            [difficultyId]: { ...current, [outcome]: current[outcome] + 1 },
+          };
+          return next;
+        });
+      }
     },
-    [fen],
+    [fen, opponentMode, humanColor, difficultyId, setRecord],
   );
 
   // Whenever it becomes the bot's turn in computer mode, play its move after
@@ -118,11 +152,22 @@ export function AyaChessTool({ tool }: { tool: ToolWithHref }) {
   }, [fen, botThinking, difficultyId, handleMove]);
 
   const handleNewGame = useCallback(() => {
-    setFen(STARTING_FEN);
-    setLastMove(null);
+    setSnapshots([INITIAL_SNAPSHOT]);
     setMoves([]);
     setMessage({ text: WELCOME_MESSAGE });
   }, []);
+
+  // In computer mode, "undo" should always hand the move back to the
+  // human: pop 2 plies (bot's reply + the human's move) if the bot has
+  // already answered, or just 1 if it's still the human's move being taken
+  // back before any reply exists. Pass-and-play always pops exactly 1.
+  const handleUndo = useCallback(() => {
+    const plies =
+      opponentMode === "computer" ? (turnOf(fen) === humanColor ? 2 : 1) : 1;
+    setSnapshots((prev) => prev.slice(0, Math.max(1, prev.length - plies)));
+    setMoves((prev) => prev.slice(0, Math.max(0, prev.length - plies)));
+    setMessage({ text: "Move taken back — happens to everyone. 🌸" });
+  }, [opponentMode, humanColor, fen]);
 
   const handleFlip = useCallback(() => {
     setOrientation((o) => (o === "white" ? "black" : "white"));
@@ -178,6 +223,7 @@ export function AyaChessTool({ tool }: { tool: ToolWithHref }) {
               onMove={handleMove}
               interactiveColor={interactiveColor}
             />
+            <CapturedTray captured={capturedPieces(fen)} />
             <OpponentPanel
               mode={opponentMode}
               onModeChange={handleModeChange}
@@ -186,10 +232,13 @@ export function AyaChessTool({ tool }: { tool: ToolWithHref }) {
               difficultyId={difficultyId}
               onDifficultyChange={setDifficultyId}
               botThinking={botThinking}
+              record={record[difficultyId]}
             />
             <ControlsBar
               onNewGame={handleNewGame}
               onFlip={handleFlip}
+              onUndo={handleUndo}
+              canUndo={snapshots.length > 1}
               palette={palette}
               onPaletteChange={setPalette}
             />

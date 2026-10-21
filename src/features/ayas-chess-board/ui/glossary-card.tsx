@@ -14,8 +14,7 @@ export function GlossaryCard() {
         Chess in Arabic
       </h3>
       <p className="mb-3 text-xs leading-relaxed text-[#9c7684]">
-        A few words this board uses — everything else, habibti, is your lesson
-        to give.
+        A few words this board uses — everything else is your lesson to give.
       </p>
       <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
         {FEATURED.map((key) => {
