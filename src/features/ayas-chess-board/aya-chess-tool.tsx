@@ -12,6 +12,7 @@ import { BOARD_PALETTES, STARTING_FEN, type BoardPalette } from "./config";
 import { isGameOver, makeMove, turnOf } from "./lib/chess-adapter";
 import { BOT_DIFFICULTIES, chooseBotMove } from "./lib/bot";
 import { capturedPieces } from "./lib/captured";
+import { GATE_STORAGE_KEY } from "./lib/gate";
 import { generateMoveMessage, WELCOME_MESSAGE } from "./lib/messages";
 import { RECORD_STORAGE_KEY, type RecordStore } from "./lib/record";
 import type { Orientation } from "./lib/board-geometry";
@@ -27,6 +28,7 @@ import { GlossaryCard } from "./ui/glossary-card";
 import { MessageBanner } from "./ui/message-banner";
 import { MoveList } from "./ui/move-list";
 import { OpponentPanel } from "./ui/opponent-panel";
+import { PasswordGate } from "./ui/password-gate";
 
 /** How long the bot "thinks" before playing — purely a pacing choice so a
  * move doesn't snap back instantly; the search itself is already fast. */
@@ -52,6 +54,7 @@ const EMPTY_RECORD: RecordStore = {};
  * second WASM worker.
  */
 export function AyaChessTool({ tool }: { tool: ToolWithHref }) {
+  const [unlocked, setUnlocked] = useLocalStorage(GATE_STORAGE_KEY, false);
   const [snapshots, setSnapshots] = useState<Snapshot[]>([INITIAL_SNAPSHOT]);
   const [orientation, setOrientation] = useState<Orientation>("white");
   const [palette, setPalette] = useState<BoardPalette>(BOARD_PALETTES[0]!);
@@ -189,6 +192,15 @@ export function AyaChessTool({ tool }: { tool: ToolWithHref }) {
   }, []);
 
   const interactiveColor = opponentMode === "computer" ? humanColor : null;
+
+  if (!unlocked) {
+    return (
+      <>
+        <JsonLd data={softwareApplicationSchema(tool)} />
+        <PasswordGate onUnlock={() => setUnlocked(true)} />
+      </>
+    );
+  }
 
   return (
     <>
