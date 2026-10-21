@@ -20,3 +20,5 @@ export interface MoveLogEntry {
   san: string;
   color: "w" | "b";
 }
+
+export type OpponentMode = "pass-and-play" | "computer";

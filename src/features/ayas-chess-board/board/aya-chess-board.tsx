@@ -19,6 +19,10 @@ interface AyaChessBoardProps {
   orientation?: Orientation;
   lastMove?: { from: Square; to: Square } | null;
   onMove: (from: Square, to: Square, promotion?: "q" | "r" | "b" | "n") => void;
+  /** Restrict clicks to one side — used while the bot is "thinking" and
+   * while it's simply not the human's turn in computer mode. `null`/omitted
+   * means both sides are clickable (pass-and-play). */
+  interactiveColor?: "w" | "b" | null;
 }
 
 /**
@@ -32,6 +36,7 @@ export function AyaChessBoard({
   orientation = "white",
   lastMove,
   onMove,
+  interactiveColor = null,
 }: AyaChessBoardProps) {
   const boardRef = useRef<HTMLDivElement>(null);
   const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
@@ -76,6 +81,7 @@ export function AyaChessBoard({
 
   const handleSquareClick = useCallback(
     (square: Square) => {
+      if (interactiveColor && turnColor !== interactiveColor) return;
       if (selectedSquare && legalTargets.includes(square)) {
         attemptMove(selectedSquare, square);
         setSelectedSquare(null);
@@ -92,7 +98,14 @@ export function AyaChessBoard({
         setSelectedSquare(null);
       }
     },
-    [selectedSquare, legalTargets, attemptMove, chess, turnColor],
+    [
+      selectedSquare,
+      legalTargets,
+      attemptMove,
+      chess,
+      turnColor,
+      interactiveColor,
+    ],
   );
 
   const onBackgroundClick = useCallback(

@@ -8,6 +8,13 @@ interface MoveIndicatorsProps {
   orientation: Orientation;
 }
 
+/**
+ * A dark core with a light halo (not a tint of the board palette itself) —
+ * the original single-tone pink dot nearly disappeared against this tool's
+ * own pink-family board themes, since dot and square landed in the same
+ * hue/lightness range. A two-tone marker reads on every palette regardless
+ * of whether the square under it happens to be light or dark.
+ */
 export function MoveIndicators({
   targets,
   occupiedTargets,
@@ -30,9 +37,21 @@ export function MoveIndicators({
             }}
           >
             {isCapture ? (
-              <div className="h-[85%] w-[85%] rounded-full ring-[6px] ring-[#d9748f]/40 ring-inset" />
+              <div
+                className="h-[82%] w-[82%] rounded-full"
+                style={{
+                  boxShadow:
+                    "inset 0 0 0 5px rgba(74,44,58,0.75), inset 0 0 0 7px rgba(255,255,255,0.85)",
+                }}
+              />
             ) : (
-              <div className="h-[28%] w-[28%] rounded-full bg-[#d9748f]/40" />
+              <div
+                className="h-[32%] w-[32%] rounded-full"
+                style={{
+                  backgroundColor: "rgba(74,44,58,0.7)",
+                  boxShadow: "0 0 0 2.5px rgba(255,255,255,0.85)",
+                }}
+              />
             )}
           </div>
         );
