@@ -505,4 +505,40 @@ export const tools: readonly Tool[] = [
       "two player chess",
     ],
   },
+  {
+    id: "general-tool-9",
+    slug: "bloomie",
+    title: "Bloomie",
+    description:
+      "A gentle daily companion for a med student — a soft task list, a private mood check-in, and an affirmation, built so no button is just for show.",
+    longDescription:
+      "A mental-wellness and study-organization companion for someone " +
+      "working through MBBS: a real, skippable onboarding that learns a " +
+      "nickname, year, subjects, and what kind of support actually helps; " +
+      'a daily task list with priorities and estimated time, a "minimum ' +
+      'viable day" mode for hard days, and a "make today easier" action ' +
+      "that pushes anything non-essential to tomorrow; a private, " +
+      "non-diagnostic mood check-in with a 28-day pattern view; and a " +
+      "rotating library of affirmations written for the specific weight of " +
+      "medical school — imposter syndrome, comparison, burnout — each with " +
+      'a "why this matters" note and an optional reflection prompt. A ' +
+      "day/lavender-night theme toggle, and everything saved locally on " +
+      "the device — no accounts, no server.",
+    category: "general",
+    icon: "flower-2",
+    difficulty: "beginner",
+    status: "live",
+    addedAt: "2026-10-23",
+    keywords: [
+      "mental wellness",
+      "mood tracker",
+      "affirmations",
+      "study planner",
+      "mbbs",
+      "medical student",
+      "self care",
+      "confidence",
+      "journal",
+    ],
+  },
 ] as const;

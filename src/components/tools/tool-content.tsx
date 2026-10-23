@@ -110,6 +110,12 @@ const AyaChessTool = dynamic(
   { loading: () => loadingSkeleton },
 );
 
+// Bloomie pulls in date-fns + framer-motion — load it only here.
+const BloomieTool = dynamic(
+  () => import("@/features/bloomie/bloomie-tool").then((m) => m.BloomieTool),
+  { loading: () => loadingSkeleton },
+);
+
 /** Map of tool id → live renderer. Add an entry when a tool ships. */
 const renderers: Record<string, React.ComponentType<{ tool: ToolWithHref }>> = {
   "phil-tool-2": ArgumentMapperTool,
@@ -123,6 +129,7 @@ const renderers: Record<string, React.ComponentType<{ tool: ToolWithHref }>> = {
   "general-tool-6": BiomechanicsLabTool,
   "general-tool-7": OrreryTool,
   "general-tool-8": AyaChessTool,
+  "general-tool-9": BloomieTool,
 };
 
 export function ToolContent({ tool }: { tool: ToolWithHref }) {
