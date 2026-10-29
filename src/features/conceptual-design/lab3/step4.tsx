@@ -27,14 +27,14 @@ const TABS = [
   { id: "weave", label: "The Weave" },
 ];
 export const SCOL = [
-  "#5CE1E6",
-  "#FFC145",
-  "#FF6B9A",
-  "#7BD88F",
-  "#B38CFF",
-  "#FF8A4C",
-  "#6CB6FF",
-  "#E879F9",
+  "#3E6D8E",
+  "#A67C3D",
+  "#A14F68",
+  "#3E7A5C",
+  "#5F5590",
+  "#B4603C",
+  "#4A8FA8",
+  "#8A5A3E",
 ];
 
 function Learn() {

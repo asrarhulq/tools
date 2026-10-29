@@ -11,7 +11,7 @@ export const STEPS = [
     pts: 10,
     app: "A",
     slides: "PDF p.2–13",
-    color: "#5CE1E6",
+    color: "#3E6D8E",
     blurb:
       "Boil the requirements list down to the crux. End with one sentence that names no solution.",
   },
@@ -23,7 +23,7 @@ export const STEPS = [
     pts: 20,
     app: "B",
     slides: "PDF p.14–30",
-    color: "#7BD88F",
+    color: "#3E7A5C",
     blurb:
       "Draw what the device does: verb + noun boxes, joined by energy, material and signal flows.",
   },
@@ -35,7 +35,7 @@ export const STEPS = [
     pts: 20,
     app: "C",
     slides: "PDF p.33–64",
-    color: "#FFC145",
+    color: "#A67C3D",
     blurb:
       "Find at least five different, sketched ways to do every function. Build the morphological chart.",
   },
@@ -47,7 +47,7 @@ export const STEPS = [
     pts: 20,
     app: "D",
     slides: "PDF p.65–67, 99–113",
-    color: "#FF8A4C",
+    color: "#B4603C",
     blurb:
       "Thread one compatible principle per function into complete working structures. At least four.",
   },
@@ -59,7 +59,7 @@ export const STEPS = [
     pts: 20,
     app: "E",
     slides: "PDF p.70–96, 114–115",
-    color: "#FF6B9A",
+    color: "#A14F68",
     blurb:
       "Filter, duel against a datum, weigh, normalize, stress-test. Defend the winner.",
   },
@@ -71,7 +71,7 @@ export const STEPS = [
     pts: 10,
     app: "F",
     slides: "PDF p.97–113",
-    color: "#B38CFF",
+    color: "#5F5590",
     blurb:
       "Firm the winner up: detailed sketch, short description, rough numbers, known weak spots.",
   },

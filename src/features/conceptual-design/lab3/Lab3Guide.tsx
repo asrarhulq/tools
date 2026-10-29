@@ -149,7 +149,7 @@ function Shell({ title }: { title: string }) {
   }, [setPrintApp]);
   const accent = /^s[1-6]$/.test(nav.view)
     ? STEPS[Number(nav.view[1]) - 1]!.color
-    : "#5CE1E6";
+    : "#2F5D50";
   const body = (() => {
     switch (nav.view) {
       case "s1":

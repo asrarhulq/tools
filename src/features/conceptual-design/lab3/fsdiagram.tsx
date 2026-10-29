@@ -35,27 +35,32 @@ interface Pal {
   mute: string;
   hi: string;
 }
+// Both variants are light-mode now (the tool's whole theme moved off the
+// old dark background) — "DARK" is kept as the on-screen name (embedded in
+// a panel that already paints its own background, so `bg` stays empty),
+// "LIGHT" is the standalone-export variant (`bg` paints its own white rect
+// for a file that has no page around it).
 const DARK: Pal = {
-  ink: "#E8F3FF",
-  E: "#FF8A4C",
-  M: "#6CB6FF",
-  S: "#4ADE80",
-  box: "rgba(255,255,255,0.05)",
-  auxBox: "rgba(255,255,255,0.02)",
+  ink: "#1A1A18",
+  E: "#B4603C",
+  M: "#3E6D8E",
+  S: "#3E7A5C",
+  box: "#FFFFFF",
+  auxBox: "#FAFAF8",
   bg: "",
-  mute: "#A9C4E4",
-  hi: "#FFC145",
+  mute: "#716E68",
+  hi: "#A67C3D",
 };
 const LIGHT: Pal = {
-  ink: "#111111",
-  E: "#C2410C",
-  M: "#1D4ED8",
-  S: "#15803D",
+  ink: "#1A1A18",
+  E: "#B4603C",
+  M: "#3E6D8E",
+  S: "#3E7A5C",
   box: "#FFFFFF",
-  auxBox: "#FFFFFF",
+  auxBox: "#FAFAF8",
   bg: "#FFFFFF",
-  mute: "#555555",
-  hi: "#B45309",
+  mute: "#716E68",
+  hi: "#A67C3D",
 };
 
 const BW = 132,

@@ -19,21 +19,23 @@ export function Panel({
 }) {
   return (
     <section className={`l3-panel ${className}`}>
-      {(title || right) && (
+      {(title || right || tag) && (
         <header className="l3-ph">
           <div>
             {title && <h3 className="l3-h3">{title}</h3>}
             {sub && <p className="l3-sub">{sub}</p>}
           </div>
-          {right}
+          <div className="l3-phr">
+            {tag && (
+              <span className="l3-tb" aria-hidden="true">
+                {tag}
+              </span>
+            )}
+            {right}
+          </div>
         </header>
       )}
       {children}
-      {tag && (
-        <div className="l3-tb" aria-hidden="true">
-          {tag}
-        </div>
-      )}
     </section>
   );
 }
@@ -160,7 +162,7 @@ export function Ring({
   pct,
   size = 44,
   stroke = 4,
-  color = "#5CE1E6",
+  color = "#2F5D50",
   children,
 }: {
   pct: number;
@@ -184,7 +186,7 @@ export function Ring({
           cy={size / 2}
           r={r}
           fill="none"
-          stroke="rgba(143,196,255,.22)"
+          stroke="rgba(28,26,23,.1)"
           strokeWidth={stroke}
         />
         <circle
