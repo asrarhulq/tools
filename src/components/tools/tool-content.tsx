@@ -116,6 +116,16 @@ const BloomieTool = dynamic(
   { loading: () => loadingSkeleton },
 );
 
+// Conceptual Design is a large, self-contained guide (six step tools, a
+// canvas sketch pad, SVG diagramming) — load it only on its own route.
+const ConceptualDesignTool = dynamic(
+  () =>
+    import("@/features/conceptual-design/conceptual-design-tool").then(
+      (m) => m.ConceptualDesignTool,
+    ),
+  { loading: () => loadingSkeleton },
+);
+
 /** Map of tool id → live renderer. Add an entry when a tool ships. */
 const renderers: Record<string, React.ComponentType<{ tool: ToolWithHref }>> = {
   "phil-tool-2": ArgumentMapperTool,
@@ -130,6 +140,7 @@ const renderers: Record<string, React.ComponentType<{ tool: ToolWithHref }>> = {
   "general-tool-7": OrreryTool,
   "general-tool-8": AyaChessTool,
   "general-tool-9": BloomieTool,
+  "general-tool-10": ConceptualDesignTool,
 };
 
 export function ToolContent({ tool }: { tool: ToolWithHref }) {

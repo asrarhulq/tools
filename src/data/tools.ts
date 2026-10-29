@@ -541,4 +541,42 @@ export const tools: readonly Tool[] = [
       "journal",
     ],
   },
+  {
+    id: "general-tool-10",
+    slug: "conceptual-design",
+    title: "Conceptual Design",
+    description:
+      "A complete, interactive guide to Pahl & Beitz conceptual design: six step tools from one requirements list to one principal solution, with a mission map and a report-ready export.",
+    longDescription:
+      "An interactive guide to the conceptual-design phase of the Pahl & " +
+      "Beitz engineering design method, built as six linked tools: an " +
+      "Abstraction Elevator for turning a requirements list into one " +
+      "solution-neutral problem statement, a Function Forge that " +
+      "auto-draws the function-structure diagram as you build it, an Idea " +
+      "Forge with a physical-effects catalogue and a live morphological " +
+      "chart, a Weave for combining principles into complete working " +
+      "structures, a Decision Arena covering filtering, a Pugh-style datum " +
+      "duel, weighted-criteria scoring, and a sensitivity stress test, and " +
+      "a Concept Studio to firm up the winning principal solution with a " +
+      "detailed sketch. A checkpoint panel after every step always knows " +
+      "what to do next, a slide atlas and a searchable help page cover the " +
+      "common sticking points, and a Vault assembles everything into " +
+      "printable report appendices. Fully client-side — work is saved " +
+      "only in your own browser, with a one-click JSON backup.",
+    category: "general",
+    icon: "drafting-compass",
+    difficulty: "intermediate",
+    status: "live",
+    addedAt: "2026-10-29",
+    keywords: [
+      "conceptual design",
+      "pahl and beitz",
+      "function structure",
+      "morphological chart",
+      "engineering design",
+      "decision matrix",
+      "working principles",
+      "design methodology",
+    ],
+  },
 ] as const;
