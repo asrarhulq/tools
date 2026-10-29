@@ -450,7 +450,7 @@ function Duel() {
               {s.runs.map((r, i) => (
                 <button
                   key={r.id}
-                  className={`l3-pill${run?.id === r.id ? "on" : ""}`}
+                  className={`l3-pill ${run?.id === r.id ? "on" : ""}`}
                   onClick={() => setRunId(r.id)}
                 >
                   Run {i + 1} · datum {nameOf(s, r.datum)}

@@ -88,7 +88,7 @@ export function Home() {
             <button
               key={st.n}
               role="listitem"
-              className={`l3-node${s.current === st.n ? "here" : ""}`}
+              className={`l3-node ${s.current === st.n ? "here" : ""}`}
               style={{ ["--c" as string]: st.color }}
               onClick={() => go(`s${st.n}` as View)}
             >
@@ -130,7 +130,7 @@ export function Home() {
             return (
               <div
                 key={i}
-                className={`l3-fn${f.ghost ? "ghost" : ""}`}
+                className={`l3-fn ${f.ghost ? "ghost" : ""}`}
                 style={{ ["--c" as string]: st.color }}
               >
                 <div

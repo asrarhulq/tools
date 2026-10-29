@@ -205,7 +205,7 @@ function Weave() {
             {s.structures.map((x, i) => (
               <button
                 key={x.id}
-                className={`l3-pill${st?.id === x.id ? "on" : ""}`}
+                className={`l3-pill ${st?.id === x.id ? "on" : ""}`}
                 style={{ ["--accent" as string]: SCOL[i % SCOL.length] }}
                 onClick={() => setSel(x.id)}
               >
@@ -287,7 +287,7 @@ function Weave() {
                   {ps.map((p, ci) => (
                     <button
                       key={p.id}
-                      className={`l3-pick${picks.includes(p.id) ? "on" : ""}`}
+                      className={`l3-pick ${picks.includes(p.id) ? "on" : ""}`}
                       aria-pressed={picks.includes(p.id)}
                       onClick={() => toggle(fn.id, p.id)}
                     >

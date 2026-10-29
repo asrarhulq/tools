@@ -40,7 +40,7 @@ export function NextPanel({ n }: { n: number }) {
           <li key={it.id} className={it.ok ? "ok" : ""}>
             {it.auto ? (
               <span
-                className={`l3-tick${it.ok ? "on" : ""}`}
+                className={`l3-tick ${it.ok ? "on" : ""}`}
                 aria-label={it.ok ? "done" : "not done"}
               >
                 {it.ok ? <Icon n="check" /> : <Icon n="dot" />}
@@ -107,7 +107,7 @@ export function NextPanel({ n }: { n: number }) {
             {sc.map((x) => (
               <button
                 key={x.id}
-                className={`l3-bchip${openSc === x.id ? "on" : ""}`}
+                className={`l3-bchip ${openSc === x.id ? "on" : ""}`}
                 onClick={() => setOpenSc(openSc === x.id ? "" : x.id)}
               >
                 {x.q}

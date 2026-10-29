@@ -516,7 +516,7 @@ function Chart() {
                 const gi = s.principles.findIndex((x) => x.id === p.id);
                 const ok = !!p.effect && isSketched(p);
                 return (
-                  <div key={p.id} className={`l3-cell${ok ? "ok" : ""}`}>
+                  <div key={p.id} className={`l3-cell ${ok ? "ok" : ""}`}>
                     <span className="cn">
                       {ri + 1}.{ci + 1}
                     </span>

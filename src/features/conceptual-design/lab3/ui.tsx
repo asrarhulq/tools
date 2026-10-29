@@ -62,7 +62,7 @@ export function Btn({
   return (
     <button
       type={type}
-      className={`l3-btn l3-${variant}${small ? "l3-sm" : ""}`}
+      className={`l3-btn l3-${variant} ${small ? "l3-sm" : ""}`}
       onClick={onClick}
       disabled={disabled}
       title={title}
@@ -116,7 +116,7 @@ export function Tabs({
           key={t.id}
           role="tab"
           aria-selected={active === t.id}
-          className={`l3-tab${active === t.id ? "on" : ""}`}
+          className={`l3-tab ${active === t.id ? "on" : ""}`}
           onClick={() => onChange(t.id)}
         >
           {t.label}

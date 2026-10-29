@@ -161,7 +161,7 @@ export function Sketch({
         {COLORS.map((c) => (
           <button
             key={c}
-            className={`l3-sw${!erase && color === c ? "on" : ""}`}
+            className={`l3-sw ${!erase && color === c ? "on" : ""}`}
             style={{ background: c }}
             aria-label={`Pen colour ${c}`}
             onClick={() => {

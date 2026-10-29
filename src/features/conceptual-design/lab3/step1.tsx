@@ -104,7 +104,7 @@ function Match() {
             <button
               key={i}
               disabled={done.includes(i)}
-              className={`l3-mi${a === i ? "sel" : ""}${done.includes(i) ? "done" : ""}`}
+              className={`l3-mi ${a === i ? "sel" : ""} ${done.includes(i) ? "done" : ""}`}
               onClick={() => setA(i)}
             >
               {m.a}
@@ -116,7 +116,7 @@ function Match() {
             <button
               key={j}
               disabled={done.includes(j)}
-              className={`l3-mi${done.includes(j) ? "done" : ""}`}
+              className={`l3-mi ${done.includes(j) ? "done" : ""}`}
               onClick={() => pickB(j)}
             >
               {MATCH[j]!.b}
@@ -165,7 +165,7 @@ function NeutralQuiz() {
                   <button
                     key={String(v)}
                     disabled={a !== undefined}
-                    className={`l3-opt${a === v ? (v === q.neutral ? "right" : "wrong") : ""}`}
+                    className={`l3-opt ${a === v ? (v === q.neutral ? "right" : "wrong") : ""}`}
                     onClick={() => setAns((x) => ({ ...x, [i]: v }))}
                   >
                     {v ? "Solution-neutral" : "Names a solution"}

@@ -78,7 +78,7 @@ function FnQuiz() {
                 <button
                   key={String(v)}
                   disabled={ans[i] !== undefined}
-                  className={`l3-opt${ans[i] === v ? (v === q.ok ? "right" : "wrong") : ""}`}
+                  className={`l3-opt ${ans[i] === v ? (v === q.ok ? "right" : "wrong") : ""}`}
                   onClick={() => setAns((a) => ({ ...a, [i]: v }))}
                 >
                   {v ? "Good function" : "Fix it"}
@@ -659,7 +659,7 @@ function Play() {
               <button
                 key={t}
                 disabled={!!pick}
-                className={`l3-opt${pick ? (t === q.a ? "right" : pick === t ? "wrong" : "") : ""}`}
+                className={`l3-opt ${pick ? (t === q.a ? "right" : pick === t ? "wrong" : "") : ""}`}
                 onClick={() => choose(t)}
               >
                 {t === "E" ? "Energy" : t === "M" ? "Material" : "Signal"}

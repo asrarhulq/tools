@@ -110,7 +110,7 @@ function Palette({ onClose }: { onClose: () => void }) {
               key={c.label + k}
               role="option"
               aria-selected={k === i}
-              className={`l3-pi${k === i ? "on" : ""}`}
+              className={`l3-pi ${k === i ? "on" : ""}`}
               onMouseEnter={() => setI(k)}
               onClick={() => run(c)}
             >
@@ -196,7 +196,7 @@ function Shell({ title }: { title: string }) {
               return (
                 <button
                   key={st.n}
-                  className={`l3-pill${nav.view === `s${st.n}` ? "on" : ""}${p >= 1 ? "done" : ""}`}
+                  className={`l3-pill ${nav.view === `s${st.n}` ? "on" : ""} ${p >= 1 ? "done" : ""}`}
                   style={{
                     ["--c" as string]: st.color,
                     ["--accent" as string]: st.color,
@@ -210,13 +210,13 @@ function Shell({ title }: { title: string }) {
               );
             })}
             <button
-              className={`l3-pill${nav.view === "vault" ? "on" : ""}`}
+              className={`l3-pill ${nav.view === "vault" ? "on" : ""}`}
               onClick={() => go("vault", "A")}
             >
               Vault
             </button>
             <button
-              className={`l3-pill${nav.view === "stuck" ? "on" : ""}`}
+              className={`l3-pill ${nav.view === "stuck" ? "on" : ""}`}
               onClick={() => go("stuck")}
             >
               Stuck?
@@ -231,7 +231,7 @@ function Shell({ title }: { title: string }) {
               <span>Jump</span> <span className="l3-kbd">Ctrl K</span>
             </button>
             <span
-              className={`l3-save${saved === "err" ? "err" : ""}`}
+              className={`l3-save ${saved === "err" ? "err" : ""}`}
               aria-live="polite"
             >
               {saved === "ok" ? "saved" : saved === "err" ? "not saving" : ""}
