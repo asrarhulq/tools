@@ -7,7 +7,7 @@ import { cx } from './ui';
 // [x, y, w, h] clickable areas. C1 and C2 both belong to the part "C12".
 export const HITS = [
   { id: 'DS1', box: [60, 36, 560, 128] },
-  { id: 'U1', box: [92, 188, 238, 86] },
+  { id: 'U1', box: [92, 168, 238, 106] },
   { id: 'C3', box: [42, 196, 36, 36] },
   { id: 'C5', box: [194, 166, 34, 30] },
   { id: 'R1', box: [38, 238, 30, 72] },
