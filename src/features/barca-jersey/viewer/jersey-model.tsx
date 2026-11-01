@@ -46,9 +46,10 @@ export function JerseyModel({
       new THREE.MeshStandardMaterial({
         map: texture,
         bumpMap: bumpTexture,
-        bumpScale: 0.6,
-        roughness: 0.82,
-        metalness: 0.05,
+        bumpScale: 0.5,
+        roughness: 0.68,
+        metalness: 0.08,
+        envMapIntensity: 1.1,
         side: THREE.DoubleSide,
       }),
     [texture, bumpTexture],
@@ -58,8 +59,9 @@ export function JerseyModel({
     () =>
       new THREE.MeshStandardMaterial({
         map: sleeveTexture,
-        roughness: 0.85,
-        metalness: 0.04,
+        roughness: 0.7,
+        metalness: 0.07,
+        envMapIntensity: 1.1,
         side: THREE.DoubleSide,
       }),
     [sleeveTexture],
