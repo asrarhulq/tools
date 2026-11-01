@@ -1,0 +1,2156 @@
+/* Electronic clock: styles. Everything is scoped to this module. */
+
+.root {
+  --stick: 64px;
+  --bg: #0a1511;
+  --bg2: #0e1c16;
+  --panel: #12261d;
+  --panel2: #173126;
+  --line: rgba(236, 226, 200, 0.14);
+  --line2: rgba(236, 226, 200, 0.24);
+  --ink: #efe7d2;
+  --dim: #aab5a6;
+  --faint: #7f8d82;
+  --copper: #d6a064;
+  --copper2: #b9814a;
+  --led: #ffb13b;
+  --ledglow: rgba(255, 177, 59, 0.75);
+  --mask: #1c5a42;
+  --mask2: #226b4e;
+  --ok: #86d495;
+  --warn: #f0c04a;
+  --bad: #ef7260;
+  --serif:
+    "Fraunces", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+
+  min-height: 100vh;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.55;
+  background-color: var(--bg);
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    rgba(236, 226, 200, 0.055) 1px,
+    transparent 0
+  );
+  background-size: 24px 24px;
+  -webkit-font-smoothing: antialiased;
+}
+.root * {
+  box-sizing: border-box;
+}
+.root ::selection {
+  background: var(--copper);
+  color: #1a1208;
+}
+.root button {
+  font-family: inherit;
+  color: inherit;
+}
+.root :focus-visible {
+  outline: 2px solid var(--led);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.wrap {
+  width: min(1180px, 100% - 40px);
+  margin: 0 auto;
+}
+.stack {
+  display: grid;
+  gap: 28px;
+}
+.mono {
+  font-family: var(--mono);
+}
+.big {
+  font-family: var(--serif);
+  font-size: 2rem;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.hint {
+  color: var(--faint);
+  font-size: 0.85rem;
+  margin: 10px 0 0;
+}
+.para {
+  margin: 0 0 12px;
+  color: var(--dim);
+}
+.okTxt {
+  color: var(--ok);
+}
+.badTxt {
+  color: var(--bad);
+}
+
+/* ---------- header ---------- */
+.header {
+  position: sticky;
+  top: var(--stick);
+  z-index: 20;
+  background: rgba(10, 21, 17, 0.88);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+.headerInner {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  min-height: 60px;
+  flex-wrap: wrap;
+  padding: 8px 0;
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  text-decoration: none;
+}
+.brandMark {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: var(--mask2);
+  border: 1.5px solid var(--copper);
+  position: relative;
+}
+.brandMark::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 1px;
+  background: var(--led);
+  box-shadow: 0 0 6px var(--ledglow);
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% 100%,
+    0 100%,
+    0 60%,
+    40% 60%,
+    40% 40%,
+    0 40%
+  );
+}
+.nav {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+.navLink {
+  padding: 6px 12px;
+  border-radius: 99px;
+  font-size: 0.9rem;
+  color: var(--dim);
+  text-decoration: none;
+  transition:
+    color 0.2s,
+    background 0.2s;
+}
+.navLink:hover {
+  color: var(--ink);
+}
+.navOn {
+  color: var(--ink);
+  background: var(--panel2);
+  box-shadow: inset 0 0 0 1px var(--line2);
+}
+
+/* ---------- segmented control ---------- */
+.segmented {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 99px;
+  background: var(--bg2);
+  border: 1px solid var(--line);
+}
+.segBtn {
+  border: 0;
+  background: none;
+  padding: 6px 14px;
+  border-radius: 99px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: var(--dim);
+  transition: all 0.2s;
+}
+.segBtn:hover {
+  color: var(--ink);
+}
+.segBtnOn {
+  background: var(--copper);
+  color: #1a1208 !important;
+  font-weight: 600;
+}
+
+/* ---------- hero ---------- */
+.hero {
+  padding: 72px 0 40px;
+  border-bottom: 1px solid var(--line);
+}
+.kicker {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--copper);
+  margin: 0 0 12px;
+}
+.heroTitle {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(3rem, 9vw, 6.6rem);
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+  margin: 0 0 20px;
+}
+.heroSub {
+  max-width: 560px;
+  font-size: 1.15rem;
+  color: var(--dim);
+  margin: 0 0 32px;
+}
+.heroDisplay {
+  max-width: 460px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: #050b08;
+  border: 1px solid var(--line2);
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.6);
+}
+.heroDisplay svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.heroMeta {
+  display: flex;
+  gap: 40px;
+  margin: 32px 0 0;
+  flex-wrap: wrap;
+}
+.heroMeta div {
+  display: flex;
+  flex-direction: column-reverse;
+}
+.heroMeta dt {
+  font-family: var(--serif);
+  font-size: 2.1rem;
+  line-height: 1;
+  color: var(--ink);
+}
+.heroMeta dd {
+  margin: 0 0 4px;
+  color: var(--faint);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* ---------- sections ---------- */
+.section {
+  padding: 72px 0 24px;
+  scroll-margin-top: calc(var(--stick) + 64px);
+}
+.sectionHead {
+  max-width: 720px;
+  margin-bottom: 32px;
+}
+.h2 {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(2rem, 4.4vw, 3rem);
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  margin: 0 0 14px;
+}
+.lede {
+  font-size: 1.1rem;
+  color: var(--dim);
+  margin: 0;
+}
+.subhead {
+  margin-top: 24px;
+}
+.subhead h3 {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 1.6rem;
+  letter-spacing: -0.02em;
+  margin: 0 0 4px;
+}
+.subhead p {
+  margin: 0;
+  color: var(--dim);
+}
+.footer {
+  padding: 56px 0 72px;
+  border-top: 1px solid var(--line);
+  margin-top: 56px;
+  color: var(--faint);
+  font-size: 0.88rem;
+}
+.footer p {
+  max-width: 640px;
+  margin: 0;
+}
+
+/* ---------- panels ---------- */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 22px;
+}
+.panelHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.panelTitle {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 1.25rem;
+  letter-spacing: -0.01em;
+  margin: 0 0 12px;
+}
+.panelTitleGap {
+  margin-top: 24px;
+}
+.twoCol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+.rowSplit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 10px 0;
+}
+.bullets {
+  margin: 0;
+  padding-left: 1.1em;
+  display: grid;
+  gap: 6px;
+  color: var(--dim);
+}
+.bullets li::marker {
+  color: var(--copper);
+}
+
+/* ---------- buttons ---------- */
+.btn,
+.btnPrimary,
+.pill,
+.pillGhost,
+.chip,
+.iconBtn {
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.btn {
+  background: var(--panel2);
+  border: 1px solid var(--line2);
+  border-radius: 10px;
+  padding: 9px 16px;
+  font-size: 0.9rem;
+}
+.btn:hover {
+  border-color: var(--copper);
+}
+.btnOn {
+  background: var(--copper) !important;
+  color: #1a1208 !important;
+  border-color: var(--copper) !important;
+}
+.btnPrimary {
+  background: var(--copper);
+  color: #1a1208 !important;
+  border: 1px solid var(--copper);
+  border-radius: 10px;
+  padding: 9px 18px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.btnPrimary:hover {
+  background: #e3b078;
+}
+.btnPrimary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.btnWide {
+  width: 100%;
+  padding: 14px;
+  user-select: none;
+  touch-action: none;
+}
+.linkBtn {
+  background: none;
+  border: 0;
+  color: var(--copper);
+  cursor: pointer;
+  font-size: 0.85rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 0;
+}
+.iconBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 99px;
+  border: 1px solid var(--line2);
+  background: var(--bg2);
+  font-size: 1.1rem;
+  line-height: 1;
+}
+.iconBtn:hover {
+  border-color: var(--copper);
+}
+.stepControls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+.pillRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.pill {
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  padding: 6px 13px;
+  font-size: 0.84rem;
+  color: var(--dim);
+}
+.pill:hover {
+  color: var(--ink);
+  border-color: var(--line2);
+}
+.pill:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+.pillOn {
+  background: var(--copper);
+  color: #1a1208 !important;
+  border-color: var(--copper);
+  font-weight: 600;
+}
+.pillBad {
+  background: rgba(239, 114, 96, 0.18);
+  color: var(--ink) !important;
+  border-color: var(--bad);
+}
+.pillGhost {
+  background: none;
+  border: 1px dashed var(--line2);
+  border-radius: 99px;
+  padding: 5px 12px;
+  font-size: 0.8rem;
+  color: var(--copper);
+}
+.pillGhost:hover {
+  border-style: solid;
+  border-color: var(--copper);
+}
+.check {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 0.9rem;
+  color: var(--dim);
+  cursor: pointer;
+  margin: 6px 0;
+}
+.check input {
+  accent-color: var(--copper);
+  margin-top: 4px;
+}
+
+/* ---------- ranges ---------- */
+.rangeRow {
+  display: grid;
+  grid-template-columns: 82px 1fr minmax(74px, auto);
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0;
+  font-size: 0.85rem;
+}
+.rangeLabel {
+  color: var(--dim);
+}
+.rangeVal {
+  font-family: var(--mono);
+  color: var(--ink);
+  text-align: right;
+  font-size: 0.82rem;
+}
+.range {
+  width: 100%;
+  accent-color: var(--copper);
+  cursor: pointer;
+}
+
+/* ---------- deeper ---------- */
+.deeper {
+  margin-top: 16px;
+}
+.deeperBtn {
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--copper);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.deeperBtn:hover {
+  color: #e3b078;
+}
+.deeperPlus {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 99px;
+  border: 1px solid currentColor;
+  font-size: 0.95rem;
+  line-height: 1;
+}
+.deeperBody {
+  margin-top: 12px;
+  padding: 14px 16px;
+  border-left: 2px solid var(--copper);
+  background: rgba(214, 160, 100, 0.06);
+  border-radius: 0 10px 10px 0;
+  animation: fadeIn 0.3s ease;
+}
+.deeperBody p:last-child {
+  margin-bottom: 0;
+}
+
+/* ---------- board / explore ---------- */
+.exploreGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+.exploreLeft {
+  position: sticky;
+  top: calc(var(--stick) + 76px);
+  display: grid;
+  gap: 14px;
+}
+.boardCard {
+  background: #07110d;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 14px;
+}
+.boardSvg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.caption {
+  text-align: center;
+  color: var(--dim);
+  font-size: 0.88rem;
+  padding-top: 10px;
+  min-height: 1.6em;
+}
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chip {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 5px 9px;
+  color: var(--dim);
+}
+.chip:hover {
+  color: var(--ink);
+  border-color: var(--line2);
+}
+.chipOn {
+  background: var(--copper);
+  color: #1a1208 !important;
+  border-color: var(--copper);
+}
+
+.pcb {
+  fill: var(--mask);
+  stroke: #0f3a29;
+  stroke-width: 2;
+}
+.traces polyline {
+  fill: none;
+  stroke: #2a8660;
+  stroke-width: 3;
+  stroke-linecap: round;
+  opacity: 0.55;
+}
+.hole {
+  fill: #07110d;
+  stroke: var(--copper2);
+  stroke-width: 2;
+}
+.dispFrame {
+  fill: #121a17;
+  stroke: #263630;
+}
+.dispGlass {
+  fill: #060d0a;
+}
+.pinHeader {
+  fill: #101614;
+}
+.pinMetal {
+  fill: #bfc4c4;
+}
+.icBody {
+  fill: #1a1d1c;
+  stroke: #2b302e;
+}
+.icNotch {
+  fill: none;
+  stroke: #3a4140;
+  stroke-width: 2;
+}
+.icDot {
+  fill: #3a4140;
+}
+.icText {
+  font: 600 11px var(--mono);
+  fill: #d7dad9;
+  opacity: 0.8;
+}
+.lead {
+  stroke: #c9cdce;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+.leadW {
+  stroke: #c9cdce;
+  stroke-width: 3;
+  stroke-linecap: round;
+  fill: none;
+}
+.resBody {
+  fill: #4a84c4;
+  stroke: #2c5b91;
+}
+.elecBody {
+  fill: #12161a;
+  stroke: #2a3138;
+}
+.elecStripe {
+  fill: #b9c2c9;
+}
+.elecMinus {
+  font: 700 16px var(--sans);
+  fill: #12161a;
+}
+.xtalBody {
+  fill: #b9bec2;
+  stroke: #8c9296;
+  stroke-width: 1.5;
+}
+.xtalText {
+  font: 600 10px var(--mono);
+  fill: #3b4146;
+}
+.ceramic {
+  fill: #d19a56;
+  stroke: #a87639;
+}
+.btnBase {
+  fill: #1a1d1c;
+  stroke: #333a38;
+}
+.btnCap {
+  fill: #7a1f19;
+  stroke: #b4322a;
+  stroke-width: 2;
+}
+.btnCapInner {
+  fill: #d4443a;
+}
+.q1Body {
+  fill: #1a1d1c;
+  stroke: #333a38;
+}
+.q1Text {
+  font: 600 8px var(--mono);
+  fill: #bfc4c4;
+}
+.c4Body {
+  fill: #c9772f;
+  stroke: #8f5421;
+}
+.buzzBody {
+  fill: #101312;
+  stroke: #2a2f2d;
+  stroke-width: 2;
+}
+.buzzRing {
+  fill: none;
+  stroke: #1f2523;
+  stroke-width: 2;
+}
+.buzzHole {
+  fill: #050807;
+}
+.buzzPlus {
+  font: 700 22px var(--sans);
+  fill: #bfc4c4;
+}
+.terminal {
+  fill: #1f5fc4;
+  stroke: #174a98;
+}
+.screw {
+  fill: #cfd3d6;
+  stroke: #8f9599;
+  stroke-width: 2;
+}
+.screwSlot {
+  stroke: #4a4f53;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.silk {
+  font: 500 11px var(--mono);
+  fill: rgba(239, 231, 210, 0.55);
+}
+.hit {
+  fill: transparent;
+  stroke: none;
+}
+.hitLive {
+  cursor: pointer;
+}
+.hitLive:hover {
+  fill: rgba(255, 177, 59, 0.1);
+}
+.hit:focus-visible {
+  outline: none;
+  stroke: var(--led);
+  stroke-width: 2;
+}
+.haloSel {
+  fill: rgba(214, 160, 100, 0.08);
+  stroke: var(--copper);
+  stroke-width: 2.5;
+}
+.haloHi {
+  fill: rgba(255, 177, 59, 0.07);
+  stroke: var(--led);
+  stroke-width: 2;
+  stroke-dasharray: 6 5;
+  animation: march 1.2s linear infinite;
+}
+.badge {
+  fill: var(--led);
+  stroke: #07110d;
+  stroke-width: 2;
+}
+.badgeText {
+  font: 700 12px var(--sans);
+  fill: #1a1208;
+}
+
+.partPanel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 26px;
+  animation: fadeIn 0.35s ease;
+}
+.partTop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.partRef {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  background: var(--copper);
+  color: #1a1208;
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+.partTag {
+  color: var(--copper);
+  font-size: 0.85rem;
+  font-style: italic;
+  font-family: var(--serif);
+}
+.partNav {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+}
+.partName {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 1.9rem;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin: 0 0 12px;
+}
+.partSimple {
+  font-size: 1.05rem;
+  margin: 0 0 12px;
+  color: var(--ink);
+}
+.analogy,
+.lookFor {
+  margin: 0 0 8px;
+  color: var(--dim);
+  font-size: 0.95rem;
+}
+.analogy span,
+.lookFor span {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--copper);
+  margin-right: 8px;
+}
+.widget {
+  margin: 20px 0;
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+}
+.widgetTitle {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--copper);
+  margin-bottom: 10px;
+}
+.calloutRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.callout {
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 0.9rem;
+  border: 1px solid var(--line);
+  margin-top: 14px;
+}
+.calloutRow .callout {
+  margin-top: 0;
+}
+.callout b {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.callout p {
+  margin: 0;
+  color: var(--dim);
+}
+.calloutWarn {
+  background: rgba(239, 114, 96, 0.08);
+  border-color: rgba(239, 114, 96, 0.3);
+}
+.calloutWarn b {
+  color: var(--bad);
+}
+.calloutTip {
+  background: rgba(134, 212, 149, 0.07);
+  border-color: rgba(134, 212, 149, 0.28);
+}
+.calloutTip b {
+  color: var(--ok);
+}
+
+/* ---------- widgets ---------- */
+.wsvg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.wsvgSm {
+  display: block;
+  width: 130px;
+  height: 130px;
+  flex: none;
+}
+.readout {
+  display: grid;
+  gap: 4px;
+  font-size: 0.9rem;
+  color: var(--dim);
+}
+.readout b {
+  color: var(--ink);
+}
+.verdict {
+  margin: 12px 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+.verdict p {
+  margin: 6px 0 0;
+}
+.v_ok {
+  background: rgba(134, 212, 149, 0.1);
+  border-color: rgba(134, 212, 149, 0.35);
+}
+.v_warn {
+  background: rgba(240, 192, 74, 0.1);
+  border-color: rgba(240, 192, 74, 0.35);
+}
+.v_bad {
+  background: rgba(239, 114, 96, 0.1);
+  border-color: rgba(239, 114, 96, 0.35);
+}
+.v_idle {
+  background: var(--panel);
+}
+.chipBody {
+  fill: #1a1d1c;
+  stroke: #3a4140;
+  stroke-width: 1.5;
+}
+.chipNotch {
+  fill: #0d100f;
+  stroke: #3a4140;
+  stroke-width: 1.5;
+}
+.chipLabel {
+  font: 600 12px var(--mono);
+  fill: #aab5a6;
+  letter-spacing: 0.08em;
+}
+.pinLeg {
+  fill: #8f9699;
+  transition: fill 0.15s;
+}
+.pin_vcc {
+  fill: #e9806d;
+}
+.pin_gnd {
+  fill: #5a6a62;
+}
+.pin_reset {
+  fill: #e5c05a;
+}
+.pin_xtal {
+  fill: #7fb8e6;
+}
+.pin_seg {
+  fill: #d6a064;
+}
+.pin_io {
+  fill: #a9b1b3;
+}
+.pinLegOn {
+  fill: var(--led);
+  filter: drop-shadow(0 0 4px var(--ledglow));
+}
+.pinRow {
+  cursor: pointer;
+}
+.pinRow:hover .pinLeg {
+  filter: brightness(1.25);
+}
+.pinName {
+  font: 500 11px var(--mono);
+  fill: var(--dim);
+}
+.pinRowOn .pinName {
+  fill: var(--ink);
+}
+.pinNum {
+  font: 600 10px var(--mono);
+  fill: #7f8d82;
+}
+.pinInfo {
+  margin-top: 6px;
+  padding: 10px 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: 0.9rem;
+}
+.pinInfo p {
+  margin: 4px 0 0;
+  color: var(--dim);
+}
+.ringBg {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 6;
+}
+.ringFg {
+  fill: none;
+  stroke: var(--led);
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+.vibrate {
+  animation: wobble 0.16s ease-in-out infinite;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+.vibrateSvg {
+  animation: wobble 0.14s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.wire {
+  stroke: var(--dim);
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+}
+.flow {
+  stroke: var(--led);
+  stroke-dasharray: 6 6;
+  animation: march 0.6s linear infinite;
+}
+.plate {
+  stroke: var(--ink);
+  stroke-width: 2.4;
+}
+.wlabel {
+  font: 500 10.5px var(--mono);
+  fill: var(--dim);
+}
+.axis {
+  stroke: var(--line2);
+  stroke-width: 1;
+}
+.threshold {
+  stroke: var(--faint);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+.curve {
+  fill: none;
+  stroke: var(--led);
+  stroke-width: 2.4;
+  stroke-linejoin: round;
+}
+.curveBad {
+  stroke: var(--bad);
+}
+.curveDot {
+  fill: var(--led);
+  stroke: var(--bg);
+  stroke-width: 2;
+}
+.symBox {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.8;
+}
+.buzzSym {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.8;
+}
+.buzzOn {
+  stroke: var(--led);
+  fill: rgba(255, 177, 59, 0.2);
+}
+.waves path {
+  fill: none;
+  stroke: var(--led);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  animation: pulse 0.35s ease-in-out infinite alternate;
+}
+.mcuMini {
+  fill: var(--panel2);
+  stroke: var(--line2);
+}
+.pinState {
+  font: 700 11px var(--mono);
+}
+.dotFill {
+  fill: var(--ink);
+}
+.dotRing {
+  fill: var(--bg);
+  stroke: var(--ink);
+  stroke-width: 1.8;
+}
+.flowBar {
+  flex: 1;
+  min-width: 100px;
+  height: 10px;
+  border-radius: 99px;
+  background: var(--line);
+  overflow: hidden;
+}
+.flowBar div {
+  height: 100%;
+  background: var(--led);
+  transition: width 0.2s;
+  border-radius: 99px;
+}
+.bandKey {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 6px 0 4px;
+  font-size: 0.82rem;
+  color: var(--dim);
+}
+.bandKey span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.bandKey i {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  border: 1px solid var(--line2);
+  display: inline-block;
+}
+.bandKey small {
+  color: var(--faint);
+}
+.zBad {
+  fill: rgba(239, 114, 96, 0.55);
+}
+.zWarn {
+  fill: rgba(240, 192, 74, 0.55);
+}
+.zOk {
+  fill: rgba(134, 212, 149, 0.7);
+}
+.marker {
+  fill: var(--ink);
+}
+.markerText {
+  font: 600 11px var(--mono);
+  fill: var(--ink);
+}
+.bitRow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin: 10px 0;
+}
+.bit {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 0;
+  cursor: pointer;
+  display: grid;
+  gap: 2px;
+  text-align: center;
+}
+.bit span {
+  font: 500 0.7rem var(--mono);
+  color: var(--faint);
+  text-transform: uppercase;
+}
+.bit b {
+  font-family: var(--mono);
+  color: var(--dim);
+}
+.bitOn {
+  border-color: var(--led);
+  background: rgba(255, 177, 59, 0.12);
+}
+.bitOn b {
+  color: var(--led);
+}
+
+/* ---------- LEDs ---------- */
+.ledOn {
+  fill: var(--led);
+  filter: drop-shadow(0 0 3px var(--ledglow));
+  transition: opacity 0.08s;
+}
+.ledOff {
+  fill: rgba(255, 177, 59, 0.07);
+}
+.ledTap {
+  cursor: pointer;
+}
+.ledTap:hover {
+  fill: rgba(255, 177, 59, 0.35);
+}
+
+/* ---------- journey ---------- */
+.journeyGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+.journeyGrid > :first-child {
+  position: sticky;
+  top: calc(var(--stick) + 76px);
+}
+.timeline {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+.tlItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: none;
+  border: 0;
+  padding: 7px 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+  color: var(--faint);
+  transition: all 0.2s;
+}
+.tlItem:hover {
+  color: var(--ink);
+}
+.tlDot {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 99px;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid var(--line2);
+  font: 600 0.78rem var(--mono);
+}
+.tlText {
+  font-size: 0.95rem;
+}
+.tlDone {
+  color: var(--dim);
+}
+.tlDone .tlDot {
+  border-color: var(--copper2);
+  color: var(--copper);
+}
+.tlOn {
+  background: var(--panel);
+  color: var(--ink);
+}
+.tlOn .tlDot {
+  background: var(--led);
+  color: #1a1208;
+  border-color: var(--led);
+  box-shadow: 0 0 12px var(--ledglow);
+}
+.stepCardBig {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 22px;
+  animation: fadeIn 0.35s ease;
+}
+.stepTime {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--copper);
+  margin-bottom: 6px;
+}
+.stepTitle {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 1.55rem;
+  letter-spacing: -0.015em;
+  margin: 0 0 10px;
+}
+.statRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.stat {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  padding: 4px 10px;
+  border-radius: 99px;
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  color: var(--dim);
+}
+
+/* ---------- build ---------- */
+.toolList,
+.tempList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.toolList li {
+  display: grid;
+  gap: 2px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+.toolList li:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.toolList b {
+  font-weight: 600;
+}
+.toolList span {
+  color: var(--dim);
+  font-size: 0.9rem;
+}
+.tempList li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 12px;
+  align-items: baseline;
+  padding: 10px 14px;
+  background: var(--bg2);
+  border-radius: 10px;
+  border: 1px solid var(--line);
+}
+.tempList b {
+  font-family: var(--mono);
+  color: var(--led);
+}
+.tempList small {
+  color: var(--faint);
+  font-family: var(--mono);
+}
+.techGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr);
+  gap: 28px;
+  align-items: center;
+}
+.jointCard {
+  background: #07110d;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+}
+.jointSvg {
+  display: block;
+  width: 100%;
+  max-width: 360px;
+  height: auto;
+  margin: 0 auto;
+}
+.jointBoard {
+  fill: var(--mask);
+}
+.jointPad {
+  fill: var(--copper);
+}
+.jointLead {
+  fill: #cfd3d6;
+}
+.solder {
+  fill: #d7dbdd;
+  stroke: #8e9599;
+  stroke-width: 1.5;
+}
+.solderDull {
+  fill: #8d9296;
+  stroke: #646a6e;
+  stroke-width: 1.5;
+}
+.solderBurnt {
+  fill: #8b7458;
+  stroke: #5d4c38;
+  stroke-width: 1.5;
+}
+.solderWire {
+  fill: none;
+  stroke: #cfd3d6;
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+.crack {
+  stroke: #2a2f31;
+  stroke-width: 2;
+}
+.ironTip {
+  fill: #b9bec2;
+}
+.ironBody {
+  fill: #3a4140;
+}
+.techDots {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 12px;
+}
+.techDot {
+  width: 30px;
+  height: 30px;
+  border-radius: 99px;
+  border: 1.5px solid var(--line2);
+  background: none;
+  cursor: pointer;
+  font: 600 0.8rem var(--mono);
+  color: var(--dim);
+}
+.techDotOn {
+  background: var(--led);
+  color: #1a1208;
+  border-color: var(--led);
+}
+.techDotDone {
+  border-color: var(--copper2);
+  color: var(--copper);
+}
+.jointVerdict {
+  text-align: center;
+  margin-top: 10px;
+  padding: 6px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: 1px solid var(--line);
+}
+.quizCount {
+  text-align: center;
+  color: var(--faint);
+  font-size: 0.82rem;
+  margin-top: 10px;
+}
+.quizDone {
+  text-align: center;
+  padding: 24px;
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+}
+
+.buildGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: 28px;
+  align-items: start;
+}
+.buildSticky {
+  position: sticky;
+  top: calc(var(--stick) + 76px);
+  display: grid;
+  gap: 14px;
+}
+.progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.85rem;
+  color: var(--dim);
+}
+.progressBar {
+  flex: 1;
+  height: 6px;
+  border-radius: 99px;
+  background: var(--line);
+  overflow: hidden;
+}
+.progressBar div {
+  height: 100%;
+  background: var(--ok);
+  transition: width 0.3s;
+}
+.buildList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+.buildItem {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.buildOpen {
+  border-color: var(--copper2);
+}
+.buildHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+}
+.buildCheck {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 99px;
+  border: 1.5px solid var(--line2);
+  background: none;
+  cursor: pointer;
+  font: 600 0.82rem var(--mono);
+  color: var(--dim);
+}
+.buildDone .buildCheck {
+  background: var(--ok);
+  border-color: var(--ok);
+  color: #0a1511;
+}
+.buildTitle {
+  flex: 1;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 4px 0;
+}
+.buildTitle small {
+  font-family: var(--mono);
+  font-weight: 400;
+  color: var(--faint);
+  font-size: 0.78rem;
+}
+.buildDone .buildTitle span {
+  color: var(--dim);
+  text-decoration: line-through;
+  text-decoration-color: var(--faint);
+}
+.buildBody {
+  padding: 0 16px 18px 56px;
+  animation: fadeIn 0.3s ease;
+}
+.checkList {
+  margin-top: 12px;
+}
+
+/* ---------- lab ---------- */
+.labTabs {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.labTabs .hint {
+  margin: 0;
+  flex: 1;
+  min-width: 240px;
+}
+.labGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(300px, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+.schemCard {
+  background: #07110d;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 14px;
+}
+.schem {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.labSide {
+  display: grid;
+  gap: 16px;
+}
+.benchCard {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+}
+.bezel {
+  background: #050b08;
+  border: 1px solid var(--line2);
+  border-radius: 10px;
+  padding: 8px 10px;
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.7);
+}
+.benchRow {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0;
+  font: 600 0.72rem var(--mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.modeTag {
+  color: var(--led);
+}
+.beepLamp {
+  color: var(--faint);
+}
+.beepOn {
+  color: var(--led);
+  text-shadow: 0 0 8px var(--ledglow);
+}
+.benchBtns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.padBtn {
+  background: var(--panel2);
+  border: 1px solid var(--line2);
+  border-radius: 12px;
+  padding: 12px;
+  cursor: pointer;
+  display: grid;
+  gap: 2px;
+  text-align: center;
+  transition:
+    transform 0.08s,
+    border-color 0.2s;
+}
+.padBtn b {
+  font-family: var(--mono);
+  color: var(--copper);
+}
+.padBtn span {
+  font-size: 0.8rem;
+  color: var(--dim);
+}
+.padBtn:hover {
+  border-color: var(--copper);
+}
+.padBtn:active {
+  transform: translateY(2px) scale(0.98);
+}
+.supply {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.meter {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+  display: grid;
+  gap: 10px;
+}
+.lcd {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: #1b2318;
+  border: 1px solid #323d2b;
+  font-family: var(--mono);
+  color: #cde8a4;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+.lcdNum {
+  font-size: 2.6rem;
+  line-height: 1;
+  letter-spacing: 0.04em;
+}
+.lcdSign {
+  font-size: 2rem;
+}
+.lcdUnit {
+  font-size: 0.78rem;
+  opacity: 0.8;
+}
+.meterLegend {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  color: var(--dim);
+}
+.redDot,
+.blackDot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 99px;
+  margin-right: 6px;
+}
+.redDot {
+  background: #e3493b;
+}
+.blackDot {
+  background: #222;
+  border: 1px solid var(--line2);
+}
+.faultGroup {
+  margin-bottom: 14px;
+}
+.faultGroupName {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin-bottom: 6px;
+}
+.faultNotes {
+  display: grid;
+  gap: 10px;
+  margin-top: 6px;
+}
+.faultNote {
+  padding: 12px 14px;
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  font-size: 0.88rem;
+}
+.faultNote p {
+  margin: 4px 0 0;
+  color: var(--dim);
+}
+.faultNote span {
+  font: 500 0.68rem var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--copper);
+  margin-right: 6px;
+}
+.scoreTag {
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  color: var(--copper);
+}
+
+/* schematic */
+.sw {
+  fill: none;
+  stroke: var(--faint);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.swLive {
+  stroke: #c8a060;
+  stroke-dasharray: 5 7;
+  animation: march 1.4s linear infinite;
+}
+.swRst {
+  stroke-dasharray: none;
+  animation: none;
+}
+.bus {
+  stroke-width: 5;
+  opacity: 0.7;
+}
+.sym {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+.slabel {
+  font: 500 10.5px var(--mono);
+  fill: var(--faint);
+}
+.sref {
+  font: 700 11.5px var(--mono);
+  fill: var(--copper);
+}
+.mcuBox {
+  fill: var(--bg2);
+  stroke: var(--line2);
+  stroke-width: 1.5;
+  transition: stroke 0.3s;
+}
+.mcuRun {
+  stroke: var(--ok);
+}
+.faultRing {
+  fill: rgba(239, 114, 96, 0.08);
+  stroke: var(--bad);
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+  animation: march 1s linear infinite;
+}
+.tp {
+  cursor: pointer;
+}
+.tpHit {
+  fill: transparent;
+}
+.tpDot {
+  fill: var(--bg);
+  stroke: #e3493b;
+  stroke-width: 2.4;
+  transition: all 0.2s;
+}
+.tpText {
+  font: 600 10px var(--mono);
+  fill: var(--dim);
+}
+.tp:hover .tpDot {
+  fill: #e3493b;
+}
+.tpOn .tpDot {
+  fill: #e3493b;
+  filter: drop-shadow(0 0 6px rgba(227, 73, 59, 0.9));
+}
+.tpOn .tpText {
+  fill: var(--ink);
+}
+.tp:focus-visible {
+  outline: none;
+}
+.tp:focus-visible .tpDot {
+  stroke: var(--led);
+}
+.probeBlack {
+  fill: #222;
+  stroke: var(--line2);
+  stroke-width: 2;
+}
+
+/* chain */
+.chain {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0 0 0 2px;
+  position: relative;
+  display: grid;
+  gap: 2px;
+}
+.chainItem {
+  position: relative;
+}
+.chainItem::before {
+  content: "";
+  position: absolute;
+  left: 10px;
+  top: 24px;
+  bottom: -4px;
+  width: 2px;
+  background: var(--line);
+}
+.chainItem:last-child::before {
+  display: none;
+}
+.chainBtn {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: 0;
+  text-align: left;
+  padding: 6px 4px;
+  cursor: pointer;
+  border-radius: 8px;
+}
+.chainBtn:hover {
+  background: rgba(236, 226, 200, 0.04);
+}
+.chainDot {
+  width: 14px;
+  height: 14px;
+  margin-left: 3px;
+  border-radius: 99px;
+  background: var(--faint);
+  border: 2px solid var(--panel);
+  box-shadow: 0 0 0 1.5px var(--faint);
+  position: relative;
+  z-index: 1;
+}
+.chainTitle {
+  font-size: 0.92rem;
+}
+.chainVal {
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  color: var(--dim);
+  text-align: right;
+}
+.chainBody {
+  margin: 2px 0 8px 36px;
+  padding: 10px 12px;
+  font-size: 0.86rem;
+  background: var(--bg2);
+  border-radius: 8px;
+  color: var(--dim);
+}
+.chainBody p {
+  margin: 0 0 6px;
+}
+.chainBody p:last-child {
+  margin: 0;
+}
+.st_ok .chainDot {
+  background: var(--ok);
+  box-shadow:
+    0 0 0 1.5px var(--ok),
+    0 0 8px rgba(134, 212, 149, 0.5);
+}
+.st_warn .chainDot {
+  background: var(--warn);
+  box-shadow: 0 0 0 1.5px var(--warn);
+}
+.st_bad .chainDot {
+  background: var(--bad);
+  box-shadow:
+    0 0 0 1.5px var(--bad),
+    0 0 8px rgba(239, 114, 96, 0.55);
+}
+.st_bad .chainTitle {
+  color: var(--bad);
+  font-weight: 600;
+}
+.st_idle .chainTitle {
+  color: var(--faint);
+}
+.st_idle .chainVal {
+  color: var(--faint);
+}
+
+/* debugger */
+.dbgGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.3fr);
+  gap: 20px;
+  align-items: start;
+}
+.symList {
+  display: grid;
+  gap: 6px;
+}
+.symBtn {
+  text-align: left;
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 0.92rem;
+  color: var(--dim);
+  transition: all 0.18s;
+}
+.symBtn:hover {
+  border-color: var(--line2);
+  color: var(--ink);
+}
+.symOn {
+  background: var(--panel2);
+  border-color: var(--copper);
+  color: var(--ink);
+}
+.dbgSteps {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+}
+.dbgSteps li {
+  padding: 14px;
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  display: grid;
+  gap: 6px;
+}
+.dbgDo {
+  font-weight: 600;
+  display: flex;
+  gap: 10px;
+}
+.dbgDo span {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 99px;
+  background: var(--copper);
+  color: #1a1208;
+  display: grid;
+  place-items: center;
+  font: 700 0.75rem var(--mono);
+}
+.dbgExpect,
+.dbgIf {
+  font-size: 0.88rem;
+  color: var(--dim);
+  padding-left: 32px;
+}
+.dbgExpect b {
+  color: var(--ok);
+}
+.dbgIf b {
+  color: var(--bad);
+}
+.dbgSteps .pillRow {
+  padding-left: 32px;
+  margin-top: 4px;
+}
+
+/* ---------- motion ---------- */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes march {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+@keyframes wobble {
+  0%,
+  100% {
+    transform: translateX(-1px);
+  }
+  50% {
+    transform: translateX(1px);
+  }
+}
+@keyframes pulse {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 1000px) {
+  .exploreGrid,
+  .journeyGrid,
+  .buildGrid,
+  .labGrid,
+  .dbgGrid,
+  .twoCol,
+  .techGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .exploreLeft,
+  .journeyGrid > :first-child,
+  .buildSticky {
+    position: static;
+  }
+  .nav {
+    margin-left: 0;
+    order: 3;
+    width: 100%;
+  }
+}
+@media (max-width: 700px) {
+  .schemCard {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .schem {
+    min-width: 640px;
+  }
+}
+@media (max-width: 560px) {
+  .calloutRow {
+    grid-template-columns: 1fr;
+  }
+  .partPanel,
+  .panel {
+    padding: 16px;
+  }
+  .section {
+    padding-top: 48px;
+  }
+  .hero {
+    padding-top: 44px;
+  }
+  .buildBody {
+    padding-left: 16px;
+  }
+  .rangeRow {
+    grid-template-columns: 70px 1fr 60px;
+  }
+}
+
+/* small additions */
+.boardCompact {
+  max-width: 100%;
+}
+.ironG {
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
+}
+.faultGroups {
+  margin-top: 4px;
+}

@@ -173,6 +173,47 @@ export const tools: readonly Tool[] = [
     },
   },
   {
+    id: "eng-tool-2",
+    slug: "electronic-clock",
+    title: "Electronic Clock, Part by Part",
+    description:
+      "An interactive guide to a four-digit electronic clock kit: every part explained, how to solder it, a circuit simulator, and a debugger.",
+    longDescription:
+      "A hands-on guide to a classic AT89C2051-based four-digit electronic " +
+      "clock kit. Tap any part on an illustrated board for a plain-language " +
+      "explanation, an analogy, and a small interactive experiment, then open " +
+      "a deeper layer for the electronics behind it. Step through the six " +
+      "stages from power-up to a running clock on a live schematic, learn " +
+      "proper soldering technique with a five-count animation and a joint " +
+      "lab, and work through the build in order with saved checkboxes. The " +
+      "Lab section runs a real-time behavioural model of the circuit: slide " +
+      "the supply voltage, plant any of 15 soldering faults, probe test " +
+      "points with a simulated multimeter, follow a guided debugger from " +
+      "symptom to fix, or diagnose a hidden fault on a mystery board. " +
+      "Includes the often-missed bypass capacitor mounted directly at the " +
+      "chip, not just the bulk smoothing capacitor near the power input.",
+    category: "engineering",
+    icon: "circuit-board",
+    difficulty: "intermediate",
+    status: "live",
+    featured: true,
+    popular: true,
+    addedAt: "2026-10-31",
+    keywords: [
+      "electronics",
+      "soldering",
+      "microcontroller",
+      "at89c2051",
+      "8051",
+      "circuit simulator",
+      "schematic",
+      "debugging",
+      "seven segment display",
+      "diy kit",
+      "decoupling capacitor",
+    ],
+  },
+  {
     id: "eng-tool-4",
     slug: "eng-tool-4",
     title: "Tolerance Grid",

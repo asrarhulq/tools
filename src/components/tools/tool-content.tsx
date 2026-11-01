@@ -126,6 +126,16 @@ const ConceptualDesignTool = dynamic(
   { loading: () => loadingSkeleton },
 );
 
+// Electronic Clock is a large, self-contained guide (board, schematic,
+// circuit simulator) — load it only on its own route.
+const ElectronicClockTool = dynamic(
+  () =>
+    import("@/features/electronic-clock/electronic-clock-tool").then(
+      (m) => m.ElectronicClockTool,
+    ),
+  { loading: () => loadingSkeleton },
+);
+
 /** Map of tool id → live renderer. Add an entry when a tool ships. */
 const renderers: Record<string, React.ComponentType<{ tool: ToolWithHref }>> = {
   "phil-tool-2": ArgumentMapperTool,
@@ -133,6 +143,7 @@ const renderers: Record<string, React.ComponentType<{ tool: ToolWithHref }>> = {
   "phil-tool-5": MoveAndMeaningTool,
   "general-tool-2": FocusTimerTool,
   "eng-tool-1": StlAnalyzerTool,
+  "eng-tool-2": ElectronicClockTool,
   "eng-tool-5": TrussAnalyzerTool,
   "eng-tool-6": BeamDesignerTool,
   "general-tool-5": GanttStudioTool,
