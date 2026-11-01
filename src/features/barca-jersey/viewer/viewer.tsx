@@ -37,36 +37,36 @@ export function Viewer({
           toneMapping: THREE.ACESFilmicToneMapping,
           toneMappingExposure: 1.08,
         }}
-        camera={{ position: [0, 0.1, 4.2], fov: 32, near: 0.1, far: 50 }}
+        camera={{ position: [0, 0.15, 6.8], fov: 32, near: 0.1, far: 80 }}
       >
         <color attach="background" args={["#0c0d12"]} />
         <ambientLight intensity={0.45} />
         <hemisphereLight args={["#dfe6ff", "#1a1830", 0.55]} />
         <directionalLight
-          position={[2.4, 3, 2]}
+          position={[3.8, 4.8, 3.2]}
           intensity={2.3}
           castShadow
           shadow-mapSize={[2048, 2048]}
           shadow-radius={5}
           shadow-bias={-0.0003}
           shadow-camera-near={0.1}
-          shadow-camera-far={10}
-          shadow-camera-left={-2}
-          shadow-camera-right={2}
-          shadow-camera-top={2}
-          shadow-camera-bottom={-2}
+          shadow-camera-far={16}
+          shadow-camera-left={-2.4}
+          shadow-camera-right={2.4}
+          shadow-camera-top={2.4}
+          shadow-camera-bottom={-2.4}
         />
-        <directionalLight position={[-2.4, 1.4, -1.6]} intensity={0.5} />
+        <directionalLight position={[-3.8, 2.2, -2.6]} intensity={0.5} />
 
         <Suspense fallback={null}>
           <JerseyModel name={name} number={number} animate={!autoRotate} />
 
           <ContactShadows
-            position={[0, -0.97, 0]}
+            position={[0, -1.36, 0]}
             opacity={0.55}
-            scale={4}
+            scale={6}
             blur={2.2}
-            far={2}
+            far={3}
             resolution={1024}
             color="#000000"
           />
@@ -102,8 +102,8 @@ export function Viewer({
           dampingFactor={0.08}
           autoRotate={autoRotate}
           autoRotateSpeed={1.1}
-          minDistance={2.4}
-          maxDistance={7}
+          minDistance={4.8}
+          maxDistance={11}
           minPolarAngle={Math.PI * 0.22}
           maxPolarAngle={Math.PI * 0.68}
           target={[0, -0.05, 0]}

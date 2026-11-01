@@ -1,98 +1,196 @@
 import * as THREE from "three";
 
 /**
- * Procedural jersey geometry. The torso is a single `LatheGeometry` revolved
- * around the Y axis — radially symmetric, so its built-in UVs already give
- * us exactly what a jersey texture needs: `u` sweeps around the body (ideal
- * for wrapping vertical stripes) and `v` runs hem→collar (ideal for stacking
- * trim bands, the crest, the sponsor, and the back print by height). No
- * external model, no manual UV unwrap.
+ * Procedural jersey geometry — a hand-built parametric surface, not a
+ * `LatheGeometry` revolve. The torso cross-section is an **ellipse**
+ * (noticeably flatter front-to-back than side-to-side, like an actual
+ * ribcage) rather than a circle, tapers through a smoothstepped waist/chest
+ * contour, and the front of the neckline **dips** below the back the way a
+ * real crew neck does — a plain radial revolve can't do any of that, it can
+ * only produce a perfectly round tube.
  *
- * `phiStart = PI/2` rotates the seam (the texture's u=0/u=1 edge) to the
- * body's side, under the sleeve, so the front print and the back print each
- * sit mid-texture with room on both sides — see `lib/texture.ts` for the
- * matching FRONT_U/BACK_U constants.
+ * Because the cross-section is elliptical, equal angle steps around it do
+ * NOT cover equal arc length (the curvature is tighter at the narrow
+ * front/back than at the wide sides), so a naive angle-stepped UV would
+ * stretch the stripe texture unevenly. `thetaAt` walks a precomputed
+ * arc-length table instead, so `u` is arc-length-uniform all the way around.
+ *
+ * `u=0` sits at the body's side (under the sleeve) — the texture seam — so
+ * the front print and the back print each land mid-texture with margin on
+ * both sides. See `lib/texture.ts`'s `FRONT_U`/`BACK_U`.
  */
 
-const TORSO_PROFILE: ReadonlyArray<readonly [radius: number, height: number]> =
-  [
-    [0.6, 0],
-    [0.63, 0.08],
-    [0.58, 0.45],
-    [0.66, 0.85],
-    [0.64, 1.15],
-    [0.57, 1.35],
-    [0.46, 1.5],
-    [0.3, 1.6],
-    [0.17, 1.68],
-  ];
+const HEM_TO_UNDERARM = 2.2;
+const YOKE_HEIGHT = 0.38;
+const COLLAR_HEIGHT = 0.1;
+const TOTAL_HEIGHT = HEM_TO_UNDERARM + YOKE_HEIGHT + COLLAR_HEIGHT;
 
-/** Vertical shift so the torso is centered near the scene origin. */
-export const TORSO_CENTER_OFFSET = 0.84;
+/** Ellipse semi-axes used only to build the arc-length table below — a
+ * fixed reference shape close enough to every row's actual proportions
+ * that the resulting `u` stays visually even all the way up the body. */
+const REF_A = 1.0;
+const REF_B = 0.52;
 
-/**
- * `LatheGeometry` parametrizes v by *cumulative arc length* along the
- * profile, not by height — a steep taper (like the neck) covers a lot of v
- * for very little height. These are that same arc-length v for each profile
- * point, so `lib/texture.ts` can place the crest and the back print at the
- * body heights they're named for instead of guessing a canvas fraction.
- */
-export const PROFILE_V: ReadonlyArray<number> = (() => {
-  const lengths = TORSO_PROFILE.slice(1).map(([r, y], i) => {
-    const [r0, y0] = TORSO_PROFILE[i]!;
-    return Math.hypot(r - r0, y - y0);
-  });
-  const total = lengths.reduce((a, b) => a + b, 0);
-  const cumulative: number[] = [0];
-  let acc = 0;
-  for (const len of lengths) {
-    acc += len;
-    cumulative.push(acc / total);
+const NECK_A = 0.36;
+const NECK_B = 0.3;
+const NECK_FRONT_DIP = 0.15;
+
+/** Vertical shift so the torso sits centered near the scene origin. */
+export const CENTER_OFFSET = TOTAL_HEIGHT / 2;
+
+function smoothstep(x: number): number {
+  const t = Math.max(0, Math.min(1, x));
+  return t * t * (3 - 2 * t);
+}
+
+interface TorsoRow {
+  readonly y: number;
+  readonly a: number;
+  readonly b: number;
+  readonly dip: number;
+}
+
+function buildRows(): readonly TorsoRow[] {
+  const rows: TorsoRow[] = [];
+  const bodySteps = 36;
+  for (let i = 0; i <= bodySteps; i++) {
+    const y = (i / bodySteps) * HEM_TO_UNDERARM;
+    const s = y / HEM_TO_UNDERARM;
+    const a =
+      0.93 + 0.07 * smoothstep(s * 1.3) + 0.04 * (1 - smoothstep(y / 0.35));
+    rows.push({ y, a, b: a * 0.52, dip: 0 });
   }
-  return cumulative;
+  const rim = rows[rows.length - 1]!;
+
+  const yokeSteps = 16;
+  for (let k = 1; k <= yokeSteps; k++) {
+    const t = k / yokeSteps;
+    const e = smoothstep(t);
+    rows.push({
+      y: HEM_TO_UNDERARM + t * YOKE_HEIGHT,
+      a: rim.a + (NECK_A - rim.a) * e,
+      b: rim.b + (NECK_B - rim.b) * e,
+      dip: NECK_FRONT_DIP * t * t * t,
+    });
+  }
+
+  const collarSteps = 3;
+  for (let c = 1; c <= collarSteps; c++) {
+    rows.push({
+      y: HEM_TO_UNDERARM + YOKE_HEIGHT + (COLLAR_HEIGHT * c) / collarSteps,
+      a: NECK_A,
+      b: NECK_B,
+      dip: NECK_FRONT_DIP,
+    });
+  }
+  return rows;
+}
+
+/** Arc-length-uniform angle for a point `u` (0..1) around the reference
+ * ellipse — built once at module load, same table reused for every row. */
+const thetaAt = (() => {
+  const samples = 4000;
+  const cumulative = new Float64Array(samples + 1);
+  let prevX = REF_A * Math.cos(Math.PI);
+  let prevZ = REF_B * Math.sin(Math.PI);
+  for (let i = 1; i <= samples; i++) {
+    const theta = Math.PI - (2 * Math.PI * i) / samples;
+    const x = REF_A * Math.cos(theta);
+    const z = REF_B * Math.sin(theta);
+    cumulative[i] = cumulative[i - 1]! + Math.hypot(x - prevX, z - prevZ);
+    prevX = x;
+    prevZ = z;
+  }
+  const total = cumulative[samples]!;
+
+  return (u: number): number => {
+    const want = u * total;
+    let lo = 0;
+    let hi = samples;
+    while (hi - lo > 1) {
+      const mid = (lo + hi) >> 1;
+      if (cumulative[mid]! <= want) lo = mid;
+      else hi = mid;
+    }
+    const span = cumulative[hi]! - cumulative[lo]!;
+    const f = span > 0 ? (want - cumulative[lo]!) / span : 0;
+    return Math.PI - (2 * Math.PI * (lo + f)) / samples;
+  };
 })();
 
-export const V_CHEST = PROFILE_V[3]!;
-export const V_UPPER_CHEST = PROFILE_V[4]!;
-export const V_SHOULDER = PROFILE_V[6]!;
-export const V_NECK_BASE = PROFILE_V[7]!;
-
 export function buildTorsoGeometry(): THREE.BufferGeometry {
-  const points = TORSO_PROFILE.map(([r, y]) => new THREE.Vector2(r, y));
-  const geometry = new THREE.LatheGeometry(
-    points,
-    56,
-    Math.PI / 2,
-    Math.PI * 2,
-  );
-  geometry.translate(0, -TORSO_CENTER_OFFSET, 0);
+  const rows = buildRows();
+  const columns = 200;
+  const thetas: number[] = [];
+  for (let j = 0; j <= columns; j++) thetas.push(thetaAt(j / columns));
+
+  const rowCount = rows.length;
+  const position = new Float32Array((columns + 1) * rowCount * 3);
+  const uv = new Float32Array((columns + 1) * rowCount * 2);
+
+  for (let ri = 0; ri < rowCount; ri++) {
+    const row = rows[ri]!;
+    for (let cj = 0; cj <= columns; cj++) {
+      const theta = thetas[cj]!;
+      const idx = ri * (columns + 1) + cj;
+      const frontFade = Math.max(0, Math.sin(theta));
+      position[idx * 3] = row.a * Math.cos(theta);
+      position[idx * 3 + 1] = row.y - row.dip * frontFade * frontFade;
+      position[idx * 3 + 2] = row.b * Math.sin(theta);
+      uv[idx * 2] = cj / columns;
+      uv[idx * 2 + 1] = row.y / TOTAL_HEIGHT;
+    }
+  }
+
+  const index: number[] = [];
+  for (let r = 0; r < rowCount - 1; r++) {
+    for (let c = 0; c < columns; c++) {
+      const a = r * (columns + 1) + c;
+      const b = a + 1;
+      const d = a + (columns + 1);
+      const e = d + 1;
+      index.push(a, b, d, b, e, d);
+    }
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.BufferAttribute(position, 3));
+  geometry.setAttribute("uv", new THREE.BufferAttribute(uv, 2));
+  geometry.setIndex(index);
   geometry.computeVertexNormals();
+
+  // The u=0 and u=columns columns are the same physical seam line;
+  // computeVertexNormals treats them as separate vertices with different
+  // neighbors, which leaves a faint lighting crease. Average them.
+  const normal = geometry.attributes.normal as THREE.BufferAttribute;
+  for (let r = 0; r < rowCount; r++) {
+    const i0 = r * (columns + 1);
+    const i1 = i0 + columns;
+    const nx = normal.getX(i0) + normal.getX(i1);
+    const ny = normal.getY(i0) + normal.getY(i1);
+    const nz = normal.getZ(i0) + normal.getZ(i1);
+    const len = Math.hypot(nx, ny, nz) || 1;
+    normal.setXYZ(i0, nx / len, ny / len, nz / len);
+    normal.setXYZ(i1, nx / len, ny / len, nz / len);
+  }
+
+  geometry.translate(0, -CENTER_OFFSET, 0);
   return geometry;
 }
 
-const SLEEVE_HEIGHT = 0.62;
-const SLEEVE_SHOULDER_RADIUS = 0.3;
-const SLEEVE_CUFF_RADIUS = 0.19;
-const SHOULDER_HEIGHT = 1.5 - TORSO_CENTER_OFFSET;
-const SHOULDER_REACH = 0.4;
+const SLEEVE_LENGTH = 0.95;
+const SLEEVE_SHOULDER_RADIUS = 0.4;
+const SLEEVE_CUFF_RADIUS = 0.35;
+const SLEEVE_ANGLE = (38 * Math.PI) / 180;
+const SLEEVE_ATTACH_X = 0.78;
+const SLEEVE_ATTACH_Y = HEM_TO_UNDERARM - 0.3 - CENTER_OFFSET;
 
 export function buildSleeveGeometry(): THREE.CylinderGeometry {
   return new THREE.CylinderGeometry(
     SLEEVE_SHOULDER_RADIUS,
     SLEEVE_CUFF_RADIUS,
-    SLEEVE_HEIGHT,
-    28,
-    1,
-    false,
-  );
-}
-
-export function buildCuffGeometry(): THREE.CylinderGeometry {
-  return new THREE.CylinderGeometry(
-    SLEEVE_CUFF_RADIUS + 0.012,
-    SLEEVE_CUFF_RADIUS + 0.012,
-    0.06,
-    28,
+    SLEEVE_LENGTH,
+    48,
     1,
     true,
   );
@@ -100,28 +198,32 @@ export function buildCuffGeometry(): THREE.CylinderGeometry {
 
 export interface SleevePlacement {
   readonly position: THREE.Vector3;
-  readonly cuffPosition: THREE.Vector3;
   readonly quaternion: THREE.Quaternion;
 }
 
-/** Positions and orients a sleeve so it reaches out from the shoulder at a
- * natural down-and-forward angle, overlapping the torso enough to hide the
- * seam between the two meshes. */
+/** Positions and orients a sleeve so its wide (shoulder) end meets the
+ * torso at the underarm and it reaches out and down at a natural angle —
+ * the taper and the attach point are picked so the two surfaces meet
+ * without a visible gap, no overlap hack required. */
 export function sleevePlacement(side: "left" | "right"): SleevePlacement {
   const sign = side === "right" ? 1 : -1;
-  const dir = new THREE.Vector3(sign, -0.55, 0.18).normalize();
+  const direction = new THREE.Vector3(
+    sign * Math.cos(SLEEVE_ANGLE),
+    -Math.sin(SLEEVE_ANGLE),
+    0,
+  );
+  const attach = new THREE.Vector3(sign * SLEEVE_ATTACH_X, SLEEVE_ATTACH_Y, 0);
+  const position = attach.clone().addScaledVector(direction, SLEEVE_LENGTH / 2);
   const quaternion = new THREE.Quaternion().setFromUnitVectors(
     new THREE.Vector3(0, 1, 0),
-    dir,
+    direction.clone().negate(),
   );
-  const attach = new THREE.Vector3(
-    sign * SHOULDER_REACH,
-    SHOULDER_HEIGHT,
-    0.05,
-  );
-  const position = attach.clone().addScaledVector(dir, SLEEVE_HEIGHT / 2 - 0.1);
-  const cuffPosition = attach
-    .clone()
-    .addScaledVector(dir, SLEEVE_HEIGHT - 0.08);
-  return { position, cuffPosition, quaternion };
+  return { position, quaternion };
 }
+
+/** Height fractions (0 = hem, 1 = collar) for where the crest and the back
+ * print sit — plain height ratios now, since `uv.y` is linear in height for
+ * this geometry (no arc-length skew to correct for, unlike a Lathe revolve). */
+export const V_CHEST = (HEM_TO_UNDERARM * 0.62) / TOTAL_HEIGHT;
+export const V_UPPER_CHEST = (HEM_TO_UNDERARM * 0.86) / TOTAL_HEIGHT;
+export const V_SHOULDER = (HEM_TO_UNDERARM + YOKE_HEIGHT * 0.55) / TOTAL_HEIGHT;

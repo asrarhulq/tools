@@ -8,9 +8,10 @@ import { V_CHEST, V_SHOULDER, V_UPPER_CHEST } from "./geometry";
  * name/number/palette change and handed to `JerseyModel` as a `CanvasTexture`
  * — no network fetch, no image assets, just 2D canvas drawing.
  *
- * The torso geometry (`lib/geometry.ts`) revolves with `phiStart = PI/2`, so
- * in this texture's own u/v space the front of the body sits at `FRONT_U`
- * and the back at `BACK_U`, each a quarter-turn from the seam at u=0/1.
+ * The torso geometry (`lib/geometry.ts`) puts its texture seam (u=0/1) at
+ * the body's side, so in this texture's own u/v space the front (where the
+ * neckline dips, see `geometry.ts`) sits at `FRONT_U` and the back at
+ * `BACK_U`, each a quarter-turn from the seam.
  */
 
 export interface JerseyPalette {
@@ -34,8 +35,8 @@ export const BLAUGRANA: JerseyPalette = {
 const CANVAS_W = 2048;
 const CANVAS_H = 1024;
 const STRIPE_COUNT = 32;
-const FRONT_U = 0.75;
-const BACK_U = 0.25;
+const FRONT_U = 0.25;
+const BACK_U = 0.75;
 
 // Arc-length v (0 = hem, 1 = collar) for where the crest and the back print
 // sit, translated to a canvas-y fraction below (`toCanvasY`). Flat body
@@ -212,6 +213,73 @@ function drawBackPrint(
   ctx.fillText(printNumber, cx, numberY);
 
   ctx.restore();
+}
+
+const SLEEVE_CANVAS = 256;
+
+/**
+ * The sleeve's own small texture — solid body color with a gold trim band
+ * near the cuff. `CylinderGeometry`'s default UV puts `v=0` at the
+ * `radiusBottom` end, which is the cuff here (see `buildSleeveGeometry`),
+ * so the trim sits near the canvas bottom (same v=0→bottom convention as
+ * the torso texture, since `flipY` is on by default).
+ */
+export function createSleeveTexture(
+  palette: JerseyPalette = BLAUGRANA,
+): THREE.CanvasTexture {
+  const canvas = document.createElement("canvas");
+  canvas.width = SLEEVE_CANVAS;
+  canvas.height = SLEEVE_CANVAS;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("2D canvas context unavailable");
+
+  ctx.fillStyle = palette.stripeA;
+  ctx.fillRect(0, 0, SLEEVE_CANVAS, SLEEVE_CANVAS);
+  ctx.fillStyle = palette.trim;
+  ctx.fillRect(0, SLEEVE_CANVAS * 0.86, SLEEVE_CANVAS, SLEEVE_CANVAS * 0.05);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.needsUpdate = true;
+  return texture;
+}
+
+/**
+ * A cheap, tileable "woven fabric" bump map: a 12×12 tile with two
+ * perforations repeated across a larger canvas. Applied as `bumpMap` on the
+ * torso material only, it catches the studio lights as a faint knit
+ * texture instead of a flat-painted surface.
+ */
+export function createKnitBumpTexture(): THREE.CanvasTexture {
+  const tile = document.createElement("canvas");
+  tile.width = 12;
+  tile.height = 12;
+  const tctx = tile.getContext("2d");
+  if (!tctx) throw new Error("2D canvas context unavailable");
+  tctx.fillStyle = "#9a9a9a";
+  tctx.fillRect(0, 0, 12, 12);
+  tctx.fillStyle = "#3a3a3a";
+  tctx.beginPath();
+  tctx.arc(3, 3, 1.5, 0, Math.PI * 2);
+  tctx.fill();
+  tctx.beginPath();
+  tctx.arc(9, 9, 1.5, 0, Math.PI * 2);
+  tctx.fill();
+
+  const canvas = document.createElement("canvas");
+  canvas.width = 1024;
+  canvas.height = 512;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("2D canvas context unavailable");
+  const pattern = ctx.createPattern(tile, "repeat");
+  if (pattern) {
+    ctx.fillStyle = pattern;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  return texture;
 }
 
 export interface CreateJerseyTextureOptions {

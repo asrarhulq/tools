@@ -4,18 +4,21 @@ import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import {
-  buildCuffGeometry,
   buildSleeveGeometry,
   buildTorsoGeometry,
   sleevePlacement,
 } from "../lib/geometry";
-import { BLAUGRANA, createJerseyTexture } from "../lib/texture";
+import {
+  createJerseyTexture,
+  createKnitBumpTexture,
+  createSleeveTexture,
+} from "../lib/texture";
 
 /**
- * Assembles the jersey from the torso lathe + two mirrored sleeves + cuff
- * trim rings, all sharing one procedurally-painted texture for the torso and
- * flat colors for the sleeves. A slow bob (not a spin — `OrbitControls`
- * already owns rotation) keeps it feeling alive at rest.
+ * Assembles the jersey from the torso surface + two mirrored sleeves, each
+ * carrying its own procedurally-painted texture (the torso's stripes/crest/
+ * back print, the sleeve's trim band). A slow bob (not a spin —
+ * `OrbitControls` already owns rotation) keeps it feeling alive at rest.
  */
 export function JerseyModel({
   name,
@@ -30,42 +33,36 @@ export function JerseyModel({
 
   const torsoGeometry = useMemo(() => buildTorsoGeometry(), []);
   const sleeveGeometry = useMemo(() => buildSleeveGeometry(), []);
-  const cuffGeometry = useMemo(() => buildCuffGeometry(), []);
 
   const texture = useMemo(
     () => createJerseyTexture({ name, number }),
     [name, number],
   );
+  const bumpTexture = useMemo(() => createKnitBumpTexture(), []);
+  const sleeveTexture = useMemo(() => createSleeveTexture(), []);
 
   const torsoMaterial = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
         map: texture,
+        bumpMap: bumpTexture,
+        bumpScale: 0.6,
         roughness: 0.82,
         metalness: 0.05,
+        side: THREE.DoubleSide,
       }),
-    [texture],
+    [texture, bumpTexture],
   );
 
   const sleeveMaterial = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
-        color: BLAUGRANA.stripeA,
+        map: sleeveTexture,
         roughness: 0.85,
         metalness: 0.04,
-      }),
-    [],
-  );
-
-  const cuffMaterial = useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        color: BLAUGRANA.trim,
-        roughness: 0.6,
-        metalness: 0.1,
         side: THREE.DoubleSide,
       }),
-    [],
+    [sleeveTexture],
   );
 
   const right = useMemo(() => sleevePlacement("right"), []);
@@ -98,18 +95,6 @@ export function JerseyModel({
         position={left.position}
         quaternion={left.quaternion}
         castShadow
-      />
-      <mesh
-        geometry={cuffGeometry}
-        material={cuffMaterial}
-        position={right.cuffPosition}
-        quaternion={right.quaternion}
-      />
-      <mesh
-        geometry={cuffGeometry}
-        material={cuffMaterial}
-        position={left.cuffPosition}
-        quaternion={left.quaternion}
       />
     </group>
   );
