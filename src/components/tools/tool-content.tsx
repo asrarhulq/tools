@@ -136,6 +136,15 @@ const ElectronicClockTool = dynamic(
   { loading: () => loadingSkeleton },
 );
 
+// Barça Jersey Studio pulls in three/r3f/drei — load it only on its route.
+const BarcaJerseyTool = dynamic(
+  () =>
+    import("@/features/barca-jersey/barca-jersey-tool").then(
+      (m) => m.BarcaJerseyTool,
+    ),
+  { loading: () => loadingSkeleton },
+);
+
 /** Map of tool id → live renderer. Add an entry when a tool ships. */
 const renderers: Record<string, React.ComponentType<{ tool: ToolWithHref }>> = {
   "phil-tool-2": ArgumentMapperTool,
@@ -152,6 +161,7 @@ const renderers: Record<string, React.ComponentType<{ tool: ToolWithHref }>> = {
   "general-tool-8": AyaChessTool,
   "general-tool-9": BloomieTool,
   "general-tool-10": ConceptualDesignTool,
+  "general-tool-11": BarcaJerseyTool,
 };
 
 export function ToolContent({ tool }: { tool: ToolWithHref }) {

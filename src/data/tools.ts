@@ -620,4 +620,40 @@ export const tools: readonly Tool[] = [
       "design methodology",
     ],
   },
+  {
+    id: "general-tool-11",
+    slug: "barca-jersey",
+    title: "Barça Jersey Studio",
+    description:
+      "A 3D blaugrana jersey you can spin, zoom, and personalize — crest, stripes, and a name on the back.",
+    longDescription:
+      "A procedurally modeled FC Barcelona-style jersey, built for a specific " +
+      "fan: a Barça supporter who already has her own chess board (see Aya's " +
+      "Chess Board) and her own daily companion (Bloomie) elsewhere in this " +
+      "hub. No downloaded 3D model and no image assets — the torso, sleeves, " +
+      "and cuffs are generated from scratch in Three.js, and the blaugrana " +
+      "vertical stripes, collar and hem trim, crest badge, and back print are " +
+      "all painted onto a canvas texture live in the browser. Drag to orbit, " +
+      "scroll to zoom, toggle the auto-spin, and change the name and squad " +
+      "number on the back — it defaults to Aya Hamouche, No. 10.",
+    category: "general",
+    icon: "shirt",
+    difficulty: "beginner",
+    status: "live",
+    addedAt: "2026-11-01",
+    keywords: [
+      "fc barcelona",
+      "barca",
+      "football jersey",
+      "soccer kit",
+      "3d model",
+      "blaugrana",
+      "jersey customizer",
+      "three.js",
+      "personalized gift",
+    ],
+    capabilities: {
+      viewer3d: true,
+    },
+  },
 ] as const;
