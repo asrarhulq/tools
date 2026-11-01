@@ -7,9 +7,9 @@ import { cx } from './ui';
 // [x, y, w, h] clickable areas. C1 and C2 both belong to the part "C12".
 export const HITS = [
   { id: 'DS1', box: [60, 36, 560, 128] },
-  { id: 'U1', box: [92, 168, 238, 106] },
+  { id: 'U1', box: [92, 188, 238, 86] },
   { id: 'C3', box: [42, 196, 36, 36] },
-  { id: 'C5', box: [194, 166, 34, 30] },
+  { id: 'RN1', box: [92, 164, 236, 26] },
   { id: 'R1', box: [38, 238, 30, 72] },
   { id: 'Y1', box: [98, 296, 88, 40] },
   { id: 'C12', k: 'a', box: [58, 316, 30, 38] },
@@ -77,17 +77,17 @@ export default function Board({ selected, onSelect, highlight = [], badges = {},
         <rect x={70} y={44} width={540} height={112} rx={3} className={s.dispGlass} />
         <Display4 x={96} y={54} w={470} h={92} masks={masks} colon={colon} bright={bright} />
       </g>
-      {/* header strip behind chip */}
-      <rect x={96} y={168} width={230} height={9} rx={2} className={s.pinHeader} />
+      {/* RN1: 9-pin resistor network, marked A102J, sitting flat between the display and the chip */}
+      <g>
+        <rect x={94} y={166} width={232} height={14} rx={2} className={s.icBody} />
+        <circle cx={104} cy={173} r={2.5} className={s.icDot} />
+        <text x={135} y={176} className={s.icText}>A102J</text>
+        {Array.from({ length: 9 }).map((_, i) => (
+          <rect key={i} x={98 + i * 27 - 2.5} y={180} width={5} height={8} className={s.pinMetal} />
+        ))}
+      </g>
 
       <IC />
-
-      {/* C5 bypass cap, standing right above the chip, marked 102J */}
-      <g>
-        <line x1={206} y1={189} x2={206} y2={199} className={s.lead} />
-        <line x1={216} y1={189} x2={216} y2={199} className={s.lead} />
-        <ellipse cx={211} cy={180} rx={10} ry={11} className={s.ceramic} />
-      </g>
 
       {/* C3 electrolytic */}
       <g>
@@ -153,7 +153,7 @@ export default function Board({ selected, onSelect, highlight = [], badges = {},
 
       {/* silkscreen labels */}
       <text x={104} y={290} className={s.silk}>U1</text>
-      <text x={224} y={172} className={s.silk}>C5</text>
+      <text x={48} y={176} className={s.silk}>RN1</text>
       <text x={40} y={192} className={s.silk}>C3</text>
       <text x={20} y={248} className={s.silk}>R1</text>
       <text x={134} y={354} className={s.silk}>Y1</text>

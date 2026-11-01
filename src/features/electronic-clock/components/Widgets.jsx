@@ -206,17 +206,14 @@ export function ResistorLab({ part }) {
   );
 }
 
-/* ---------- C4 / C5: smoothing and bypass ---------- */
-export function Bucket({ part }) {
-  const ref = part ? part.refs : 'C4';
-  const fast = part && part.id === 'C5';
+/* ---------- C4: smoothing ---------- */
+export function Bucket() {
   const [on, setOn] = useState(true);
   const [ph, setPh] = useState(0);
   useFrame((t) => setPh(t), []);
   const line = (amp) => Array.from({ length: 90 }, (_, i) => {
     const x = i * 3.2 + 6;
-    const speed = fast ? 3 : 1;
-    const n = Math.sin(i * 0.45 * speed + ph * 6 * speed) * 0.5 + Math.sin(i * 1.3 * speed + ph * 9 * speed) * 0.3 + Math.sin(i * 3.1 * speed + ph * 14 * speed) * 0.2;
+    const n = Math.sin(i * 0.45 + ph * 6) * 0.5 + Math.sin(i * 1.3 + ph * 9) * 0.3 + Math.sin(i * 3.1 + ph * 14) * 0.2;
     return `${x.toFixed(1)},${(70 - n * amp * 50).toFixed(1)}`;
   }).join(' ');
   return (
@@ -226,8 +223,45 @@ export function Bucket({ part }) {
         <text x={8} y={16} className={s.wlabel}>voltage at the chip (nominally 5 V)</text>
         <polyline points={line(on ? 0.1 : 0.6)} className={cx(s.curve, !on && s.curveBad)} />
       </svg>
-      <div className={cx(s.verdict, on ? s.v_ok : s.v_bad)}>{on ? `With ${ref}: ${fast ? 'the fast spikes right at the chip are' : 'small bumps are'} absorbed, the supply stays steady.` : `Without ${ref}: every switch of the display or buzzer jolts the supply${fast ? ', fast and close to the chip' : ''}.`}</div>
-      <label className={s.check}><input type="checkbox" checked={on} onChange={(e) => setOn(e.target.checked)} /> {ref} fitted</label>
+      <div className={cx(s.verdict, on ? s.v_ok : s.v_bad)}>{on ? 'With C4: small bumps are absorbed, the supply stays steady.' : 'Without C4: every switch of the display or buzzer jolts the supply.'}</div>
+      <label className={s.check}><input type="checkbox" checked={on} onChange={(e) => setOn(e.target.checked)} /> C4 fitted</label>
+    </div>
+  );
+}
+
+/* ---------- RN1: segment resistor network ---------- */
+const SEG_LETTERS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'dp'];
+export function ResistorNetwork() {
+  const [ohms, setOhms] = useState(1000);
+  const vf = 2.0; // typical red/amber LED segment forward voltage
+  const mA = Math.max(0, (5 - vf) / ohms) * 1000;
+  const zone = ohms < 220 ? ['bad', 'Too low: each segment pulls far more current than the LED or the chip pin is rated for.']
+    : ohms <= 2200 ? ['ok', 'In a sensible range. This kit uses 1 kΩ.']
+      : ['warn', 'Too high: the segments will look dim.'];
+  return (
+    <div>
+      <svg viewBox="0 0 300 160" className={s.wsvg}>
+        <rect x={16} y={14} width={60} height={18} rx={2} className={s.icBody} />
+        <circle cx={24} cy={23} r={2} className={s.icDot} />
+        <text x={46} y={27} textAnchor="middle" className={s.icText}>A102J</text>
+        {SEG_LETTERS.map((k, i) => {
+          const y = 14 + i * 16;
+          return (
+            <g key={k}>
+              <line x1={76} y1={23} x2={96} y2={y + 6} className={s.wire} />
+              <rect x={96} y={y} width={26} height={12} className={s.symBox} />
+              <line x1={122} y1={y + 6} x2={160} y2={y + 6} className={s.wire} />
+              <text x={168} y={y + 10} className={s.wlabel}>{k}</text>
+            </g>
+          );
+        })}
+      </svg>
+      <div className={cx(s.verdict, s[`v_${zone[0]}`])}>{zone[1]}</div>
+      <div className={s.readout}>
+        <div>Current per segment ≈ <b>{mA.toFixed(1)} mA</b> (assuming about {vf.toFixed(1)} V is used by the LED itself)</div>
+      </div>
+      <Range label="Each resistor" value={ohms} onChange={setOhms} min={100} max={4700} step={100} unit=" Ω" />
+      <p className={s.hint}>All eight resistors in RN1 are the same value: 1 kΩ, read from its A102J marking.</p>
     </div>
   );
 }
@@ -436,5 +470,5 @@ export function PowerPicker() {
 
 export const WIDGETS = {
   pins: PinMap, crystal: CrystalTicker, loadcaps: LoadCaps, reset: ResetCurve, resistor: ResistorLab,
-  bucket: Bucket, transistor: TransistorSwitch, beeper: Beeper, button: ButtonPin, display: DisplayLab, power: PowerPicker,
+  bucket: Bucket, resnet: ResistorNetwork, transistor: TransistorSwitch, beeper: Beeper, button: ButtonPin, display: DisplayLab, power: PowerPicker,
 };

@@ -47,12 +47,6 @@ export default function Schematic({ a, probe, onProbe, running, beeping, masks, 
       {G('130,226 130,420')}
       <text x={146} y={224} className={s.sref}>C4</text>
 
-      {/* C5 — bypass right at the chip. Same topology as C4 (rail to ground), drawn alongside it. */}
-      {W('160,40 160,202')}
-      <line x1={148} y1={202} x2={172} y2={202} className={s.sym} /><line x1={148} y1={214} x2={172} y2={214} className={s.sym} />
-      {G('160,214 160,420')}
-      <text x={176} y={212} className={s.sref}>C5</text>
-
       {/* C3 + R1 reset column */}
       {W('190,40 190,92')}
       <line x1={178} y1={92} x2={202} y2={92} className={s.sym} /><line x1={178} y1={104} x2={202} y2={104} className={s.sym} />
@@ -102,9 +96,12 @@ export default function Schematic({ a, probe, onProbe, running, beeping, masks, 
       <text x={454} y={268} textAnchor="end" className={s.slabel}>buzzer</text>
 
       {/* buses to display */}
-      <polyline points="460,175 600,175" className={cx(s.sw, s.bus)} />
+      <polyline points="460,175 505,175" className={cx(s.sw, s.bus)} />
+      <rect x={505} y={168} width={34} height={14} className={s.sym} />
+      <text x={507} y={163} className={s.sref}>RN1 ×8</text>
+      <polyline points="539,175 600,175" className={cx(s.sw, s.bus)} />
       <polyline points="460,225 600,225" className={cx(s.sw, s.bus)} />
-      <text x={470} y={170} className={s.slabel}>8</text><text x={470} y={220} className={s.slabel}>4</text>
+      <text x={470} y={220} className={s.slabel}>4</text>
 
       {/* buzzer chain */}
       <polyline points="460,275 500,275" className={s.sw} />

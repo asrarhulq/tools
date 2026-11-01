@@ -237,26 +237,26 @@ export const PARTS = [
     solder: "Press it to the board, 2 seconds per leg.",
   },
   {
-    id: "C5",
-    refs: "C5",
-    name: "Bypass capacitor, marked 102J",
-    tag: "The close guard",
-    widget: "bucket",
+    id: "RN1",
+    refs: "RN1",
+    name: "9-pin resistor network, marked A102J",
+    tag: "The eight gatekeepers",
+    widget: "resnet",
     simple:
-      "A second, much smaller capacitor standing right next to the chip. It mops up the fast little noise spikes at the chip's own pins, which C4, further away, is too slow to catch.",
+      "One small black block holding eight 1 kΩ resistors, one for every segment line between the chip and the display. It keeps each segment from drawing more current than its LED and the chip's pin can take.",
     analogy:
-      "If C4 is the water tank for the whole house, this one is the glass of water kept right on the desk, for the sip you need the instant you need it.",
-    look: "A small ceramic capacitor, often blue or brown, standing upright directly above or beside the chip, printed 102J.",
+      "Eight garden hoses sharing one tap, each with its own narrow nozzle so that none of them floods.",
+    look: "A small black rectangular block with 9 pins in a row, sitting flat between the display and the chip. Printed in white: A102J. The board's own silkscreen nearby often repeats its value.",
     detail: [
-      '"102" is the same three-digit code printed on the two 30 pF capacitors by the crystal, just a different value: two significant digits (1, 0) then a multiplier of 10 to the 2nd power, so 10 × 100 = 1000 pF, or 1 nF. "J" means plus-or-minus 5 percent. A leading letter like this A is usually a batch or series mark, not part of the value.',
-      "Every time the chip switches a display segment or flips a pin, it draws a brief, very fast pulse of current. The copper trace between the chip and C4 has a little inductance, which resists fast changes in current, so a spike that quick barely reaches C4 before it is over.",
-      "Putting a small capacitor as close as possible to the chip's own VCC and GND pins gives that pulse somewhere to come from locally, almost instantly, instead of travelling all the way back to C4. This is the standard trick called local decoupling: a big capacitor handles slow bulk changes, a small one right at the chip handles the fast ones.",
-      "It is ceramic and not polarised, so direction does not matter.",
+      '"A102J" uses the same three-digit-plus-letter code as a single resistor: two significant digits (1, 0) then a multiplier of 10 to the 2nd power, so 10 × 100 = 1000 Ω, or 1 kΩ. "J" means plus-or-minus 5 percent. The leading A is a batch or series mark, not part of the value.',
+      "Instead of nine individual resistors and eighteen separate leg joints, the kit uses one small package — a resistor network, sometimes called a resistor pack — that holds several resistors side by side in one body.",
+      "Port 1 of the chip drives the display's eight segment lines (a through g, plus the decimal point) directly. Without a resistor in series with each one, a segment LED would try to pull far more current than its own forward-voltage curve, and the chip's pin, can safely carry.",
+      "Eight of the nine pins each carry their own 1 kΩ resistor out to one segment line; exactly how the ninth, ganged pin is wired can vary by kit. Either way, every segment gets its own 1 kΩ in series with it.",
     ],
     watch:
-      "It sits very close to the chip's own legs, so a bridge of solder here can short two neighbouring pins of the chip itself. Leaving it out will usually not stop the clock running, but makes it a little more prone to a stray glitch or reset on a noisy supply.",
+      "Nine pins in a tight row make a solder bridge easy to create by accident. A bridged pair usually shows up as two segments that always light together, on every digit.",
     solder:
-      "Tiny and quick, like the 30 pF caps: 1 to 2 seconds per leg. Keep its body clear of the chip's pins so it cannot lean over and bridge them.",
+      "Match the orientation mark (a dot or notch at pin 1) to the board's silkscreen before soldering. All nine legs, one careful joint at a time — it sits low and flat, so give yourself a clear view of each pad.",
   },
   {
     id: "Q1",
@@ -384,13 +384,13 @@ export const JOURNEY = [
   {
     id: "power",
     title: "Power arrives",
-    parts: ["J1", "C4", "C5"],
+    parts: ["J1", "C4"],
     time: "0 ms",
     stats: ["5 V in", "Ground at 0 V"],
     simple:
-      "Five volts comes in at the blue terminal. C4 soaks up the slow bumps; C5, standing right at the chip, catches the fast ones.",
+      "Five volts comes in at the blue terminal. C4 soaks up small bumps so the supply stays steady.",
     detail:
-      "The whole circuit is a loop: current leaves the + terminal, goes through the chip and display, and returns to the − terminal. C4 sits across that loop right at the entrance; C5 sits at the far end, right at the chip itself.",
+      "The whole circuit is a loop: current leaves the + terminal, goes through the chip and display, and returns to the − terminal. C4 sits across that loop right at the entrance.",
   },
   {
     id: "wait",
@@ -428,13 +428,13 @@ export const JOURNEY = [
   {
     id: "paint",
     title: "The display is painted",
-    parts: ["U1", "DS1"],
+    parts: ["U1", "RN1", "DS1"],
     time: "hundreds of times a second",
     stats: ["8 segment lines", "4 digit selects"],
     simple:
-      "The chip lights one digit at a time, so quickly your eyes see all four at once.",
+      "The chip lights one digit at a time, so quickly your eyes see all four at once. RN1 keeps every segment's current in check on the way there.",
     detail:
-      "Port 1 puts the pattern for digit 1 on the segment wires, and one select line turns digit 1 on. A moment later it switches to digit 2, and so on. Each digit is lit for about 1/4 of the time.",
+      "Port 1 puts the pattern for digit 1 on the segment wires, through RN1's eight resistors, and one select line turns digit 1 on. A moment later it switches to digit 2, and so on. Each digit is lit for about 1/4 of the time.",
   },
   {
     id: "listen",
@@ -593,20 +593,22 @@ export function classifyJoint(heat, amount) {
 export const BUILD_STEPS = [
   {
     id: "res",
-    title: "Resistors R1 and R2",
-    parts: ["R1", "R2"],
-    time: "5 min",
+    title: "Resistors R1, R2 and network RN1",
+    parts: ["R1", "R2", "RN1"],
+    time: "6 min",
     simple: [
-      "Bend each leg 90° close to the body.",
+      "Bend each leg of R1 and R2 90° close to the body.",
       "Push them in flat against the board, then flip the board and spread the legs slightly so they stay put.",
       "R1 and R2 are both 10 kΩ: brown, black, orange. Direction does not matter.",
+      "RN1 (marked A102J) sits flat between the display and the chip. Match its pin-1 dot or notch to the board before soldering all nine legs.",
     ],
     detail:
-      "Short parts go first so the board lies flat on the table while you work. Colour code: the first two bands are digits (1, 0), the third is the multiplier (orange = ×1000), so 10 × 1000 = 10,000 Ω. If your resistor has five bands, brown, black, black, red, brown is the same value.",
+      "Short parts go first so the board lies flat on the table while you work. Colour code: the first two bands are digits (1, 0), the third is the multiplier (orange = ×1000), so 10 × 1000 = 10,000 Ω. If your resistor has five bands, brown, black, black, red, brown is the same value. RN1 is different from R1 and R2 in one way that matters: a resistor network does have an orientation, marked by a dot or notch at pin 1, so check it against the silkscreen before soldering.",
     check: [
       "Bodies sit flat on the board",
-      "Two shiny cone joints on each",
+      "Two shiny cone joints on each of R1 and R2",
       "Legs trimmed just above the joint",
+      "RN1's pin 1 matches the board, all nine joints shiny",
     ],
     mistake:
       "Grabbing a different value. 1 kΩ (brown, black, red) in the R1 spot shortens the reset delay a lot.",
@@ -653,22 +655,20 @@ export const BUILD_STEPS = [
   },
   {
     id: "ic",
-    title: "Chip socket U1, and bypass cap C5",
-    parts: ["U1", "C5"],
-    time: "9 min",
+    title: "Chip socket U1",
+    parts: ["U1"],
+    time: "8 min",
     simple: [
       "Match the notch of the socket to the notch drawn on the board.",
       "Solder two opposite corner pins first, check it is flat, then do the rest.",
-      "C5 (marked 102J) stands right above or beside the socket. Fit it now, while the legs are easy to reach, and keep its body clear of the socket pins.",
       "Do NOT put the chip in yet.",
     ],
     detail:
-      "Soldering the chip itself would expose it to heat and static, and make replacement impossible. A socket protects it. If your kit has no socket and the chip is already supplied, solder it last of all with the notch matching the board. C5 is a small bypass capacitor that belongs as close to the chip's own power pins as the board allows, so it is easiest to fit right after the socket, before anything else crowds that corner.",
+      "Soldering the chip itself would expose it to heat and static, and make replacement impossible. A socket protects it. If your kit has no socket and the chip is already supplied, solder it last of all with the notch matching the board.",
     check: [
       "Notch is at the correct end",
       "Socket sits flat on the board",
       "All 20 joints shiny, no bridges between pins",
-      "C5 does not lean against the socket",
     ],
     mistake:
       "A bridge between two neighbouring pins. Pins are only 2.54 mm apart, so use a small amount of solder.",
