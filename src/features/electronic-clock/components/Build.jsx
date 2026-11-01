@@ -246,6 +246,11 @@ function BuildSteps() {
 export default function Build() {
   return (
     <div className={s.stack}>
+      <div className={cx(s.callout, s.calloutWarn)}>
+        <b>Wear safety glasses at all times on the bench</b>
+        <p>Not only while trimming — a cut leg or a flicked blob of solder can fly without warning. Put them on before you pick up the iron and keep them on until you put it down.</p>
+      </div>
+
       <div className={s.twoCol}>
         <div className={s.panel}>
           <h3 className={s.panelTitle}>Your kit of tools</h3>

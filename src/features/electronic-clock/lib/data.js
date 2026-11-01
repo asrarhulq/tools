@@ -494,9 +494,9 @@ export const TEMPS = [
 ];
 
 export const SAFETY = [
+  "Wear safety glasses at all times on the bench, not only while trimming. Cut legs fly like tiny darts with no warning.",
   "Work with good airflow. Keep your face out of the smoke plume.",
   "The tip is about 350 °C. Always rest the iron in its stand.",
-  "Wear glasses when trimming. Cut legs fly like tiny darts.",
   "If your solder is leaded, wash your hands before eating.",
   "Keep the flux and cleaning liquid away from the buzzer hole.",
 ];
@@ -776,9 +776,18 @@ export const BUILD_STEPS = [
   },
 ];
 
+export const SYMPTOM_GROUPS = [
+  "Nothing happens",
+  "Display looks wrong",
+  "Keeps restarting",
+  "Sound or buttons",
+  "Something's hot",
+];
+
 export const SYMPTOMS = [
   {
     id: "dark",
+    group: "Nothing happens",
     title: "The display is completely dark",
     plain:
       "Nothing is happening at all. The cause is almost always upstream of the display: power, the chip itself, the crystal or the reset.",
@@ -818,6 +827,7 @@ export const SYMPTOMS = [
   },
   {
     id: "onedigit",
+    group: "Display looks wrong",
     title: "One digit stays dark",
     plain:
       "The chip and the clock are fine, so the problem is local to that digit's pin on the display.",
@@ -839,6 +849,7 @@ export const SYMPTOMS = [
   },
   {
     id: "nomiddle",
+    group: "Display looks wrong",
     title: "A bar is missing on every digit",
     plain:
       "All four digits share the same eight segment wires. If the same bar is missing everywhere, one of those shared wires is broken.",
@@ -860,6 +871,7 @@ export const SYMPTOMS = [
   },
   {
     id: "ghost",
+    group: "Display looks wrong",
     title: "Extra segments glow, or look dim and smeared",
     plain:
       "Two neighbouring pins have been joined by a drop of solder. Whenever one lights, the other lights too.",
@@ -874,6 +886,7 @@ export const SYMPTOMS = [
   },
   {
     id: "restart",
+    group: "Keeps restarting",
     title: "It works, then restarts, or flashes on and off",
     plain: "The reset pin is not staying low. Look at the reset network.",
     steps: [
@@ -893,6 +906,7 @@ export const SYMPTOMS = [
   },
   {
     id: "nosound",
+    group: "Sound or buttons",
     title: "The clock works but never beeps",
     plain:
       "The clock part is fine. The problem is in the buzzer path: BZ1, Q1 and the connection through R2.",
@@ -913,6 +927,7 @@ export const SYMPTOMS = [
   },
   {
     id: "nobutton",
+    group: "Sound or buttons",
     title: "A button does nothing",
     plain: "The clock is running, so only the button's own path is broken.",
     steps: [
@@ -926,6 +941,7 @@ export const SYMPTOMS = [
   },
   {
     id: "hot",
+    group: "Something's hot",
     title: "Something gets hot, or the supply struggles",
     plain:
       "Unplug immediately. Too much current is flowing. This is almost always a short, a backwards chip, or swapped power wires.",

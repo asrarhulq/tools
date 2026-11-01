@@ -5,7 +5,7 @@ import Schematic from './Schematic';
 import { Display4 } from './Segments';
 import { useClockSim } from '../lib/useClockSim';
 import { FAULTS, FAULT_BY_ID, FAULT_GROUPS, INDEPENDENT, NODES, nodeVoltage } from '../lib/sim';
-import { SYMPTOMS } from '../lib/data';
+import { SYMPTOMS, SYMPTOM_GROUPS } from '../lib/data';
 import { Deeper, Segmented, cx, useStored } from './ui';
 
 /* ---------- the power-up chain ---------- */
@@ -152,37 +152,63 @@ function BenchTab({ vin, setVin, faults, setFaults, sim, probe, setProbe, speed,
   );
 }
 
-/* ---------- guided debugger ---------- */
+/* ---------- guided debugger: grouped symptoms, one check at a time ---------- */
 function DebuggerTab({ onReproduce }) {
-  const [sym, setSym] = useState(SYMPTOMS[0].id);
+  const [group, setGroup] = useState(SYMPTOM_GROUPS[0]);
+  const groupSymptoms = SYMPTOMS.filter((x) => x.group === group);
+  const [sym, setSym] = useState(groupSymptoms[0].id);
+  const [step, setStep] = useState(0);
+
+  const chooseGroup = (g) => {
+    setGroup(g);
+    setSym(SYMPTOMS.find((x) => x.group === g).id);
+    setStep(0);
+  };
+  const chooseSym = (id) => {
+    setSym(id);
+    setStep(0);
+  };
+
   const cur = SYMPTOMS.find((x) => x.id === sym);
+  const curStep = cur.steps[step];
+  const isLast = step === cur.steps.length - 1;
+
   return (
     <div className={s.dbgGrid}>
       <div className={s.panel}>
         <h3 className={s.panelTitle}>What are you seeing?</h3>
-        <div className={s.symList}>
-          {SYMPTOMS.map((x) => (
-            <button key={x.id} type="button" className={cx(s.symBtn, sym === x.id && s.symOn)} onClick={() => setSym(x.id)}>{x.title}</button>
+        <p className={s.hint}>Pick the kind of problem, then the exact symptom.</p>
+        <div className={s.pillRow}>
+          {SYMPTOM_GROUPS.map((g) => (
+            <button key={g} type="button" className={cx(s.pill, group === g && s.pillOn)} onClick={() => chooseGroup(g)}>{g}</button>
+          ))}
+        </div>
+        <div className={s.symList} style={{ marginTop: 12 }}>
+          {groupSymptoms.map((x) => (
+            <button key={x.id} type="button" className={cx(s.symBtn, sym === x.id && s.symOn)} onClick={() => chooseSym(x.id)}>{x.title}</button>
           ))}
         </div>
       </div>
       <div className={s.panel}>
         <h3 className={s.panelTitle}>{cur.title}</h3>
         <p className={s.partSimple}>{cur.plain}</p>
-        <ol className={s.dbgSteps}>
-          {cur.steps.map((st, i) => (
-            <li key={i}>
-              <div className={s.dbgDo}><span>{i + 1}</span>{st.do}</div>
-              <div className={s.dbgExpect}><b>You should see</b> {st.expect}</div>
-              <div className={s.dbgIf}><b>If not</b> {st.ifNot}</div>
-              <div className={s.pillRow}>
-                {st.tryFaults.map((id) => (
-                  <button key={id} type="button" className={s.pillGhost} onClick={() => onReproduce([id])}>Reproduce: {FAULT_BY_ID[id].label}</button>
-                ))}
-              </div>
-            </li>
-          ))}
-        </ol>
+        <div className={s.hint}>Check {step + 1} of {cur.steps.length}</div>
+        <div key={`${sym}:${step}`} className={s.dbgSteps}>
+          <div className={s.dbgDo}><span>{step + 1}</span>{curStep.do}</div>
+          <div className={s.dbgExpect}><b>You should see</b> {curStep.expect}</div>
+          <div className={s.dbgIf}><b>If not</b> {curStep.ifNot}</div>
+          <div className={s.pillRow}>
+            {curStep.tryFaults.map((id) => (
+              <button key={id} type="button" className={s.pillGhost} onClick={() => onReproduce([id])}>Reproduce: {FAULT_BY_ID[id].label}</button>
+            ))}
+          </div>
+        </div>
+        <div className={s.stepControls}>
+          <button type="button" className={s.btn} disabled={step === 0} onClick={() => setStep((n) => n - 1)}>Back</button>
+          {!isLast
+            ? <button type="button" className={s.btnPrimary} onClick={() => setStep((n) => n + 1)}>Next check</button>
+            : <span className={s.hint}>That was every check for this symptom.</span>}
+        </div>
         <Deeper label="Why this order?">
           <p className={s.para}>Debugging works best from the source downwards: power first, then the chip, then reset, then the crystal, and only then the display and extras. A broken early step makes every later step look broken too, so fix the first red step before you worry about anything beyond it.</p>
         </Deeper>

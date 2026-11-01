@@ -1,7 +1,7 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import s from './clock.module.css';
-import { DetailCtx, Section, Segmented, useStored, cx } from './components/ui';
+import { DetailCtx, FullscreenButton, Section, Segmented, useFullscreen, useStored, cx } from './components/ui';
 import Explore from './components/Explore';
 import Journey from './components/Journey';
 import Build from './components/Build';
@@ -21,6 +21,8 @@ export default function ElectronicClock() {
   const [mode, setMode] = useStored('mode', 'simple');
   const [active, setActive] = useState('board');
   const [now, setNow] = useState(null);
+  const rootRef = useRef(null);
+  const [fullscreen, toggleFullscreen] = useFullscreen(rootRef);
 
   useEffect(() => {
     const tick = () => setNow(new Date());
@@ -45,7 +47,7 @@ export default function ElectronicClock() {
 
   return (
     <DetailCtx.Provider value={{ detailed: mode === 'detailed' }}>
-      <div className={s.root}>
+      <div ref={rootRef} className={s.root} style={fullscreen ? { '--stick': '0px' } : undefined}>
         <header className={s.header}>
           <div className={cx(s.wrap, s.headerInner)}>
             <a href="#top" className={s.brand}>
@@ -58,6 +60,7 @@ export default function ElectronicClock() {
               ))}
             </nav>
             <Segmented label="Explanation depth" value={mode} onChange={setMode} options={[{ value: 'simple', label: 'Simple' }, { value: 'detailed', label: 'Detailed' }]} />
+            <FullscreenButton on={fullscreen} toggle={toggleFullscreen} />
           </div>
         </header>
 

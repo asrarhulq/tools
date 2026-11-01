@@ -78,4 +78,42 @@ export function useStored(key, initial) {
   return [v, set];
 }
 
+// Full screen for one element (the guide's own root), not the whole tab.
+export function useFullscreen(ref) {
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    const onChange = () => setOn(!!document.fullscreenElement && document.fullscreenElement === ref.current);
+    document.addEventListener('fullscreenchange', onChange);
+    return () => document.removeEventListener('fullscreenchange', onChange);
+  }, [ref]);
+  const toggle = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    try {
+      if (document.fullscreenElement) {
+        (document.exitFullscreen || document.webkitExitFullscreen)?.call(document);
+      } else {
+        (el.requestFullscreen || el.webkitRequestFullscreen)?.call(el);
+      }
+    } catch { /* full screen may be blocked by the browser */ }
+  }, [ref]);
+  return [on, toggle];
+}
+
+export function FullscreenButton({ on, toggle }) {
+  return (
+    <button type="button" className={s.iconBtn} onClick={toggle} aria-label={on ? 'Exit full screen' : 'Full screen'} title={on ? 'Exit full screen' : 'Full screen'}>
+      {on ? (
+        <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">
+          <path d="M6 2v3a1 1 0 0 1-1 1H2M10 2v3a1 1 0 0 0 1 1h3M6 14v-3a1 1 0 0 0-1-1H2M10 14v-3a1 1 0 0 1 1-1h3" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      ) : (
+        <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">
+          <path d="M2 6V3a1 1 0 0 1 1-1h3M14 6V3a1 1 0 0 0-1-1h-3M2 10v3a1 1 0 0 0 1 1h3M14 10v3a1 1 0 0 1-1 1h-3" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
 export const cx = (...a) => a.filter(Boolean).join(' ');
