@@ -2,11 +2,14 @@ import type { MetadataRoute } from "next";
 import { absoluteUrl } from "@/lib/utils";
 import { allTools } from "@/lib/tools";
 import { categories } from "@/data/categories";
+import { PRIVATE_TOOLS } from "@/lib/private-tools";
 
 /**
  * XML sitemap generated from the tool registry, so every tool route is indexed
  * automatically as the catalog grows. Category views are included as
- * homepage `?category=` entries.
+ * homepage `?category=` entries. Private tools (`lib/private-tools.ts`) are
+ * always excluded here — a static sitemap can't know whether whoever's
+ * asking has unlocked them, so it defaults to not listing them at all.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
@@ -25,12 +28,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.8,
   }));
 
-  const toolEntries: MetadataRoute.Sitemap = allTools.map((tool) => ({
-    url: absoluteUrl(tool.href),
-    lastModified: new Date(tool.addedAt),
-    changeFrequency: "monthly",
-    priority: tool.featured ? 0.9 : 0.7,
-  }));
+  const toolEntries: MetadataRoute.Sitemap = allTools
+    .filter((tool) => !(tool.id in PRIVATE_TOOLS))
+    .map((tool) => ({
+      url: absoluteUrl(tool.href),
+      lastModified: new Date(tool.addedAt),
+      changeFrequency: "monthly",
+      priority: tool.featured ? 0.9 : 0.7,
+    }));
 
   return [home, ...categoryEntries, ...toolEntries];
 }

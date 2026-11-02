@@ -9,6 +9,7 @@ import { useTheme } from "next-themes";
 import { allTools, popularTools } from "@/lib/tools";
 import { getCategory } from "@/data/categories";
 import { searchTools } from "@/lib/search";
+import { useHiddenToolIds } from "@/hooks/use-private-tools";
 import { Icon } from "@/components/ui/icon";
 
 interface CommandPaletteProps {
@@ -25,8 +26,17 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const router = useRouter();
   const { resolvedTheme, setTheme } = useTheme();
   const [query, setQuery] = useState("");
+  const hidden = useHiddenToolIds();
 
-  const results = query ? searchTools(query) : allTools;
+  const visibleAllTools = hidden.size
+    ? allTools.filter((t) => !hidden.has(t.id))
+    : allTools;
+  const visiblePopularTools = hidden.size
+    ? popularTools.filter((t) => !hidden.has(t.id))
+    : popularTools;
+  const results = query
+    ? searchTools(query).filter((t) => !hidden.has(t.id))
+    : visibleAllTools;
 
   const go = useCallback(
     (href: string) => {
@@ -38,9 +48,10 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   );
 
   const randomTool = useCallback(() => {
-    const tool = allTools[Math.floor(Math.random() * allTools.length)]!;
+    const tool =
+      visibleAllTools[Math.floor(Math.random() * visibleAllTools.length)]!;
     go(tool.href);
-  }, [go]);
+  }, [go, visibleAllTools]);
 
   return (
     <AnimatePresence>
@@ -105,12 +116,12 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                 </Command.Group>
               ) : null}
 
-              {!query && popularTools.length ? (
+              {!query && visiblePopularTools.length ? (
                 <Command.Group
                   heading="Popular"
                   className="[&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:text-[var(--color-muted-foreground)]"
                 >
-                  {popularTools.map((tool) => (
+                  {visiblePopularTools.map((tool) => (
                     <ToolItem
                       key={tool.id}
                       icon={<Icon name={tool.icon} className="size-4" />}
