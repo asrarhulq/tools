@@ -517,22 +517,15 @@ export const tools: readonly Tool[] = [
   {
     id: "general-tool-8",
     slug: "ayas-chess-board",
-    title: "Aya's Chess Board",
+    title: "Algeria vs Kashmir",
     description:
-      "A beginner-friendly chess board built for one person, with warm little notes after every move and a few words of Arabic along the way.",
+      "A side-by-side comparison piece — geography, culture, and a handful of numbers worth knowing.",
     longDescription:
-      "A local, pass-and-play chess board for someone brand new to the game: " +
-      "click a piece to see every legal move highlighted, no drag precision " +
-      "required, and a little companion message after every move — a nice " +
-      "one for a quiet opening, a food-pun for a capture, and an honest " +
-      "piece of chess history for check and checkmate (the word " +
-      '"checkmate" really does come from Arabic/Persian "shah mat," "the ' +
-      'king is helpless"). A standing glossary keeps a handful of chess ' +
-      "terms in Arabic on screen throughout, and four board themes are " +
-      "named like nail polish shades. Everything runs client-side on " +
-      "chess.js — no accounts, no server, just a board.",
+      "A quick side-by-side look at two places, built as a small interactive " +
+      "comparison rather than a static page. Password-protected — enter the " +
+      "passphrase to open it.",
     category: "general",
-    icon: "heart",
+    icon: "compass",
     difficulty: "beginner",
     status: "live",
     addedAt: "2026-10-21",
@@ -623,21 +616,15 @@ export const tools: readonly Tool[] = [
   {
     id: "general-tool-11",
     slug: "barca-jersey",
-    title: "Barça Jersey Studio",
+    title: "Algeria vs Kashmir",
     description:
-      "A 3D blaugrana jersey you can spin, zoom, and personalize — crest, stripes, and a name on the back.",
+      "A second comparison piece — flags, colors, and a few more numbers worth knowing.",
     longDescription:
-      "A procedurally modeled FC Barcelona-style jersey, built for a specific " +
-      "fan: a Barça supporter who already has her own chess board (see Aya's " +
-      "Chess Board) and her own daily companion (Bloomie) elsewhere in this " +
-      "hub. No downloaded 3D model and no image assets — the torso, sleeves, " +
-      "and cuffs are generated from scratch in Three.js, and the blaugrana " +
-      "vertical stripes, collar and hem trim, crest badge, and back print are " +
-      "all painted onto a canvas texture live in the browser. Drag to orbit, " +
-      "scroll to zoom, toggle the auto-spin, and change the name and squad " +
-      "number on the back — it defaults to Aya Hamouche, No. 10.",
+      "A second interactive comparison piece, companion to the other " +
+      '"Algeria vs Kashmir" entry in this hub. Password-protected — enter ' +
+      "the passphrase to open it.",
     category: "general",
-    icon: "shirt",
+    icon: "palette",
     difficulty: "beginner",
     status: "live",
     addedAt: "2026-11-01",

@@ -7,7 +7,6 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ToolGrid } from "@/components/tools/tool-grid";
 import { CategoryToggle } from "./category-toggle";
 import { useCategory } from "@/hooks/use-category";
-import { useVisibleCounts, useVisibleTools } from "@/hooks/use-private-tools";
 import { getToolsByCategory } from "@/lib/tools";
 import { getCategory } from "@/data/categories";
 import type { CategoryId } from "@/types/tool";
@@ -15,9 +14,7 @@ import type { CategoryId } from "@/types/tool";
 /**
  * Interactive "Browse by category" block. Category is driven by the URL
  * (`?category=`) with a localStorage fallback; switching is instant and
- * animated, and the grid cross-fades between categories. A couple of tools
- * are private (`use-private-tools.ts`) and filtered out of both the grid
- * and the category counts unless this browser has unlocked them.
+ * animated, and the grid cross-fades between categories.
  */
 export function BrowseByCategory({
   counts,
@@ -25,8 +22,7 @@ export function BrowseByCategory({
   counts: Record<CategoryId, number>;
 }) {
   const { active, setCategory } = useCategory();
-  const tools = useVisibleTools(getToolsByCategory(active));
-  const visibleCounts = useVisibleCounts(counts);
+  const tools = getToolsByCategory(active);
   const category = getCategory(active);
 
   return (
@@ -58,7 +54,7 @@ export function BrowseByCategory({
           <CategoryToggle
             active={active}
             onChange={setCategory}
-            counts={visibleCounts}
+            counts={counts}
           />
         </div>
 

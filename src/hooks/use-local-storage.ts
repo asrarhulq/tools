@@ -81,4 +81,19 @@ export function useLocalStorage<T>(
   return [value, set, hydrated] as const;
 }
 
+/**
+ * Writes a key outside of a component, for the rare case where unlocking one
+ * gate should also unlock a sibling one (e.g. two tools sharing a single
+ * password) — dispatches the same event `useLocalStorage` listens for, so
+ * any mounted hook on that key re-renders immediately.
+ */
+export function writeLocalStorage<T>(key: string, value: T): void {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+    window.dispatchEvent(new Event(LOCAL_EVENT));
+  } catch {
+    // Storage may be unavailable (private mode, quota).
+  }
+}
+
 const LOCAL_EVENT = "asrarul-tools:local-storage";

@@ -28,9 +28,7 @@ export function JerseyGate({ onUnlock }: { onUnlock: () => void }) {
     <div className="flex flex-col items-center gap-4 rounded-[var(--radius)] border border-[#223457] bg-[#0b1830] p-8 text-center sm:p-12">
       <Lock className="size-6 text-[#f0b429]" />
       <div>
-        <h2 className="text-lg font-semibold text-white">
-          Barça Jersey Studio
-        </h2>
+        <h2 className="text-lg font-semibold text-white">Algeria vs Kashmir</h2>
         <p className="mt-1 text-sm text-[#9fb0d6]">
           This one&apos;s made for one person. What&apos;s our thing?
         </p>

@@ -9,7 +9,6 @@ import { Container } from "@/components/ui/container";
 import { useCommandPalette } from "@/components/command/command-palette-provider";
 import { allTools, getToolCountByCategory } from "@/lib/tools";
 import { categories } from "@/data/categories";
-import { useVisibleCounts, useVisibleTools } from "@/hooks/use-private-tools";
 import { Icon } from "@/components/ui/icon";
 import { CategoryLink } from "./category-link";
 import { fadeUp, staggerContainer } from "@/lib/motion";
@@ -37,12 +36,10 @@ export function Hero({ toolCount }: { toolCount: number }) {
   const { open } = useCommandPalette();
   const router = useRouter();
   const reduce = useReducedMotion();
-  const counts = useVisibleCounts(getToolCountByCategory());
-  const visibleTools = useVisibleTools(allTools);
-  const visibleToolCount = toolCount - (allTools.length - visibleTools.length);
+  const counts = getToolCountByCategory();
 
   function randomTool() {
-    const tool = visibleTools[Math.floor(Math.random() * visibleTools.length)]!;
+    const tool = allTools[Math.floor(Math.random() * allTools.length)]!;
     toast("Surprise!", { description: `Opening ${tool.title}` });
     router.push(tool.href);
   }
@@ -79,7 +76,7 @@ export function Hero({ toolCount }: { toolCount: number }) {
                 </span>
                 Live
               </span>
-              {visibleToolCount} interactive tools, and counting
+              {toolCount} interactive tools, and counting
             </motion.span>
 
             <motion.h1
@@ -148,7 +145,7 @@ export function Hero({ toolCount }: { toolCount: number }) {
               <div className="flex-1 border-r border-[var(--color-border)] px-4 py-3.5">
                 <dt className="microlabel">Tools</dt>
                 <dd className="readout mt-1.5 text-3xl font-semibold text-[var(--color-foreground)]">
-                  {String(visibleToolCount).padStart(2, "0")}
+                  {String(toolCount).padStart(2, "0")}
                 </dd>
               </div>
               <div className="flex-1 px-4 py-3.5">

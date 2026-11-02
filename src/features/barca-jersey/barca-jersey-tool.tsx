@@ -2,8 +2,9 @@
 
 import { JsonLd } from "@/components/seo/json-ld";
 import { softwareApplicationSchema } from "@/lib/json-ld";
-import { useLocalStorage } from "@/hooks/use-local-storage";
+import { useLocalStorage, writeLocalStorage } from "@/hooks/use-local-storage";
 import type { ToolWithHref } from "@/types/tool";
+import { GATE_STORAGE_KEY as CHESS_GATE_STORAGE_KEY } from "@/features/ayas-chess-board/lib/gate";
 import { GATE_STORAGE_KEY } from "./lib/gate";
 import { JerseyGate } from "./ui/jersey-gate";
 import { JerseyStudio } from "./ui/jersey-studio";
@@ -16,18 +17,25 @@ import { JerseyStudio } from "./ui/jersey-studio";
  * texture (`lib/texture.ts`): blaugrana stripes, collar/hem trim, a crest
  * badge up front, her name and number on the back.
  *
- * Gated the same way as the other two: the whole tool sits behind the
- * password, not just the editor, so nobody browsing General can tell what
- * it actually is without it.
+ * Gated the same way as `ayas-chess-board` — same password, and the two
+ * share an unlock: entering it on either one unlocks both, since they're
+ * listed under the same cover name ("Algeria vs Kashmir") in the catalog.
  */
 export function BarcaJerseyTool({ tool }: { tool: ToolWithHref }) {
-  const [unlocked, setUnlocked] = useLocalStorage(GATE_STORAGE_KEY, false);
+  const [unlockedHere, setUnlocked] = useLocalStorage(GATE_STORAGE_KEY, false);
+  const [unlockedViaChess] = useLocalStorage(CHESS_GATE_STORAGE_KEY, false);
+  const unlocked = unlockedHere || unlockedViaChess;
 
   if (!unlocked) {
     return (
       <>
         <JsonLd data={softwareApplicationSchema(tool)} />
-        <JerseyGate onUnlock={() => setUnlocked(true)} />
+        <JerseyGate
+          onUnlock={() => {
+            setUnlocked(true);
+            writeLocalStorage(CHESS_GATE_STORAGE_KEY, true);
+          }}
+        />
       </>
     );
   }

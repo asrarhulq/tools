@@ -2,11 +2,12 @@
 
 import { Heart } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useLocalStorage } from "@/hooks/use-local-storage";
+import { useLocalStorage, writeLocalStorage } from "@/hooks/use-local-storage";
 import { JsonLd } from "@/components/seo/json-ld";
 import { softwareApplicationSchema } from "@/lib/json-ld";
 import type { ToolWithHref } from "@/types/tool";
 import type { Square } from "chess.js";
+import { GATE_STORAGE_KEY as JERSEY_GATE_STORAGE_KEY } from "@/features/barca-jersey/lib/gate";
 import { AyaChessBoard } from "./board/aya-chess-board";
 import { BOARD_PALETTES, STARTING_FEN, type BoardPalette } from "./config";
 import { isGameOver, makeMove, turnOf } from "./lib/chess-adapter";
@@ -54,7 +55,9 @@ const EMPTY_RECORD: RecordStore = {};
  * second WASM worker.
  */
 export function AyaChessTool({ tool }: { tool: ToolWithHref }) {
-  const [unlocked, setUnlocked] = useLocalStorage(GATE_STORAGE_KEY, false);
+  const [unlockedHere, setUnlocked] = useLocalStorage(GATE_STORAGE_KEY, false);
+  const [unlockedViaJersey] = useLocalStorage(JERSEY_GATE_STORAGE_KEY, false);
+  const unlocked = unlockedHere || unlockedViaJersey;
   const [snapshots, setSnapshots] = useState<Snapshot[]>([INITIAL_SNAPSHOT]);
   const [orientation, setOrientation] = useState<Orientation>("white");
   const [palette, setPalette] = useState<BoardPalette>(BOARD_PALETTES[0]!);
@@ -197,7 +200,12 @@ export function AyaChessTool({ tool }: { tool: ToolWithHref }) {
     return (
       <>
         <JsonLd data={softwareApplicationSchema(tool)} />
-        <PasswordGate onUnlock={() => setUnlocked(true)} />
+        <PasswordGate
+          onUnlock={() => {
+            setUnlocked(true);
+            writeLocalStorage(JERSEY_GATE_STORAGE_KEY, true);
+          }}
+        />
       </>
     );
   }

@@ -30,7 +30,7 @@ export function PasswordGate({ onUnlock }: PasswordGateProps) {
       <Lock className="size-6 text-[#d9748f]" />
       <div>
         <h2 className="text-lg font-semibold text-[#4a2c3a]">
-          Aya&apos;s Chess Board
+          Algeria vs Kashmir
         </h2>
         <p className="mt-1 text-sm text-[#9c7684]">
           This one&apos;s just for us. What&apos;s our thing? 🌸
