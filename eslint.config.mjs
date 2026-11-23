@@ -20,6 +20,8 @@ const eslintConfig = [
       "node_modules/**",
       // Vendored third-party Stockfish engine build — not our source.
       "public/engine/**",
+      // Python research workspace (venv ships vendored matplotlib JS) — not app source.
+      "tornado-analysis/**",
     ],
   },
   ...next,

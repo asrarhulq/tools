@@ -36,6 +36,7 @@ import {
   Shirt,
   Shuffle,
   Sparkles,
+  Tornado,
   TrendingUp,
   type LucideIcon,
   type LucideProps,
@@ -88,6 +89,7 @@ export const icons = {
   shirt: Shirt,
   shuffle: Shuffle,
   sparkles: Sparkles,
+  tornado: Tornado,
   "trending-up": TrendingUp,
 } satisfies Record<string, LucideIcon>;
 

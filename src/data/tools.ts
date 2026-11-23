@@ -643,4 +643,42 @@ export const tools: readonly Tool[] = [
       viewer3d: true,
     },
   },
+  {
+    id: "general-tool-12",
+    slug: "alley-tracker",
+    title: "Alley Tracker: Boilermaker Edition",
+    description:
+      "Has Tornado Alley moved east? Replicate and extend Agee et al. (2016) on 70 years of NOAA tornado tracks, with live field-significance tests and a PDF report.",
+    longDescription:
+      "An EAPS 225 final project at Purdue University (Professor Daniel Chavas) by " +
+      "Asrar ul Haq. It reproduces the 2.5° grid-box analysis of Agee, Larson, " +
+      "Childs and Marmo (2016) on the NOAA Storm Prediction Center tornado " +
+      "database and extends it through 2024. Pick any two periods, (E)F1+ or " +
+      "(E)F2+ tornadoes or tornado days, and a season; the map shows the change " +
+      "with block-bootstrap field significance computed live, alongside the " +
+      "paper's east-vs-west bootstrap, seasonal extremes, Theil–Sen trends and a " +
+      "100–500 km ring around West Lafayette. Validation against the published " +
+      "numbers, results with and without the record year 2024, a CSV export and " +
+      "a downloadable research-style PDF report are included.",
+    category: "general",
+    icon: "tornado",
+    difficulty: "advanced",
+    status: "live",
+    featured: true,
+    addedAt: "2026-11-23",
+    keywords: [
+      "tornado",
+      "tornado alley",
+      "dixie alley",
+      "climatology",
+      "agee 2016",
+      "field significance",
+      "bootstrap",
+      "storm prediction center",
+      "purdue",
+      "eaps 225",
+      "west lafayette",
+      "severe weather",
+    ],
+  },
 ] as const;

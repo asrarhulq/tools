@@ -5,3 +5,5 @@ build
 out
 coverage
 next-env.d.ts
+tornado-analysis
+src/features/alley-tracker/data

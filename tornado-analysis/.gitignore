@@ -1,0 +1,8 @@
+# Local Python env and regenerated outputs
+.venv/
+out/
+__pycache__/
+# Not redistributed: copyrighted paper (ProQuest copy) and raw downloads.
+# Re-fetch data from https://www.spc.noaa.gov/wcm/ and us-atlas@3.0.1 (see CLAUDE.md).
+agee_2016.pdf
+data/

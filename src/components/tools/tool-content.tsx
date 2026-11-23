@@ -145,6 +145,16 @@ const BarcaJerseyTool = dynamic(
   { loading: () => loadingSkeleton },
 );
 
+// Alley Tracker (EAPS 225 final project): its dataset JSON, stats worker and
+// jsPDF all load lazily from inside the feature, never on any other route.
+const AlleyTrackerTool = dynamic(
+  () =>
+    import("@/features/alley-tracker/alley-tracker-tool").then(
+      (m) => m.AlleyTrackerTool,
+    ),
+  { loading: () => loadingSkeleton },
+);
+
 /** Map of tool id → live renderer. Add an entry when a tool ships. */
 const renderers: Record<string, React.ComponentType<{ tool: ToolWithHref }>> = {
   "phil-tool-2": ArgumentMapperTool,
@@ -162,6 +172,7 @@ const renderers: Record<string, React.ComponentType<{ tool: ToolWithHref }>> = {
   "general-tool-9": BloomieTool,
   "general-tool-10": ConceptualDesignTool,
   "general-tool-11": BarcaJerseyTool,
+  "general-tool-12": AlleyTrackerTool,
 };
 
 export function ToolContent({ tool }: { tool: ToolWithHref }) {
