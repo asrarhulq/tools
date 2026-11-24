@@ -236,13 +236,7 @@ export function GridMap({
           unit={unit}
         />
       ) : null}
-      <Legend
-        view={sel.view}
-        max={scaleMax}
-        dark={dark}
-        unit={unit}
-        hasSig={!!sig}
-      />
+      <Legend view={sel.view} max={scaleMax} dark={dark} hasSig={!!sig} />
     </div>
   );
 }
@@ -317,13 +311,11 @@ function Legend({
   view,
   max,
   dark,
-  unit,
   hasSig,
 }: {
   view: Selection["view"];
   max: number;
   dark: boolean;
-  unit: string;
   hasSig: boolean;
 }) {
   const stops = Array.from({ length: 11 }, (_, i) => {
@@ -345,11 +337,7 @@ function Legend({
         <span className="font-mono tabular-nums">
           {view === "diff" ? signed(max, 1) : fmt(max, 1)}
         </span>
-        <span>
-          {view === "diff"
-            ? `change in ${unit}/yr (B − A)`
-            : `${unit} per year`}
-        </span>
+        <span>{view === "diff" ? "change per year" : "per year"}</span>
       </div>
       {hasSig ? (
         <span className="flex items-center gap-1.5">
@@ -368,22 +356,11 @@ function Legend({
               fill={dark ? "#f0efec" : "#0b0b0b"}
             />
           </svg>
-          locally significant change
+          significant
         </span>
       ) : null}
       <span className="flex items-center gap-1.5">
-        <span className="inline-block size-3 rounded-[2px] border-2 border-[var(--color-foreground)]" />
-        {view === "diff"
-          ? "largest increase (solid) / decrease (dashed)"
-          : "busiest box"}
-      </span>
-      <span className="flex items-center gap-1.5">
-        <span className="inline-block size-3 rounded-[2px] border-2 border-[var(--color-primary)]" />
-        inspected box
-      </span>
-      <span className="flex items-center gap-1.5">
-        <span className="text-[#b59a62]">★</span> West Lafayette (Purdue) ·
-        dashed ring = radius
+        <span className="text-[#b59a62]">★</span> Purdue
       </span>
     </div>
   );

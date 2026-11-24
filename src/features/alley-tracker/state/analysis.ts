@@ -126,10 +126,9 @@ export function useAnalysis(data: AlleyData | null, sel: Selection) {
 
   const eastWest = useMemo(() => {
     if (!data || !grid || !idx) return null;
-    const ge = data.meta.paper.GE as unknown as BoxIdx;
-    const gw = (sel.rating === "f1"
-      ? data.meta.paper.GW_f1
-      : data.meta.paper.GW_f2) as unknown as BoxIdx;
+    // our own boxes of greatest F1+ increase / decrease (Period II − I)
+    const ge: BoxIdx = data.meta.GE;
+    const gw: BoxIdx = data.meta.GW;
     const rows: EastWestRow[] = (["A", "B"] as const).map((p, k) => {
       const ii = p === "A" ? idx.a : idx.b;
       const e = cellSeries(grid.series, cellOf(ge), ii),
@@ -143,7 +142,7 @@ export function useAnalysis(data: AlleyData | null, sel: Selection) {
       };
     });
     return { ge, gw, rows };
-  }, [data, grid, idx, sel.rating]);
+  }, [data, grid, idx]);
 
   const seasonal = useMemo((): SeasonRow[] | null => {
     if (!data || !idx) return null;

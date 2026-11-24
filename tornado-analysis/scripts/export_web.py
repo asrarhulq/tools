@@ -15,17 +15,18 @@ ring    distance from West Lafayette (40.43N, 86.91W): for every tornado the clo
         season and rating, so the page gets counts within any radius r by a cumulative sum.
 outline US state borders (us-atlas 3.0.1, ISC; from US Census cartographic boundaries),
         clipped to the map frame and simplified (Douglas-Peucker, 0.02 deg).
-reference  headline numbers from analyze2/stats3 (paper validation, field significance,
-        east-west bootstrap) for both the "through 2024" and "2024 excluded" runs.
+validation / extension  copied from replicate.py (paper check + Period III).
 
-Usage: python3 -I export_web.py --csv SPC.csv --topo states-10m.json --stats-dir OUT --json DEST
+Usage: python3 -I export_web.py --csv SPC.csv --topo states-10m.json --replication replication.json --json DEST
 """
-import argparse, json, math, os, datetime
+import argparse, json, math, os, sys, datetime
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # our own core module
 import numpy as np, pandas as pd
+from tornado_core import boxes_on_path
 
 ap = argparse.ArgumentParser()
 ap.add_argument('--csv', required=True); ap.add_argument('--topo', required=True)
-ap.add_argument('--stats-dir', required=True, help='folder holding thru2024/ and thru2023_no2024/')
+ap.add_argument('--replication', required=True, help='replication.json from replicate.py')
 ap.add_argument('--json', required=True); ap.add_argument('--end-year', type=int, default=2024)
 A = ap.parse_args()
 
@@ -57,8 +58,7 @@ ring_c = np.zeros((2, 4, NYR, NBIN), dtype=np.int32)
 seen_day_box = [set(), set()]; day_min = [{}, {}]
 for r in df.itertuples():
     la, lo = path(r)
-    iy = np.floor((la - LAT0) / D).astype(int); ix = np.floor((lo - LON0) / D).astype(int)
-    cells = {(a, b) for a, b in zip(iy, ix) if 0 <= a < NY and 0 <= b < NX}
+    cells = boxes_on_path(r.slat, r.slon, r.elat, r.elon)   # exact, same as replicate.py
     dmin = float(hav_km(la, lo).min())
     for t in (0, 1):
         if r.mag < t + 1: continue
@@ -107,22 +107,8 @@ for l in lines:
     s = dp(l, 0.02)
     if len(s) > 1: outline.append([round(v, 2) for p in s for v in p])
 
-# ------------------------------------------------------------- reference numbers
-def load(name):
-    d = os.path.join(A.stats_dir, name)
-    return json.load(open(os.path.join(d, 'results2.json'))), json.load(open(os.path.join(d, 'stats3.json')))
-ref = {}
-for name in ['thru2024', 'thru2023_no2024']:
-    r2, s3 = load(name)
-    fs = {k: {c: {kk: v[kk] for kk in ('N_pct', 'threshold_pct', 'field_significant', 'local_sig_grid')}
-              for c, v in vv.items()} for k, vv in s3['field_sig'].items()}
-    ew = {k: {'GE': v['GE'], 'GW': v['GW'],
-              'periods': {p: {kk: q[kk] for kk in ('n_years', 'east_mean', 'east_ci95', 'west_mean', 'west_ci95',
-                                                   'diff_mean', 'diff_ci95', 'diff_ci99')} for p, q in v['periods'].items()}}
-          for k, v in s3['east_west'].items()}
-    ref[name] = dict(years=s3['meta']['years'], exclude=s3['meta']['exclude_years'], n_years=s3['meta']['n_years'],
-                     max_box={k: r2[k + '_summary']['max'] for k in ('f1_counts', 'f2_counts', 'f1_days', 'f2_days')},
-                     state=r2['state'], trend_diff=r2['trend_diff'], field_sig=fs, east_west=ew)
+# ------------------------------------------------------------- validation + extension (replicate.py)
+rep = json.load(open(A.replication))
 
 def flat(a): return a.reshape(-1).astype(int).tolist()
 out = dict(
@@ -131,13 +117,14 @@ out = dict(
               sourceUrl='https://www.spc.noaa.gov/wcm/', years=[YEARS[0], YEARS[-1]],
               grid=dict(lat0=LAT0, lon0=LON0, d=D, ny=NY, nx=NX), center=dict(lat=WL[0], lon=WL[1], name='West Lafayette, IN'),
               ringBinKm=BIN_KM, ringBins=NBIN, seasons=SEASONS,
-              paper=dict(GE=[2, 7], GW_f1=[1, 2], GW_f2=[1, 3]),
+              GE=rep['GE']['idx'], GW=rep['GW']['idx'],
               tornadoesUsed={'f1': int((df.mag >= 1).sum()), 'f2': int((df.mag >= 2).sum())}),
     boxes={f'{t}{k}': {s: flat(box[ti, ki, si]) for si, s in enumerate(SEASONS)}
            for ti, t in enumerate(['f1', 'f2']) for ki, k in enumerate(['c', 'd'])},
     ring={f'{t}{k}': {s: flat(arr[ti, si]) for si, s in enumerate(SEASONS)}
           for ti, t in enumerate(['f1', 'f2']) for k, arr in (('c', ring_c), ('d', ring_d))},
-    outline=outline, reference=ref)
+    outline=outline,
+    validation=rep['validation'], fieldSig=rep['field_sig'], extension=rep['extension'])
 os.makedirs(os.path.dirname(A.json), exist_ok=True)
 json.dump(out, open(A.json, 'w'), separators=(',', ':'))
 print('wrote', A.json, os.path.getsize(A.json), 'bytes;', len(outline), 'outline lines;',

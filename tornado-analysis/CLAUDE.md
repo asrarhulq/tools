@@ -21,6 +21,12 @@ Goal: replicate Agee, Larson, Childs, Marmo (2016), JAMC 55, 1681-1697 (agee_201
 - Web: scripts/export_web.py writes src/features/alley-tracker/data/alley-tracker.json (needs data/us-atlas/states-10m.json). Tool live at /general/alley-tracker with PDF report; TS stats port matches Python.
 - Period III vs II field significance is descriptive only (10-11 yrs = ~2 blocks).
 
+## Independent replication (2026-11-23, supersedes the numbers above)
+- scripts/tornado_core.py + replicate.py: written from the paper's text, exact path-box intersection (no point sampling). `scripts/run_all.sh` runs replicate -> export_web.
+- Validation: 30 of 33 published numbers within 10%. Outside: F2+ busiest box Period II (162 vs 185), central-TN tornado-day change (14 vs 29, F2+ 15 vs 25; same box is still the domain's largest increase). Field significance verdict matches (F1+ N 30% vs 27.5%).
+- Paper's "southern Mississippi" = box 30-32.5N, 92.5-90W (SON 74 -> 122 vs paper 74 -> 124).
+- After 2013: east box 13.3/yr vs west 7.5 (to 2024); 12.7 vs 6.5 (to 2023). Shift holds, not grown.
+
 ## Next
 1. Get the SPC file through 2024/2025 (spc.noaa.gov/wcm, download manually; it blocks bots). NCEI Storm Events is only a cross-check (it splits tornadoes by county).
 2. Re-run with newer years; show results with and without 2024 (record year).

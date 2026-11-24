@@ -1,152 +1,252 @@
 "use client";
 
-import type { AlleyData, BoxIdx, Selection } from "../lib/types";
+import { useState } from "react";
+import type { AlleyData, BoxIdx, Selection, ValidationRow } from "../lib/types";
 import type { FieldSigResult } from "../lib/stats";
 import type { EastWestRow, SeasonRow, SeriesStats } from "../state/analysis";
 import { NX, NY, boxShort, rangeLabel, seasonLabel } from "../lib/data";
 import { SERIES } from "../lib/colors";
-import { PAPER } from "../config";
-import { Panel, Stat, Swatch, fmt, fmtCI, fmtP, signed } from "./primitives";
+import { PAPER_CREDIT } from "../config";
+import { Panel, Stat, Swatch, fmt, fmtCI, signed } from "./primitives";
 import { cn } from "@/lib/utils";
 
-const isAgee = (s: Selection) =>
-  s.a[0] === 1954 && s.a[1] === 1983 && s.b[0] === 1984 && s.b[1] === 2013;
+/**
+ * Panels for the simplified page: one verdict line for field significance,
+ * a short A-vs-B stat row, the paper check, and the post-2013 extension.
+ * Detailed tables (east/west, seasons) live in a collapsed "More" section.
+ */
 
-// ───────────────────────────────────────────────────── field significance
+// ───────────────────────────────────────────────────── verdict line
 
-export function SignificancePanel({
-  sel,
+export function Verdict({
   sig,
-  status,
-  ms,
+  running,
 }: {
-  sel: Selection;
   sig: FieldSigResult | null;
-  status: string;
-  ms: number;
+  running: boolean;
 }) {
-  const paper =
-    isAgee(sel) && sel.season === "ALL" && sel.measure === "c"
-      ? sel.rating === "f1"
-        ? PAPER.fieldSigF1
-        : PAPER.fieldSigF2
-      : null;
-  return (
-    <Panel
-      title="Field significance · B vs A"
-      action={
-        <span className="font-mono text-[11px] text-[var(--color-muted-foreground)]">
-          {status === "running" || !sig
-            ? "running 10 000 resamples…"
-            : `${(ms / 1000).toFixed(2)} s`}
-        </span>
-      }
-    >
-      {sig ? (
-        <>
-          <div className="grid grid-cols-3 gap-3">
-            <Stat
-              label="Boxes significant (N)"
-              value={`${fmt(sig.N, 1)}%`}
-              sub={`${sig.nSig} of 80`}
-            />
-            <Stat
-              label="Monte Carlo threshold"
-              value={`${fmt(sig.threshold, 2)}%`}
-              sub="95th pct, α = 0.05"
-            />
-            <Stat
-              label="Verdict"
-              value={
-                <span
-                  className={
-                    sig.fieldSignificant
-                      ? "text-[var(--color-ok)]"
-                      : "text-[var(--color-warn)]"
-                  }
-                >
-                  {sig.fieldSignificant ? "Significant" : "Not sig."}
-                </span>
-              }
-              sub={sig.fieldSignificant ? "N > threshold" : "N ≤ threshold"}
-            />
-          </div>
-          {paper ? (
-            <p className="mt-3 rounded-md bg-[var(--color-surface-2)] px-2.5 py-1.5 text-[11px] text-[var(--color-muted-foreground)]">
-              Paper (Agee et al. 2016): N = {paper.N}% vs threshold{" "}
-              {paper.threshold}%. With 10 000 resamples N varies by about ±2
-              points between random seeds (the offline run gives 27.5%); other
-              gaps come from SPC database revisions since 2016.
-            </p>
-          ) : null}
-        </>
-      ) : (
-        <div className="h-16 animate-pulse rounded-md bg-[var(--color-surface-2)]" />
-      )}
-      <p className="mt-3 text-[11px] leading-relaxed text-[var(--color-muted-foreground)]">
-        Moving-block bootstrap (block 5 yr) of each box&apos;s B − A change in
-        annual mean; Monte Carlo threshold after Livezey &amp; Chen (1983), as
-        in Elmore et al. (2006).
-        {sel.season !== "ALL" ? ` Season: ${seasonLabel(sel.season)}.` : ""}
+  if (!sig || running)
+    return (
+      <p className="text-sm text-[var(--color-muted-foreground)]">
+        Testing significance…
       </p>
-    </Panel>
+    );
+  return (
+    <p className="text-sm text-[var(--color-foreground)]">
+      <span
+        className={cn(
+          "mr-1.5 inline-block rounded px-1.5 py-0.5 text-xs font-semibold",
+          sig.fieldSignificant
+            ? "bg-[var(--color-ok)]/15 text-[var(--color-ok)]"
+            : "bg-[var(--color-warn)]/15 text-[var(--color-warn)]",
+        )}
+      >
+        {sig.fieldSignificant ? "Real shift" : "Could be chance"}
+      </span>
+      {fmt(sig.N, 0)}% of boxes changed significantly (chance alone: up to{" "}
+      {fmt(sig.threshold, 0)}%).
+    </p>
   );
 }
 
-// ───────────────────────────────────────────────────── A vs B summary block
+// ───────────────────────────────────────────────────── A vs B stats
 
 export function PeriodStats({
   s,
   sel,
-  unit,
   dark,
-  compact = false,
 }: {
   s: SeriesStats;
   sel: Selection;
-  unit: string;
   dark: boolean;
-  /** two columns, for the narrow side panel */
-  compact?: boolean;
 }) {
   const col = dark ? SERIES.dark : SERIES.light;
-  const sig99 = s.diff.ci99[0] > 0 || s.diff.ci99[1] < 0;
-  const sig95 = s.diff.ci95[0] > 0 || s.diff.ci95[1] < 0;
+  const sig = s.diff.ci95[0] > 0 || s.diff.ci95[1] < 0;
   return (
-    <div className={cn("grid grid-cols-2 gap-3", !compact && "sm:grid-cols-4")}>
+    <div className="grid grid-cols-3 gap-3">
       <Stat
         label={
           <span className="inline-flex items-center gap-1.5">
-            <Swatch color={col.a} />A {rangeLabel(sel.a, sel.exclude2024)}
+            <Swatch color={col.a} />
+            {rangeLabel(sel.a, sel.exclude2024)}
           </span>
         }
-        value={fmt(s.a.mean)}
-        sub={`95% ${fmtCI(s.a.ci95)} · n=${s.a.n}`}
+        value={fmt(s.a.mean, 1)}
+        sub="per year"
       />
       <Stat
         label={
           <span className="inline-flex items-center gap-1.5">
-            <Swatch color={col.b} />B {rangeLabel(sel.b, sel.exclude2024)}
+            <Swatch color={col.b} />
+            {rangeLabel(sel.b, sel.exclude2024)}
           </span>
         }
-        value={fmt(s.b.mean)}
-        sub={`95% ${fmtCI(s.b.ci95)} · n=${s.b.n}`}
+        value={fmt(s.b.mean, 1)}
+        sub="per year"
       />
       <Stat
-        label="B − A"
-        value={signed(s.diff.diff)}
-        sub={`99% ${fmtCI(s.diff.ci99)} · ${sig99 ? "sig. 99%" : sig95 ? "sig. 95%" : "n.s."}`}
-      />
-      <Stat
-        label="Trend (Theil–Sen)"
-        value={`${signed(s.trend.slopePerDecade)}/dec`}
-        sub={`MK p ${fmtP(s.trend.p)} · ${unit}`}
+        label="Change"
+        value={signed(s.diff.diff, 1)}
+        sub={sig ? "significant (95%)" : "not significant"}
       />
     </div>
   );
 }
 
-// ───────────────────────────────────────────────────── east vs west
+// ───────────────────────────────────────────────────── check against the paper
+
+function mark(r: ValidationRow) {
+  if (r.diff_pct === null) return "·";
+  const d = Math.abs(r.diff_pct);
+  return d <= 10 ? "✓" : d <= 25 ? "≈" : "✗";
+}
+
+export function ValidationPanel({ data }: { data: AlleyData }) {
+  const [all, setAll] = useState(false);
+  const rows = data.validation;
+  const comparable = rows.filter((r) => r.diff_pct !== null);
+  const close = comparable.filter((r) => Math.abs(r.diff_pct!) <= 10).length;
+  const key = rows.filter(
+    (r) =>
+      /Busiest box|Largest decrease \(II|share of boxes/.test(r.what) &&
+      !/MAM|JJA|SON/.test(r.group),
+  );
+  const shown = all ? rows : key;
+  return (
+    <Panel title="Step 2 · Check against the paper (1954–2013)">
+      <p className="mb-3 text-sm text-[var(--color-foreground)]">
+        <strong className="font-semibold">
+          {close} of {comparable.length}
+        </strong>{" "}
+        numbers published by {PAPER_CREDIT.short} are matched within 10%, and
+        the field-significance test gives the same verdict.
+      </p>
+      <table className="w-full text-xs">
+        <thead className="text-left text-[var(--color-muted-foreground)]">
+          <tr className="border-b border-[var(--color-border)]">
+            <th className="py-1.5 pr-2 font-medium">Published number</th>
+            <th className="pr-2 text-right font-medium">Paper</th>
+            <th className="pr-2 text-right font-medium">Ours</th>
+            <th className="w-6 font-medium" />
+          </tr>
+        </thead>
+        <tbody>
+          {shown.map((r) => (
+            <tr
+              key={r.group + r.what}
+              className="border-b border-[var(--color-border)]/60 last:border-0"
+              title={`${r.box} · ${r.place}`}
+            >
+              <td className="py-1.5 pr-2">
+                <span className="text-[var(--color-muted-foreground)]">
+                  {r.group} ·{" "}
+                </span>
+                {r.what}
+              </td>
+              <td className="pr-2 text-right font-mono tabular-nums">
+                {r.paper}
+              </td>
+              <td className="pr-2 text-right font-mono tabular-nums">
+                {r.ours}
+              </td>
+              <td className="text-center">{mark(r)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="mt-2 flex items-center justify-between gap-3 text-[11px] text-[var(--color-muted-foreground)]">
+        <span>
+          ✓ within 10% · ≈ within 25% · ✗ larger gap (database revised since
+          2016)
+        </span>
+        <button
+          type="button"
+          onClick={() => setAll((a) => !a)}
+          className="shrink-0 font-medium text-[var(--color-primary)] hover:underline"
+        >
+          {all ? "Show key rows" : `Show all ${rows.length}`}
+        </button>
+      </div>
+    </Panel>
+  );
+}
+
+// ───────────────────────────────────────────────────── after 2013
+
+export function AfterPanel({ data }: { data: AlleyData }) {
+  const a = data.extension.thru2024,
+    b = data.extension.thru2023;
+  const row = (label: string, x: React.ReactNode, y: React.ReactNode) => (
+    <tr className="border-b border-[var(--color-border)]/60 last:border-0">
+      <td className="py-1.5 pr-2">{label}</td>
+      <td className="pr-2 text-right font-mono tabular-nums">{x}</td>
+      <td className="text-right font-mono tabular-nums">{y}</td>
+    </tr>
+  );
+  const ahead = (r: { ci99: number[] }) =>
+    r.ci99[0]! > 0 ? "yes" : "not quite";
+  return (
+    <Panel title="Step 3 · Same method, after 2013">
+      <p className="mb-3 text-sm text-[var(--color-foreground)]">
+        The eastward shift is{" "}
+        <strong className="font-semibold">
+          still there in 2014–2024, but it has not grown.
+        </strong>{" "}
+        2024 was a record year, so it is shown both ways.
+      </p>
+      <table className="w-full text-xs">
+        <thead className="text-left text-[var(--color-muted-foreground)]">
+          <tr className="border-b border-[var(--color-border)]">
+            <th className="py-1.5 pr-2 font-medium">
+              (E)F1+ tornadoes per year
+            </th>
+            <th className="pr-2 text-right font-medium">to 2024</th>
+            <th className="text-right font-medium">to 2023</th>
+          </tr>
+        </thead>
+        <tbody>
+          {row(
+            "East box: 1954–83 → 1984–2013",
+            `${fmt(a.east_west.I.east, 1)} → ${fmt(a.east_west.II.east, 1)}`,
+            "same",
+          )}
+          {row(
+            "East box: 2014 onward",
+            fmt(a.east_west.III.east, 1),
+            fmt(b.east_west.III.east, 1),
+          )}
+          {row(
+            "West box: 1954–83 → 1984–2013",
+            `${fmt(a.east_west.I.west, 1)} → ${fmt(a.east_west.II.west, 1)}`,
+            "same",
+          )}
+          {row(
+            "West box: 2014 onward",
+            fmt(a.east_west.III.west, 1),
+            fmt(b.east_west.III.west, 1),
+          )}
+          {row(
+            "East still ahead? (99% confidence)",
+            ahead(a.east_west.III),
+            ahead(b.east_west.III),
+          )}
+          {row(
+            "Map still differs from 1954–83?",
+            a.field_sig_III_vs_I.f1.field_significant ? "yes" : "no",
+            b.field_sig_III_vs_I.f1.field_significant ? "yes" : "no",
+          )}
+        </tbody>
+      </table>
+      <p className="mt-2 text-[11px] text-[var(--color-muted-foreground)]">
+        East box {boxShort(data, data.meta.GE)} (central Tennessee) · west box{" "}
+        {boxShort(data, data.meta.GW)} (southern Oklahoma) · only {a.n_years}{" "}
+        years so far.
+      </p>
+    </Panel>
+  );
+}
+
+// ───────────────────────────────────────────────────── east vs west (details)
 
 export function EastWestPanel({
   data,
@@ -164,283 +264,100 @@ export function EastWestPanel({
   unit: string;
 }) {
   return (
-    <Panel title="East (GE) vs West (GW) · paper Fig. 12–14">
-      <p className="mb-3 text-xs text-[var(--color-muted-foreground)]">
-        GE {boxShort(data, ge)} (greatest increase) vs GW {boxShort(data, gw)}{" "}
-        (greatest decrease), {unit}/yr. Bootstrap: n years drawn independently
-        from each box, mean of differences, 10 000×.
+    <Panel title="East box vs west box">
+      <p className="mb-2 text-xs text-[var(--color-muted-foreground)]">
+        {unit} per year · east {boxShort(data, ge)} · west {boxShort(data, gw)}
       </p>
-      <div className="overflow-x-auto">
-        <table className="w-full font-mono text-xs tabular-nums">
-          <thead className="text-left text-[var(--color-muted-foreground)]">
-            <tr className="border-b border-[var(--color-border)]">
-              <th className="py-1.5 pr-3 font-medium">Period</th>
-              <th className="pr-3 font-medium">East (95% CI)</th>
-              <th className="pr-3 font-medium">West (95% CI)</th>
-              <th className="pr-3 font-medium">E − W</th>
-              <th className="pr-3 font-medium">99% CI</th>
+      <table className="w-full font-mono text-xs tabular-nums">
+        <thead className="text-left font-sans text-[var(--color-muted-foreground)]">
+          <tr className="border-b border-[var(--color-border)]">
+            <th className="py-1.5 pr-3 font-medium">Period</th>
+            <th className="pr-3 font-medium">East</th>
+            <th className="pr-3 font-medium">West</th>
+            <th className="pr-3 font-medium">East − West (99% CI)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr
+              key={r.period}
+              className="border-b border-[var(--color-border)]/60 last:border-0"
+            >
+              <td className="py-1.5 pr-3">
+                {rangeLabel(r.period === "A" ? sel.a : sel.b, sel.exclude2024)}
+              </td>
+              <td className="pr-3">{fmt(r.east.mean, 1)}</td>
+              <td className="pr-3">{fmt(r.west.mean, 1)}</td>
+              <td className="pr-3">
+                {signed(r.diff.diff, 1)} {fmtCI(r.diff.ci99, 1)}
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => {
-              const s99 = r.diff.ci99[0] > 0 || r.diff.ci99[1] < 0;
-              return (
-                <tr
-                  key={r.period}
-                  className="border-b border-[var(--color-border)]/60 last:border-0"
-                >
-                  <td className="py-1.5 pr-3">
-                    {r.period}{" "}
-                    {rangeLabel(
-                      r.period === "A" ? sel.a : sel.b,
-                      sel.exclude2024,
-                    )}
-                  </td>
-                  <td className="pr-3">
-                    {fmt(r.east.mean)} {fmtCI(r.east.ci95)}
-                  </td>
-                  <td className="pr-3">
-                    {fmt(r.west.mean)} {fmtCI(r.west.ci95)}
-                  </td>
-                  <td className="pr-3">{signed(r.diff.diff)}</td>
-                  <td
-                    className={cn(
-                      "pr-3",
-                      s99 && "font-semibold text-[var(--color-foreground)]",
-                    )}
-                  >
-                    {fmtCI(r.diff.ci99)}
-                    {s99 ? " *" : ""}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-      <p className="mt-2 text-[11px] text-[var(--color-muted-foreground)]">
-        * interval excludes zero (99% confidence).
-      </p>
+          ))}
+        </tbody>
+      </table>
     </Panel>
   );
 }
 
-// ───────────────────────────────────────────────────── seasonal
+// ───────────────────────────────────────────────────── seasons (details)
 
 export function SeasonalPanel({
   data,
   rows,
   sigByTag,
-  unit,
   active,
   onPick,
 }: {
   data: AlleyData;
   rows: SeasonRow[];
   sigByTag: Record<string, FieldSigResult> | null;
-  unit: string;
   active: string;
   onPick: (s: SeasonRow["season"]) => void;
 }) {
-  const short = (b: BoxIdx) => boxShort(data, b);
   return (
-    <Panel title="Seasonal analysis (DJF · MAM · JJA · SON)">
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px] text-xs">
-          <thead className="text-left text-[var(--color-muted-foreground)]">
-            <tr className="border-b border-[var(--color-border)]">
-              <th className="py-1.5 pr-3 font-medium">Season</th>
-              <th className="pr-3 font-medium">Largest increase (B − A)</th>
-              <th className="pr-3 font-medium">Largest decrease</th>
-              <th className="pr-3 font-medium">Busiest A → B</th>
-              <th className="pr-3 font-medium">Field sig. N / thr</th>
-            </tr>
-          </thead>
-          <tbody className="font-mono tabular-nums">
-            {rows.map((r) => {
-              const fs = sigByTag?.[r.season];
-              return (
-                <tr
-                  key={r.season}
-                  onClick={() => onPick(r.season)}
-                  className={cn(
-                    "cursor-pointer border-b border-[var(--color-border)]/60 last:border-0 hover:bg-[var(--color-surface-2)]",
-                    active === r.season && "bg-[var(--color-surface-2)]",
-                  )}
-                >
-                  <td className="py-1.5 pr-3 font-sans font-medium">
-                    {seasonLabel(r.season)}
-                  </td>
-                  <td className="pr-3">
-                    {signed(r.incVal)}{" "}
-                    <span className="text-[var(--color-muted-foreground)]">
-                      {short(r.inc)}
-                    </span>
-                  </td>
-                  <td className="pr-3">
-                    {signed(r.decVal)}{" "}
-                    <span className="text-[var(--color-muted-foreground)]">
-                      {short(r.dec)}
-                    </span>
-                  </td>
-                  <td className="pr-3">
-                    {fmt(r.maxAVal, 1)} → {fmt(r.maxBVal, 1)}
-                  </td>
-                  <td className="pr-3">
-                    {fs ? (
-                      <span
-                        className={
-                          fs.fieldSignificant
-                            ? "text-[var(--color-ok)]"
-                            : "text-[var(--color-warn)]"
-                        }
-                      >
-                        {fmt(fs.N, 1)}% / {fmt(fs.threshold, 1)}%{" "}
-                        {fs.fieldSignificant ? "✓" : "✗"}
-                      </span>
-                    ) : (
-                      "…"
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+    <Panel title="By season">
+      <table className="w-full text-xs">
+        <thead className="text-left text-[var(--color-muted-foreground)]">
+          <tr className="border-b border-[var(--color-border)]">
+            <th className="py-1.5 pr-3 font-medium">Season</th>
+            <th className="pr-3 font-medium">Biggest rise</th>
+            <th className="pr-3 font-medium">Biggest drop</th>
+            <th className="font-medium">Real shift?</th>
+          </tr>
+        </thead>
+        <tbody className="font-mono tabular-nums">
+          {rows.map((r) => {
+            const fs = sigByTag?.[r.season];
+            return (
+              <tr
+                key={r.season}
+                onClick={() => onPick(r.season)}
+                className={cn(
+                  "cursor-pointer border-b border-[var(--color-border)]/60 last:border-0 hover:bg-[var(--color-surface-2)]",
+                  active === r.season && "bg-[var(--color-surface-2)]",
+                )}
+              >
+                <td className="py-1.5 pr-3 font-sans">
+                  {seasonLabel(r.season)}
+                </td>
+                <td className="pr-3" title={boxShort(data, r.inc)}>
+                  {signed(r.incVal, 1)}
+                </td>
+                <td className="pr-3" title={boxShort(data, r.dec)}>
+                  {signed(r.decVal, 1)}
+                </td>
+                <td className="font-sans">
+                  {fs ? (fs.fieldSignificant ? "yes" : "no") : "…"}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
       <p className="mt-2 text-[11px] text-[var(--color-muted-foreground)]">
-        Values are {unit}/yr per 2.5° box. Click a row to map that season.
-        Seasons by calendar month (December stays in its own year).
+        Per box, per year. Click a season to map it.
       </p>
     </Panel>
-  );
-}
-
-// ───────────────────────────────────────────────────── reference / validation
-
-export function ReferencePanel({ data }: { data: AlleyData }) {
-  const r24 = data.reference.thru2024,
-    r23 = data.reference.thru2023_no2024;
-  const mx = r24.max_box;
-  const row = (
-    label: string,
-    ours: React.ReactNode,
-    paper: React.ReactNode,
-  ) => (
-    <tr className="border-b border-[var(--color-border)]/60 last:border-0">
-      <td className="py-1.5 pr-3 font-sans">{label}</td>
-      <td className="pr-3">{ours}</td>
-      <td className="pr-3 text-[var(--color-muted-foreground)]">{paper}</td>
-    </tr>
-  );
-  const fs = (r: typeof r24, k: string, c: string) => {
-    const v = r.field_sig[k]?.[c];
-    return v ? `${fmt(v.N_pct, 1)} / ${fmt(v.threshold_pct, 1)}` : "–";
-  };
-  const ew = (r: typeof r24, p: string) => {
-    const v = r.east_west.f1_counts.periods[p];
-    return v ? `${fmt(v.east_mean)} / ${fmt(v.west_mean)}` : "–";
-  };
-  return (
-    <div className="grid gap-4 lg:grid-cols-2">
-      <Panel title="Validation against the paper (1954–2013)">
-        <table className="w-full font-mono text-xs tabular-nums">
-          <thead className="text-left text-[var(--color-muted-foreground)]">
-            <tr className="border-b border-[var(--color-border)]">
-              <th className="py-1.5 pr-3 font-sans font-medium">Quantity</th>
-              <th className="pr-3 font-sans font-medium">This study</th>
-              <th className="pr-3 font-sans font-medium">Agee et al.</th>
-            </tr>
-          </thead>
-          <tbody>
-            {row(
-              "Busiest box, (E)F1+, Period I",
-              mx.f1_counts.I[0],
-              PAPER.maxBoxI,
-            )}
-            {row(
-              "Busiest box, (E)F1+, Period II",
-              mx.f1_counts.II[0],
-              PAPER.maxBoxII,
-            )}
-            {row(
-              "Busiest box, (E)F2+, I / II",
-              `${mx.f2_counts.I[0]} / ${mx.f2_counts.II[0]}`,
-              `${PAPER.f2MaxI} / ${PAPER.f2MaxII}`,
-            )}
-            {row(
-              "Tornado days max, I / II",
-              `${mx.f1_days.I[0]} / ${mx.f1_days.II[0]}`,
-              `${PAPER.daysMaxI} / ${PAPER.daysMaxII}`,
-            )}
-            {row(
-              "Oklahoma (E)F1+, I / II",
-              `${r24.state.OK.I} / ${r24.state.OK.II}`,
-              PAPER.stateOK.join(" / "),
-            )}
-            {row(
-              "Tennessee (E)F1+, I / II",
-              `${r24.state.TN.I} / ${r24.state.TN.II}`,
-              PAPER.stateTN.join(" / "),
-            )}
-            {row(
-              "Field sig. (E)F1+ N / thr %",
-              fs(r24, "f1_counts", "II_vs_I"),
-              `${PAPER.fieldSigF1.N} / ${PAPER.fieldSigF1.threshold}`,
-            )}
-            {row(
-              "Field sig. (E)F2+ N / thr %",
-              fs(r24, "f2_counts", "II_vs_I"),
-              `${PAPER.fieldSigF2.N} / ${PAPER.fieldSigF2.threshold}`,
-            )}
-          </tbody>
-        </table>
-        <p className="mt-2 text-[11px] text-[var(--color-muted-foreground)]">
-          Differences are documented, not tuned away: the SPC database has been
-          revised since 2016 (re-ratings, added/merged tracks).
-        </p>
-      </Panel>
-      <Panel title="Period III with and without 2024 (record year)">
-        <table className="w-full font-mono text-xs tabular-nums">
-          <thead className="text-left text-[var(--color-muted-foreground)]">
-            <tr className="border-b border-[var(--color-border)]">
-              <th className="py-1.5 pr-3 font-sans font-medium">Quantity</th>
-              <th className="pr-3 font-sans font-medium">2014–2024</th>
-              <th className="pr-3 font-sans font-medium">2014–2023</th>
-            </tr>
-          </thead>
-          <tbody>
-            {row("Years in Period III", r24.n_years.III, r23.n_years.III)}
-            {row(
-              "East / West (E)F1+ per yr, III",
-              ew(r24, "III"),
-              ew(r23, "III"),
-            )}
-            {row("East / West (E)F1+ per yr, II", ew(r24, "II"), ew(r23, "II"))}
-            {row(
-              "Field sig. III vs II, (E)F1+",
-              fs(r24, "f1_counts", "III_vs_II"),
-              fs(r23, "f1_counts", "III_vs_II"),
-            )}
-            {row(
-              "Field sig. III vs II, (E)F2+",
-              fs(r24, "f2_counts", "III_vs_II"),
-              fs(r23, "f2_counts", "III_vs_II"),
-            )}
-            {row(
-              "E − W trend /decade (MK p)",
-              `${signed(r24.trend_diff.slope_per_decade)} (${fmtP(r24.trend_diff.p)})`,
-              `${signed(r23.trend_diff.slope_per_decade)} (${fmtP(r23.trend_diff.p)})`,
-            )}
-          </tbody>
-        </table>
-        <p className="mt-2 text-[11px] text-[var(--color-muted-foreground)]">
-          The eastward shift holds into Period III but has not grown. Period III
-          is 10–11 years — about two 5-year blocks — so its field-significance
-          result is descriptive only.
-        </p>
-      </Panel>
-    </div>
   );
 }
 
@@ -460,8 +377,7 @@ export function GridTable({
     <div className="overflow-x-auto">
       <table className="w-full font-mono text-[11px] tabular-nums">
         <caption className="mb-2 text-left font-sans text-xs text-[var(--color-muted-foreground)]">
-          {unit} per year by 2.5° box (rows: south edge latitude; columns: west
-          edge longitude)
+          {unit} per year, by 2.5° box
         </caption>
         <thead>
           <tr>

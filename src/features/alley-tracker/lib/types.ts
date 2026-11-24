@@ -14,43 +14,42 @@ export type SeriesKey = `${Rating}${Measure}`;
 export type YearRange = readonly [number, number];
 export type BoxIdx = readonly [number, number];
 
-export type MeasureName = "f1_counts" | "f2_counts" | "f1_days" | "f2_days";
+/** One published number from Agee et al. (2016) next to our independent value. */
+export interface ValidationRow {
+  group: string;
+  what: string;
+  paper: number;
+  ours: number;
+  box: string;
+  place: string;
+  /** null for rows that are not a like-for-like count (field-significance %) */
+  diff_pct: number | null;
+}
 
-export interface FieldSigRef {
+export interface FieldSigSummary {
   N_pct: number;
   threshold_pct: number;
   field_significant: boolean;
-  local_sig_grid: number[][];
+  n_sig: number;
 }
 
-export interface EastWestPeriodRef {
+export interface EastWestRef {
+  n: number;
+  east: number;
+  west: number;
+  diff: number;
+  ci95: number[];
+  ci99: number[];
+}
+
+/** Same method applied after 2013 (replicate.py). */
+export interface ExtensionRun {
+  years: [number, number];
   n_years: number;
-  east_mean: number;
-  east_ci95: number[];
-  west_mean: number;
-  west_ci95: number[];
-  diff_mean: number;
-  diff_ci95: number[];
-  diff_ci99: number[];
-}
-
-export interface ReferenceRun {
-  years: number[];
-  exclude: number[];
-  n_years: Record<"I" | "II" | "III", number>;
-  /** analyze2 output: per measure, per period: [max, [iy, ix]] */
-  max_box: Record<MeasureName, Record<"I" | "II" | "III", [number, number[]]>>;
-  state: Record<"OK" | "TN", Record<"I" | "II", number>>;
-  trend_diff: { slope_per_decade: number; lo: number; hi: number; p: number };
-  field_sig: Record<string, Record<string, FieldSigRef>>;
-  east_west: Record<
-    MeasureName,
-    {
-      GE: { idx: number[]; bounds: number[] };
-      GW: { idx: number[]; bounds: number[] };
-      periods: Record<string, EastWestPeriodRef>;
-    }
-  >;
+  east_west: Record<"I" | "II" | "III", EastWestRef>;
+  busiest_III: { box: string; per_year: number };
+  field_sig_III_vs_II: Record<"f1" | "f2", FieldSigSummary>;
+  field_sig_III_vs_I: Record<"f1" | "f2", FieldSigSummary>;
 }
 
 export interface AlleyData {
@@ -65,7 +64,9 @@ export interface AlleyData {
     ringBinKm: number;
     ringBins: number;
     seasons: string[];
-    paper: { GE: number[]; GW_f1: number[]; GW_f2: number[] };
+    /** our own boxes of greatest increase (east) / decrease (west), F1+ counts, II − I */
+    GE: [number, number];
+    GW: [number, number];
     tornadoesUsed: { f1: number; f2: number };
   };
   /** year-major, row-major: [(yearIdx * ny + iy) * nx + ix] */
@@ -74,7 +75,9 @@ export interface AlleyData {
   ring: Record<SeriesKey, Record<Season, number[]>>;
   /** flat [lon, lat, lon, lat, …] polylines */
   outline: number[][];
-  reference: Record<"thru2024" | "thru2023_no2024", ReferenceRun>;
+  validation: ValidationRow[];
+  fieldSig: Record<"f1_II_vs_I" | "f2_II_vs_I", FieldSigSummary>;
+  extension: Record<"thru2024" | "thru2023", ExtensionRun>;
 }
 
 export interface Selection {
